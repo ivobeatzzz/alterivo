@@ -40,15 +40,15 @@ constexpr float kEnd   = juce::MathConstants<float>::pi * 2.75f;
 constexpr int kW = AlterIvoEditor::kBaseW, kH = AlterIvoEditor::kBaseH;
 
 // Posiciones del diseño (760 x 540)
-const juce::Point<int> kPitchC   { 124, 236 }, kFormantC { 636, 236 }, kDriveC { 104, 420 }, kMixC { 200, 420 };
+const juce::Point<int> kPitchC   { 124, 236 }, kFormantC { 636, 236 }, kDriveC { 124, 426 }, kMixC { 636, 426 };
 constexpr int kBigBox = 180, kSmallBox = 96;
 constexpr float kBigR = 58.0f, kSmallR = 24.0f;
 
 const juce::Rectangle<int> kModes    { kW - 36 - 300, 30, 300, 36 };
 const juce::Rectangle<int> kCard     { 236, 100, 288, 244 };
 const juce::Rectangle<int> kLink     { 350, 360, 60, 28 };
-const juce::Rectangle<int> kInMeter  { 330, 400, 394, 20 };
-const juce::Rectangle<int> kOutMeter { 330, 426, 394, 20 };
+const juce::Rectangle<int> kInMeter  { 236, 404, 288, 20 };
+const juce::Rectangle<int> kOutMeter { 236, 430, 288, 20 };
 const juce::Rectangle<int> kPresets  { 270, 482, 220, 36 };
 
 juce::Rectangle<int> box (juce::Point<int> c, int size) { return { c.x - size / 2, c.y - size / 2, size, size }; }
@@ -444,9 +444,9 @@ void LevelMeter::paint (juce::Graphics& g)
     g.setFont (font (*fonts, Face::manropeX, 9.5f, 0.24f));
     g.drawText (label, r.withWidth (44.0f), juce::Justification::centredLeft, false);
 
-    constexpr int N = 36;
+    constexpr int N = 28;
     constexpr float lo = -48.0f;
-    const float x0 = 46.0f, w = (r.getWidth() - x0) / (float) N;
+    const float x0 = 38.0f, w = (r.getWidth() - x0 + 2.5f) / (float) N;
     const float cy = r.getCentreY();
 
     int lit = 0;
@@ -756,15 +756,15 @@ void AlterIvoView::paintBackground (juce::Graphics& g)
     g.setFont (font (*fonts, Face::manropeX, 9.5f, 0.24f));
     g.drawText ("PITCH",   centredRect (kPitchC.x, 116, 160, 14), juce::Justification::centred, false);
     g.drawText ("FORMANT", centredRect (kFormantC.x, 116, 160, 14), juce::Justification::centred, false);
-    g.drawText ("DRIVE",   centredRect (kDriveC.x, 348, 120, 14), juce::Justification::centred, false);
-    g.drawText ("MIX",     centredRect (kMixC.x, 348, 120, 14), juce::Justification::centred, false);
+    g.drawText ("DRIVE",   centredRect (kDriveC.x, kDriveC.y - 72, 120, 14), juce::Justification::centred, false);
+    g.drawText ("MIX",     centredRect (kMixC.x, kMixC.y - 72, 120, 14), juce::Justification::centred, false);
 
     // Firma IVO abajo a la derecha (las letras ocupan del 13.45 % al 86.55 % del ancho del SVG)
     if (logoMark != nullptr)
     {
         const float size = 46.0f;
         const float x = W - 36.0f - 0.8655f * size;
-        logoMark->drawWithin (g, juce::Rectangle<float> (x, 509.0f - size * 0.5f, size, size), juce::RectanglePlacement::centred, 1.0f);
+        logoMark->drawWithin (g, juce::Rectangle<float> (x, 515.0f - size * 0.5f, size, size), juce::RectanglePlacement::centred, 1.0f);
     }
 }
 
