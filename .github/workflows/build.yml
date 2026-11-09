@@ -1,0 +1,99 @@
+# Compila alterIVO y crea los dos instaladores:
+#   - alterIVO-Mac-Instalador.pkg      (elige VST3 y/o AU)
+#   - alterIVO-Windows-Instalador.exe  (VST3)
+# En cada subida quedan en la pestaña "Actions" → último run → "Artifacts".
+# Al crear una release con etiqueta tipo v1.0.0 se publican en "Releases".
+name: Build alterIVO
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ "v*" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compilar
+        run: cmake --build build --config Release -j 4
+
+      - name: Crear instalador .pkg
+        run: bash packaging/mac/build-pkg.sh 1.0.0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alterIVO-Mac-Instalador
+          path: dist/alterIVO-Mac-Instalador.pkg
+
+      - name: Publicar en Releases
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/alterIVO-Mac-Instalador.pkg
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar
+        run: cmake -B build -A x64
+
+      - name: Compilar
+        run: cmake --build build --config Release -j 4
+
+      - name: Instalar Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Crear instalador .exe
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = (Get-Command iscc).Source }
+          & $iscc "packaging\windows\installer.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alterIVO-Windows-Instalador
+          path: dist/alterIVO-Windows-Instalador.exe
+
+      - name: Publicar en Releases
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/alterIVO-Windows-Instalador.exe
+
+  # Junta los dos instaladores en una sola carpeta para compartir
+  carpeta:
+    needs: [ mac, windows ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: descargas
+          merge-multiple: true
+
+      - name: Montar la carpeta
+        run: |
+          mkdir -p "alterIVO Instaladores"
+          cp descargas/alterIVO-Mac-Instalador.pkg "alterIVO Instaladores/"
+          cp descargas/alterIVO-Windows-Instalador.exe "alterIVO Instaladores/"
+          cp packaging/LEEME.txt "alterIVO Instaladores/"
+          ls -la "alterIVO Instaladores"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alterIVO-Instaladores
+          path: alterIVO Instaladores/

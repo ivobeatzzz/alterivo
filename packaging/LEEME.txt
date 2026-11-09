@@ -1,0 +1,29 @@
+alterIVO — Voice manipulator · IVO Beatz
+https://ivobeatz.com
+
+Esta carpeta trae dos instaladores. Usa el de tu ordenador.
+
+
+MAC  →  alterIVO-Mac-Instalador.pkg
+----------------------------------------
+1. Doble clic en el instalador.
+2. Si macOS dice que no se puede abrir: Ajustes del Sistema →
+   Privacidad y seguridad → baja hasta el aviso de alterIVO →
+   "Abrir igualmente".
+3. En "Tipo de instalación" marca VST3 y/o Audio Unit (AU).
+4. Pulsa Instalar e introduce la contraseña del Mac.
+
+
+WINDOWS  →  alterIVO-Windows-Instalador.exe
+----------------------------------------
+1. Doble clic en el instalador.
+2. Si sale "Windows protegió su PC": Más información →
+   Ejecutar de todas formas.
+3. Deja la carpeta VST3 que viene por defecto y pulsa Instalar.
+
+
+DESPUÉS DE INSTALAR
+----------------------------------------
+Abre tu DAW y vuelve a escanear plugins.
+Ableton Live: Configuración → Plug-Ins → Rescan.
+Aparece como IVO Beatz → alterIVO.

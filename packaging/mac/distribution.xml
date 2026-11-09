@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>alterIVO</title>
+    <organization>com.ivobeatz</organization>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <!-- customize="always": muestra siempre la pantalla para elegir VST3 / AU -->
+    <options customize="always" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+    <domains enable_localSystem="true"/>
+
+    <choices-outline>
+        <line choice="vst3"/>
+        <line choice="au"/>
+    </choices-outline>
+
+    <choice id="vst3" title="VST3"
+            description="alterIVO.vst3 en /Library/Audio/Plug-Ins/VST3. Para Ableton Live, FL Studio, Cubase, Studio One, Reaper…">
+        <pkg-ref id="com.ivobeatz.alterivo.vst3"/>
+    </choice>
+
+    <choice id="au" title="Audio Unit (AU)"
+            description="alterIVO.component en /Library/Audio/Plug-Ins/Components. Para Logic Pro, GarageBand y Ableton Live.">
+        <pkg-ref id="com.ivobeatz.alterivo.au"/>
+    </choice>
+
+    <pkg-ref id="com.ivobeatz.alterivo.vst3" version="1.0.0" onConclusion="none">alterIVO-VST3.pkg</pkg-ref>
+    <pkg-ref id="com.ivobeatz.alterivo.au" version="1.0.0" onConclusion="none">alterIVO-AU.pkg</pkg-ref>
+</installer-gui-script>

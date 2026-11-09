@@ -1,0 +1,83 @@
+#pragma once
+
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
+
+#include <array>
+#include <atomic>
+
+#include "PitchEngine.h"
+#include "TubeDrive.h"
+
+class AlterIvoProcessor : public juce::AudioProcessor
+{
+public:
+    AlterIvoProcessor();
+    ~AlterIvoProcessor() override = default;
+
+    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void releaseResources() override {}
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
+    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    using AudioProcessor::processBlock;
+
+    juce::AudioProcessorEditor* createEditor() override;
+    bool hasEditor() const override { return true; }
+
+    const juce::String getName() const override { return JucePlugin_Name; }
+    bool acceptsMidi() const override { return true; }
+    bool producesMidi() const override { return false; }
+    bool isMidiEffect() const override { return false; }
+    double getTailLengthSeconds() const override { return 0.0; }
+
+    // Presets de fábrica (también aparecen en el menú de presets del DAW)
+    int getNumPrograms() override;
+    int getCurrentProgram() override { return currentPreset; }
+    void setCurrentProgram (int index) override;
+    const juce::String getProgramName (int index) override;
+    void changeProgramName (int, const juce::String&) override {}
+
+    void getStateInformation (juce::MemoryBlock& destData) override;
+    void setStateInformation (const void* data, int sizeInBytes) override;
+
+    static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
+    juce::AudioProcessorValueTreeState apvts;
+
+    // Para la pantalla de la interfaz
+    float getDetectedHz() const noexcept { return engine.getDetectedHz(); }
+    float getOutputHz() const noexcept   { return engine.getOutputHz(); }
+    int getHeldMidiNote() const noexcept { return heldNote.load(); }
+
+private:
+    void processChunk (juce::AudioBuffer<float>& buffer, int start, int len);
+    void handleMidi (const juce::MidiBuffer& midi);
+    void noteOn (int note);
+    void noteOff (int note);
+
+    alterivo::PitchEngine engine;
+    alterivo::TubeDrive drive;
+    std::array<alterivo::DcBlocker, 2> dcBlockers;
+    std::unique_ptr<juce::dsp::Oversampling<float>> oversampler;
+
+    juce::AudioBuffer<float> wetBuffer;
+    juce::AudioBuffer<float> dryDelay;
+    int dryWrite = 0, dryLen = 1;
+    int maxBlock = 512;
+
+    juce::SmoothedValue<float> mixSmoothed;
+
+    std::array<int, 128> noteStack {};
+    int noteCount = 0;
+    std::atomic<int> heldNote { -1 };
+
+    int currentPreset = 0;
+
+    std::atomic<float>* pPitch   = nullptr;
+    std::atomic<float>* pFormant = nullptr;
+    std::atomic<float>* pDrive   = nullptr;
+    std::atomic<float>* pMix     = nullptr;
+    std::atomic<float>* pMode    = nullptr;
+    std::atomic<float>* pLink    = nullptr;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AlterIvoProcessor)
+};

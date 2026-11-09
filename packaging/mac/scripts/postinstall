@@ -1,0 +1,4 @@
+#!/bin/sh
+# Refresca la caché de Audio Units para que el DAW vea el plugin nuevo
+killall -9 AudioComponentRegistrar 2>/dev/null || true
+exit 0
