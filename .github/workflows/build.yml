@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   mac:
-    runs-on: macos-latest
+    runs-on: macos-15-intel   # Intel: suele tener más máquinas libres que macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +28,14 @@ jobs:
 
       - name: Crear instalador .pkg
         run: bash packaging/mac/build-pkg.sh 1.0.0
+
+      - name: Guardar en la rama "instalador-mac"
+        run: |
+          mkdir out && cp dist/alterIVO-Mac-Instalador.pkg out/ && cd out
+          git init -q -b instalador-mac
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "alterIVO Mac"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" instalador-mac
 
       - uses: actions/upload-artifact@v4
         with:
@@ -61,6 +69,15 @@ jobs:
           if (-not (Test-Path $iscc)) { $iscc = (Get-Command iscc).Source }
           & $iscc "packaging\windows\installer.iss"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Guardar en la rama "instalador-windows"
+        shell: bash
+        run: |
+          mkdir out && cp dist/alterIVO-Windows-Instalador.exe out/ && cd out
+          git init -q -b instalador-windows
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "alterIVO Windows"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" instalador-windows
 
       - uses: actions/upload-artifact@v4
         with:
