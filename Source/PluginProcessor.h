@@ -44,10 +44,13 @@ public:
     juce::AudioProcessorValueTreeState apvts;
 
     // Para la pantalla de la interfaz
-    float getDetectedHz() const noexcept { return engine.getDetectedHz(); }
-    float getOutputHz() const noexcept   { return engine.getOutputHz(); }
+    float getDetectedHz() const noexcept { return engines[0].getDetectedHz(); }
+    float getOutputHz() const noexcept   { return engines[0].getOutputHz(); }
+
+    // Tonalidad de lo que ha sonado (raíz 0-11, escala 1 mayor / 2 menor). false si no hay datos
+    bool detectKey (int& root, int& scale);
     int getHeldMidiNote() const noexcept { return heldNote.load(); }
-    float getFormantEnvelope (float* dest) const noexcept { return engine.getDisplayEnvelope (dest); }
+    float getFormantEnvelope (float* dest) const noexcept { return engines[0].getDisplayEnvelope (dest); }
     static constexpr int kFormantPoints = alterivo::PitchEngine::kEnvPoints;
 
     // Tamaño de la ventana (se guarda con la sesión)
@@ -63,7 +66,7 @@ private:
     void noteOn (int note);
     void noteOff (int note);
 
-    alterivo::PitchEngine engine;
+    std::array<alterivo::PitchEngine, 2> engines;
     alterivo::TubeDrive drive;
     std::array<alterivo::DcBlocker, 2> dcBlockers;
     std::unique_ptr<juce::dsp::Oversampling<float>> oversampler;
@@ -104,6 +107,18 @@ private:
     std::atomic<float>* pMix     = nullptr;
     std::atomic<float>* pMode    = nullptr;
     std::atomic<float>* pLink    = nullptr;
+    std::atomic<float>* pKey     = nullptr;
+    std::atomic<float>* pScale   = nullptr;
+    std::atomic<float>* pSource  = nullptr;
+
+    // Nivel igualado
+    float levelCoef = 0.0f, levelIn = 0.0f, levelOut = 0.0f;
+    juce::SmoothedValue<float> levelGain;
+    double sr = 48000.0;
+
+    // Detección de tonalidad
+    juce::SpinLock pitchClassLock;
+    std::array<float, 12> pitchClasses {};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AlterIvoProcessor)
 };

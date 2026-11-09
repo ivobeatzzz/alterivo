@@ -67,6 +67,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout AlterIvoProcessor::createLay
 
     params.push_back (std::make_unique<AudioParameterBool> (ParameterID { "link", 1 }, "Link", false));
 
+    // Tonalidad para Quantize y fuente (voz o mezcla)
+    params.push_back (std::make_unique<AudioParameterChoice> (
+        ParameterID { "key", 2 }, "Key", StringArray { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" }, 0));
+    params.push_back (std::make_unique<AudioParameterChoice> (
+        ParameterID { "scale", 2 }, "Scale", StringArray { "Chromatic", "Major", "Minor" }, 0));
+    params.push_back (std::make_unique<AudioParameterChoice> (
+        ParameterID { "source", 2 }, "Source", StringArray { "Voice", "Mix" }, 0));
+
     return { params.begin(), params.end() };
 }
 
@@ -82,6 +90,9 @@ AlterIvoProcessor::AlterIvoProcessor()
     pMix     = apvts.getRawParameterValue ("mix");
     pMode    = apvts.getRawParameterValue ("mode");
     pLink    = apvts.getRawParameterValue ("link");
+    pKey     = apvts.getRawParameterValue ("key");
+    pScale   = apvts.getRawParameterValue ("scale");
+    pSource  = apvts.getRawParameterValue ("source");
 }
 
 bool AlterIvoProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -97,8 +108,16 @@ void AlterIvoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     maxBlock = juce::jmax (32, samplesPerBlock);
     const int numCh = juce::jlimit (1, 2, getTotalNumOutputChannels());
 
-    engine.prepare (sampleRate);
-    const int engineLatency = engine.getLatencySamples();
+    for (auto& e : engines)
+        e.prepare (sampleRate);
+    const int engineLatency = engines[0].getLatencySamples();
+
+    // Nivel igualado: la salida procesada suena tan fuerte como la entrada
+    levelCoef = (float) (1.0 - std::exp (-1.0 / (0.4 * sampleRate)));
+    levelIn = levelOut = 0.0f;
+    levelGain.reset (sampleRate, 0.05);
+    levelGain.setCurrentAndTargetValue (1.0f);
+    sr = sampleRate;
 
     // 4x de sobremuestreo para la saturación (latencia entera para alinear el resto)
     oversampler = std::make_unique<juce::dsp::Oversampling<float>> (
@@ -183,11 +202,19 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
 
     handleMidi (midi);
 
-    engine.setPitchSemitones (pPitch->load());
-    engine.setFormantSemitones (pFormant->load());
     const auto engineMode = static_cast<alterivo::Mode> (juce::jlimit (0, 2, (int) std::lround (pMode->load())));
-    engine.setMode (engineMode);
-    engine.setMidiNote (heldNote.load());
+    const int keyRoot = juce::jlimit (0, 11, (int) std::lround (pKey->load()));
+    const auto scale = static_cast<alterivo::Scale> (juce::jlimit (0, 2, (int) std::lround (pScale->load())));
+    const bool voiceSource = pSource->load() < 0.5f;
+    for (auto& e : engines)
+    {
+        e.setPitchSemitones (pPitch->load());
+        e.setFormantSemitones (pFormant->load());
+        e.setMode (engineMode);
+        e.setMidiNote (heldNote.load());
+        e.setScale (keyRoot, scale);
+        e.setVoiceSource (voiceSource);
+    }
 
     const float driveAmount = pDrive->load() / 100.0f;
     drive.setAmount (driveAmount);
@@ -215,6 +242,21 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     for (int ch = 0; ch < juce::jmin (numOut, buffer.getNumChannels()); ++ch)
         pout = juce::jmax (pout, buffer.getMagnitude (ch, 0, total));
 
+    // Notas cantadas para detectar la tonalidad (se olvida poco a poco, ~1 minuto)
+    {
+        const float hz = engines[0].getDetectedHz();
+        const float decay = std::exp (-(float) total / (float) (60.0 * sr));
+        const juce::SpinLock::ScopedLockType lock (pitchClassLock);
+        for (auto& v : pitchClasses) v *= decay;
+        if (hz > 50.0f && pin > 0.003f)
+        {
+            const float note = 69.0f + 12.0f * std::log2 (hz / 440.0f);
+            const int n = (int) std::lround (note);
+            if (std::abs (note - (float) n) < 0.35f)   // notas estables, no los glissandos
+                pitchClasses[(size_t) (((n % 12) + 12) % 12)] += (float) total / (float) sr;
+        }
+    }
+
     if (pin > inPeak.load (std::memory_order_relaxed))   inPeak.store (pin, std::memory_order_relaxed);
     if (pout > outPeak.load (std::memory_order_relaxed)) outPeak.store (pout, std::memory_order_relaxed);
 }
@@ -226,21 +268,37 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
     if (numCh <= 0)
         return;
 
-    // 1) Pitch / formantes (mono, como el original) mezclado con la entrada intacta
-    const float inScale = 1.0f / (float) numIn;
+    // 1) Pitch / formantes: cada canal con su motor (el estéreo se respeta),
+    //    con el mismo nivel que la entrada, mezclado con la entrada intacta
+    const int engineCh = juce::jmin (numIn, (int) engines.size());
     for (int i = 0; i < len; ++i)
     {
-        float mono = 0.0f;
-        for (int ch = 0; ch < numIn; ++ch)
-            mono += buffer.getSample (ch, start + i);
+        float processed[2] {}, intact[2] {};
+        float eIn = 0.0f, eOut = 0.0f;
+        for (int ch = 0; ch < engineCh; ++ch)
+        {
+            const float x = buffer.getSample (ch, start + i);
+            processed[ch] = engines[(size_t) ch].process (x);
+            intact[ch] = dryToEngine[(size_t) ch].process (x);
+            eIn += intact[ch] * intact[ch];
+            eOut += processed[ch] * processed[ch];
+        }
 
-        const float processed = engine.process (mono * inScale);
+        // Nivel igualado (lento, sólo cuando hay señal)
+        levelIn  += levelCoef * (eIn - levelIn);
+        levelOut += levelCoef * (eOut - levelOut);
+        if ((i & 63) == 0)
+        {
+            if (levelIn > 1.0e-7f && levelOut > 1.0e-9f)
+                levelGain.setTargetValue (juce::jlimit (0.5f, 2.0f, std::sqrt (levelIn / levelOut)));
+        }
+        const float lg = levelGain.getNextValue();
         const float g = engineGain.getNextValue();
 
         for (int ch = 0; ch < numCh; ++ch)
         {
-            const float intact = dryToEngine[(size_t) ch].process (buffer.getSample (juce::jmin (ch, numIn - 1), start + i));
-            wetBuffer.setSample (ch, i, intact + g * (processed - intact));
+            const int src = juce::jmin (ch, engineCh - 1);
+            wetBuffer.setSample (ch, i, intact[src] + g * (processed[src] * lg - intact[src]));
         }
     }
 
@@ -291,6 +349,45 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
             buffer.setSample (ch, start + i, dry + mix * (wet - dry));
         }
     }
+}
+
+// ------------------------------------------------------------- tonalidad
+bool AlterIvoProcessor::detectKey (int& root, int& scale)
+{
+    std::array<float, 12> h {};
+    {
+        const juce::SpinLock::ScopedLockType lock (pitchClassLock);
+        h = pitchClasses;
+    }
+    float sum = 0.0f;
+    for (auto v : h) sum += v;
+    if (sum < 1.5f)            // hace falta algo de voz cantada (segundos)
+        return false;
+
+    static const float major[12] = { 6.35f, 2.23f, 3.48f, 2.33f, 4.38f, 4.09f, 2.52f, 5.19f, 2.39f, 3.66f, 2.29f, 2.88f };
+    static const float minor[12] = { 6.33f, 2.68f, 3.52f, 5.38f, 2.60f, 3.53f, 2.54f, 4.75f, 3.98f, 2.69f, 3.34f, 3.17f };
+    auto corr = [&] (const float* prof, int r)
+    {
+        float mx = 0, mp = 0;
+        for (int i = 0; i < 12; ++i) { mx += h[(size_t) ((i + r) % 12)]; mp += prof[i]; }
+        mx /= 12.0f; mp /= 12.0f;
+        float num = 0, dx = 0, dp = 0;
+        for (int i = 0; i < 12; ++i)
+        {
+            const float a = h[(size_t) ((i + r) % 12)] - mx, b = prof[i] - mp;
+            num += a * b; dx += a * a; dp += b * b;
+        }
+        return dx > 0 && dp > 0 ? num / std::sqrt (dx * dp) : -1.0f;
+    };
+
+    float best = -2.0f;
+    for (int r = 0; r < 12; ++r)
+    {
+        const float cM = corr (major, r), cm = corr (minor, r);
+        if (cM > best) { best = cM; root = r; scale = 1; }
+        if (cm > best) { best = cm; root = r; scale = 2; }
+    }
+    return true;
 }
 
 // --------------------------------------------------------------- presets

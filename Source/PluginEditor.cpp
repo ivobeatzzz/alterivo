@@ -50,6 +50,8 @@ const juce::Rectangle<int> kLink     { 350, 360, 60, 28 };
 const juce::Rectangle<int> kInMeter  { 236, 404, 288, 20 };
 const juce::Rectangle<int> kOutMeter { 236, 430, 288, 20 };
 const juce::Rectangle<int> kPresets  { 270, 482, 220, 36 };
+const juce::Rectangle<int> kKey      { kW - 36 - 150, 32, 150, 32 };
+const juce::Rectangle<int> kSource   { kW - 36 - 200, 68, 200, 18 };
 
 juce::Rectangle<int> box (juce::Point<int> c, int size) { return { c.x - size / 2, c.y - size / 2, size, size }; }
 juce::Rectangle<int> centredRect (int cx, int y, int w, int h) { return { cx - w / 2, y, w, h }; }
@@ -176,53 +178,81 @@ void AlterIvoLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int
 }
 
 // =========================================================== ModeSelector
-ModeSelector::ModeSelector() { setMouseCursor (juce::MouseCursor::PointingHandCursor); }
+ModeSelector::ModeSelector (juce::StringArray n, float size, bool dotBeside)
+    : names (std::move (n)), fontSize (size), inlineDot (dotBeside)
+{
+    setMouseCursor (juce::MouseCursor::PointingHandCursor);
+}
 
 void ModeSelector::setSelected (int index)
 {
     if (index != selected) { selected = index; repaint(); }
 }
 
-static const char* kModeNames[3] = { "TRANSPOSE", "QUANTIZE", "ROBOT" };
-
-// Cada palabra con su ancho real y el mismo espacio entre ellas, todo centrado
-std::array<juce::Rectangle<float>, 3> ModeSelector::segments() const
+// Cada palabra con su ancho real y el mismo espacio entre ellas
+std::vector<juce::Rectangle<float>> ModeSelector::segments() const
 {
-    const auto f = font (*fonts, Face::manropeX, 10.0f, 0.22f);
-    std::array<float, 3> w {};
+    const auto f = font (*fonts, Face::manropeX, fontSize, 0.22f);
+    const float pad = fontSize * 1.7f;
+    std::vector<float> w;
     float total = 0.0f;
-    for (int i = 0; i < 3; ++i) { w[(size_t) i] = textWidth (f, kModeNames[i]) + 34.0f; total += w[(size_t) i]; }
-    std::array<juce::Rectangle<float>, 3> r;
-    float x = ((float) getWidth() - total) * 0.5f;
-    for (int i = 0; i < 3; ++i) { r[(size_t) i] = { x, 0.0f, w[(size_t) i], (float) getHeight() }; x += w[(size_t) i]; }
+    for (auto& n : names) { w.push_back (inlineDot ? 14.0f + textWidth (f, n) + 16.0f : textWidth (f, n) + pad * 2.0f); total += w.back(); }
+    if (inlineDot) total -= 16.0f;
+    std::vector<juce::Rectangle<float>> r;
+    float x = inlineDot ? (float) getWidth() - total : ((float) getWidth() - total) * 0.5f;
+    for (auto wi : w) { r.push_back ({ x, 0.0f, wi, (float) getHeight() }); x += wi; }
     return r;
 }
 
 int ModeSelector::indexAt (float x) const
 {
     const auto r = segments();
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < (int) r.size(); ++i)
         if (x >= r[(size_t) i].getX() && x < r[(size_t) i].getRight()) return i;
     return -1;
 }
 
 void ModeSelector::paint (juce::Graphics& g)
 {
-    // Tres palabras; la activa en tinta con el punto lima del logo debajo
+    // La palabra activa en tinta con el punto lima del logo debajo
     const auto segs = segments();
-    g.setFont (font (*fonts, Face::manropeX, 10.0f, 0.22f));
-    for (int i = 0; i < 3; ++i)
+    g.setFont (font (*fonts, Face::manropeX, fontSize, 0.22f));
+    const float textH = fontSize * 1.6f, dotY = 6.0f + textH + 8.0f;
+    if (inlineDot)
     {
-        const auto seg = segs[(size_t) i].withY (6.0f).withHeight (16.0f);
+        for (int i = 0; i < (int) segs.size(); ++i)
+        {
+            const auto seg = segs[(size_t) i];
+            const float cy = seg.getCentreY();
+            g.setColour (i == selected ? theme::ink : (i == hover ? theme::textDim : theme::arrows));
+            g.drawText (names[i], seg.withTrimmedLeft (14.0f), juce::Justification::centredLeft, false);
+            if (i == selected)
+            {
+                g.setColour (theme::limeBright.withAlpha (0.3f));
+                g.fillEllipse (seg.getX() + 3.5f - 5.0f, cy - 5.0f, 10.0f, 10.0f);
+                g.setColour (theme::limeLine);
+                g.fillEllipse (seg.getX() + 3.5f - 2.5f, cy - 2.5f, 5.0f, 5.0f);
+            }
+            else
+            {
+                g.setColour (theme::track);
+                g.fillEllipse (seg.getX() + 3.5f - 2.5f, cy - 2.5f, 5.0f, 5.0f);
+            }
+        }
+        return;
+    }
+    for (int i = 0; i < (int) segs.size(); ++i)
+    {
+        const auto seg = segs[(size_t) i].withY (6.0f).withHeight (textH);
         g.setColour (i == selected ? theme::ink : (i == hover ? theme::textDim : theme::arrows));
-        g.drawText (kModeNames[i], seg.translated (0.11f * 10.0f, 0.0f), juce::Justification::centred, false);
+        g.drawText (names[i], seg.translated (0.11f * fontSize, 0.0f), juce::Justification::centred, false);
         if (i == selected)
         {
-            const float cx = seg.getCentreX(), cy = 30.0f;
+            const float cx = seg.getCentreX();
             g.setColour (theme::limeBright.withAlpha (0.25f));
-            g.fillEllipse (cx - 6.0f, cy - 6.0f, 12.0f, 12.0f);
+            g.fillEllipse (cx - 6.0f, dotY - 6.0f, 12.0f, 12.0f);
             g.setColour (theme::limeLine);
-            g.fillEllipse (cx - 3.0f, cy - 3.0f, 6.0f, 6.0f);
+            g.fillEllipse (cx - 3.0f, dotY - 3.0f, 6.0f, 6.0f);
         }
     }
 }
@@ -490,6 +520,41 @@ void LevelMeter::paint (juce::Graphics& g)
     }
 }
 
+// ================================================================= KeyBox
+KeyBox::KeyBox()
+{
+    setMouseCursor (juce::MouseCursor::PointingHandCursor);
+}
+
+void KeyBox::setText (const juce::String& t, bool isActive)
+{
+    if (t != text || isActive != active) { text = t; active = isActive; repaint(); }
+}
+
+void KeyBox::paint (juce::Graphics& g)
+{
+    const auto r = getLocalBounds().toFloat();
+    g.setColour (theme::surface);
+    g.fillRoundedRectangle (r, r.getHeight() * 0.5f);
+
+    g.setFont (font (*fonts, Face::manropeX, 8.5f, 0.2f));
+    g.setColour (theme::textFaint);
+    g.drawText ("KEY", juce::Rectangle<float> (16.0f, 0.0f, 40.0f, r.getHeight()), juce::Justification::centredLeft, false);
+
+    g.setFont (font (*fonts, Face::manropeX, 10.0f, 0.12f));
+    g.setColour (active ? theme::ink : theme::textDim);
+    g.drawText (text, juce::Rectangle<float> (46.0f, 0.0f, r.getWidth() - 46.0f - 26.0f, r.getHeight()), juce::Justification::centredLeft, false);
+
+    // Flecha del menú
+    juce::Path p;
+    const float cx = r.getRight() - 17.0f, cy = r.getCentreY();
+    p.startNewSubPath (cx - 3.5f, cy - 1.8f);
+    p.lineTo (cx, cy + 1.8f);
+    p.lineTo (cx + 3.5f, cy - 1.8f);
+    g.setColour (theme::arrows);
+    g.strokePath (p, juce::PathStrokeType (1.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+}
+
 // ============================================================== PresetBox
 PresetBox::PresetBox() { setMouseCursor (juce::MouseCursor::PointingHandCursor); }
 
@@ -573,6 +638,12 @@ AlterIvoView::AlterIvoView (AlterIvoProcessor& p) : proc (p)
     modeSelector.onChange = [this] (int i) { setMode (i); };
     addAndMakeVisible (modeSelector);
 
+    sourceSelector.onChange = [this] (int i) { setChoice ("source", i); timerCallback(); };
+    addAndMakeVisible (sourceSelector);
+
+    keyBox.onClick = [this] { showKeyMenu(); };
+    addAndMakeVisible (keyBox);
+
     linkButton.onStateChange = [this] { repaint (260, 364, 240, 20); };
     addAndMakeVisible (linkButton);
     linkAtt = std::make_unique<ButtonAttachment> (proc.apvts, "link", linkButton);
@@ -638,6 +709,64 @@ void AlterIvoView::setMode (int index)
     timerCallback();
 }
 
+void AlterIvoView::setChoice (const char* id, int index)
+{
+    if (auto* param = dynamic_cast<juce::AudioParameterChoice*> (proc.apvts.getParameter (id)))
+    {
+        param->beginChangeGesture();
+        *param = index;
+        param->endChangeGesture();
+    }
+}
+
+static const char* kRoots[12] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
+
+void AlterIvoView::updateKeyText()
+{
+    if (keyMessageFrames > 0)
+        return;
+    const int root = (int) std::lround (proc.apvts.getRawParameterValue ("key")->load());
+    const int scale = (int) std::lround (proc.apvts.getRawParameterValue ("scale")->load());
+    keyBox.setText (scale == 0 ? juce::String ("CHROMATIC") : juce::String (kRoots[root]) + (scale == 1 ? " MAJOR" : " MINOR"), scale != 0);
+}
+
+void AlterIvoView::showKeyMenu()
+{
+    const int root = (int) std::lround (proc.apvts.getRawParameterValue ("key")->load());
+    const int scale = (int) std::lround (proc.apvts.getRawParameterValue ("scale")->load());
+
+    juce::PopupMenu major, minor, menu;
+    for (int r = 0; r < 12; ++r)
+    {
+        major.addItem (100 + r, juce::String (kRoots[r]) + " major", true, scale == 1 && root == r);
+        minor.addItem (200 + r, juce::String (kRoots[r]) + " minor", true, scale == 2 && root == r);
+    }
+    menu.setLookAndFeel (&lnf);
+    menu.addItem (1, juce::String (juce::CharPointer_UTF8 ("Detectar tonalidad (de lo que ha sonado)")));
+    menu.addSeparator();
+    menu.addItem (2, "Chromatic (todas las notas)", true, scale == 0);
+    menu.addSubMenu ("Major", major, true, nullptr, scale == 1);
+    menu.addSubMenu ("Minor", minor, true, nullptr, scale == 2);
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&keyBox),
+                        [safe = juce::Component::SafePointer<AlterIvoView> (this)] (int result)
+                        {
+                            if (safe == nullptr || result <= 0) return;
+                            auto& v = *safe;
+                            if (result == 1)
+                            {
+                                int r = 0, sc = 0;
+                                if (v.proc.detectKey (r, sc)) { v.setChoice ("key", r); v.setChoice ("scale", sc); }
+                                else { v.keyBox.setText ("PLAY THE CLIP", false); v.keyMessageFrames = 75; }
+                            }
+                            else if (result == 2) v.setChoice ("scale", 0);
+                            else if (result >= 200) { v.setChoice ("key", result - 200); v.setChoice ("scale", 2); }
+                            else if (result >= 100) { v.setChoice ("key", result - 100); v.setChoice ("scale", 1); }
+                            v.shownKey = -1;
+                            v.timerCallback();
+                        });
+}
+
 void AlterIvoView::loadPreset (int index)
 {
     proc.setCurrentProgram (index);
@@ -670,6 +799,14 @@ void AlterIvoView::timerCallback()
         currentMode = mode;
         modeSelector.setSelected (mode);
     }
+
+    const int src = (int) std::lround (proc.apvts.getRawParameterValue ("source")->load());
+    if (src != shownSource) { shownSource = src; sourceSelector.setSelected (src); }
+
+    const int keyState = (int) std::lround (proc.apvts.getRawParameterValue ("key")->load()) * 4
+                       + (int) std::lround (proc.apvts.getRawParameterValue ("scale")->load());
+    if (keyMessageFrames > 0 && --keyMessageFrames == 0) shownKey = -1;
+    if (keyState != shownKey) { shownKey = keyState; updateKeyText(); }
 
     if (proc.getCurrentProgram() != shownPreset)
     {
@@ -757,6 +894,7 @@ void AlterIvoView::paintBackground (juce::Graphics& g)
 
     // Sombras de las piezas blancas
     softShadow (g, roundRect (kPresets.toFloat(), 18.0f), 0.10f, 18, 6);
+    softShadow (g, roundRect (kKey.toFloat(), 16.0f), 0.10f, 16, 5);
     softShadow (g, roundRect (kLink.toFloat(), 14.0f), 0.14f, 12, 5);
     for (auto c : { kPitchC, kFormantC })
         softShadow (g, circle (c.toFloat(), kBigR), 0.20f, 30, 16);
@@ -795,6 +933,8 @@ void AlterIvoView::resized()
     drive.setBounds (box (kDriveC, kSmallBox));
     mix.setBounds (box (kMixC, kSmallBox));
     modeSelector.setBounds (kModes);
+    sourceSelector.setBounds (kSource);
+    keyBox.setBounds (kKey);
     linkButton.setBounds (kLink);
     display.setBounds (kCard);
     inMeter.setBounds (kInMeter);

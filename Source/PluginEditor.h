@@ -30,11 +30,13 @@ private:
     juce::SharedResourcePointer<BrandFonts> fonts;
 };
 
-// Selector de modo segmentado (Transpose / Quantize / Robot)
+// Selector de palabras con el punto lima bajo la activa (modo, fuente)
 class ModeSelector : public juce::Component
 {
 public:
-    ModeSelector();
+    // inlineDot: punto a la izquierda de la palabra y todo alineado a la derecha
+    explicit ModeSelector (juce::StringArray names = { "TRANSPOSE", "QUANTIZE", "ROBOT" },
+                           float fontSize = 10.0f, bool inlineDot = false);
     void setSelected (int index);
     std::function<void (int)> onChange;
     void paint (juce::Graphics&) override;
@@ -43,8 +45,11 @@ public:
     void mouseExit (const juce::MouseEvent&) override;
 
 private:
-    std::array<juce::Rectangle<float>, 3> segments() const;
+    std::vector<juce::Rectangle<float>> segments() const;
     int indexAt (float x) const;
+    juce::StringArray names;
+    float fontSize = 10.0f;
+    bool inlineDot = false;
     int selected = 0, hover = -1;
     juce::SharedResourcePointer<BrandFonts> fonts;
 };
@@ -91,6 +96,22 @@ private:
     juce::SharedResourcePointer<BrandFonts> fonts;
 };
 
+// Tonalidad para Quantize: píldora que abre la lista (con detección automática)
+class KeyBox : public juce::Component
+{
+public:
+    KeyBox();
+    void setText (const juce::String& t, bool active);
+    std::function<void()> onClick;
+    void paint (juce::Graphics&) override;
+    void mouseDown (const juce::MouseEvent&) override { if (onClick) onClick(); }
+
+private:
+    juce::String text;
+    bool active = false;
+    juce::SharedResourcePointer<BrandFonts> fonts;
+};
+
 // Preset: nombre (abre la lista) y flechas anterior/siguiente
 class PresetBox : public juce::Component
 {
@@ -123,6 +144,9 @@ private:
     void linkedMove (juce::Slider& moved, juce::Slider& other, double& lastMoved, double& lastOther);
     void loadPreset (int index);
     void showPresetMenu();
+    void showKeyMenu();
+    void setChoice (const char* id, int index);
+    void updateKeyText();
     void paintBackground (juce::Graphics&);
 
     AlterIvoProcessor& proc;
@@ -131,6 +155,8 @@ private:
 
     juce::Slider pitch, formant, drive, mix;
     ModeSelector modeSelector;
+    ModeSelector sourceSelector { { "VOICE", "MIX" }, 9.0f, true };
+    KeyBox keyBox;
     LinkButton linkButton;
     VoiceDisplay display;
     LevelMeter inMeter { "IN" }, outMeter { "OUT" };
@@ -146,7 +172,8 @@ private:
 
     double lastPitch = 0.0, lastFormant = 0.0;
     bool linking = false;
-    int currentMode = -1, shownPreset = -1;
+    int currentMode = -1, shownPreset = -1, shownSource = -1, shownKey = -1;
+    int keyMessageFrames = 0;
     std::array<float, AlterIvoProcessor::kFormantPoints> envBuf {};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AlterIvoView)
