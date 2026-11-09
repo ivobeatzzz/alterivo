@@ -47,6 +47,15 @@ target_sources(AlterIvo PRIVATE
 
 target_include_directories(AlterIvo PRIVATE Source)
 
+# Fuentes de la marca (Sora y Manrope, licencia OFL) incrustadas en el plugin
+juce_add_binary_data(AlterIvoFonts SOURCES
+    fonts/Sora-Light.ttf
+    fonts/Sora-SemiBold.ttf
+    fonts/Sora-Bold.ttf
+    fonts/Manrope-Bold.ttf
+    fonts/Manrope-ExtraBold.ttf)
+set_target_properties(AlterIvoFonts PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
 # Los nombres de presets llevan tildes: compilar el código como UTF-8 en Windows
 if(MSVC)
     target_compile_options(AlterIvo PRIVATE /utf-8)
@@ -59,6 +68,7 @@ target_compile_definitions(AlterIvo PUBLIC
 
 target_link_libraries(AlterIvo
     PRIVATE
+        AlterIvoFonts
         juce::juce_audio_utils
         juce::juce_dsp
     PUBLIC

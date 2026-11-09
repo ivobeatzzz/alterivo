@@ -10,6 +10,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cmath>
 #include <complex>
@@ -117,6 +118,10 @@ public:
         curPeaks.reserve ((size_t) half);
 
         lifter = std::max (8, (int) std::lround (sr / 1000.0));
+        envEvery = std::max (1, (int) std::lround (sr / H / 30.0));   // pantalla: ~30 envolventes por segundo
+        envCount = 0;
+        for (auto& v : dispEnv) v.store (-200.0f, std::memory_order_relaxed);
+        dispLevel.store (-200.0f, std::memory_order_relaxed);
 
         // Detección de tono (YIN sobre la trama diezmada)
         decim   = std::max (1, (int) std::round (sr / 24000.0));
@@ -170,6 +175,16 @@ public:
 
     float getDetectedHz() const noexcept { return detectedHz.load (std::memory_order_relaxed); }
     float getOutputHz() const noexcept   { return outputHz.load (std::memory_order_relaxed); }
+
+    // Envolvente de formantes de la entrada para la pantalla: kEnvPoints valores en dB,
+    // frecuencias en escala logarítmica de kEnvLoHz a kEnvHiHz. Devuelve el nivel aproximado (dBFS).
+    static constexpr int kEnvPoints = 64;
+    static constexpr float kEnvLoHz = 150.0f, kEnvHiHz = 6000.0f;
+    float getDisplayEnvelope (float* dest) const noexcept
+    {
+        for (int i = 0; i < kEnvPoints; ++i) dest[i] = dispEnv[(size_t) i].load (std::memory_order_relaxed);
+        return dispLevel.load (std::memory_order_relaxed);
+    }
 
     // ---- Procesado muestra a muestra (mono)
     float process (float x) noexcept
@@ -232,6 +247,12 @@ private:
             const float dphi = princarg (phase[(size_t) k] - prevPhase[(size_t) k] - expect * (float) k);
             omega[(size_t) k] = (float) (2.0 * kPi * k / N) + dphi / (float) H;   // rad/muestra
             prevPhase[(size_t) k] = phase[(size_t) k];
+        }
+
+        if (++envCount >= envEvery)
+        {
+            envCount = 0;
+            publishEnvelope();
         }
 
         const bool identity = std::abs (ratio - 1.0) < 1.0e-4 && std::abs (formant - 1.0) < 1.0e-4;
@@ -392,6 +413,28 @@ private:
             logEnv[(size_t) k] = cep[(size_t) k].real();
     }
 
+    void publishEnvelope() noexcept
+    {
+        computeEnvelope();
+        constexpr float toDb = 8.685889638f;              // 20 / ln(10)
+        const float ref = 20.0f * std::log10 ((float) N * 0.25f);   // seno a 0 dBFS con ventana Hann
+        const float binPerHz = (float) N / (float) sr;
+        float peak = -200.0f;
+        for (int i = 0; i < kEnvPoints; ++i)
+        {
+            // Media en ±1/12 de octava (quita el rizado del cepstrum) y +4.5 dB/oct
+            // de inclinación para que los formantes agudos se vean igual que los graves
+            const float hz = kEnvLoHz * std::pow (kEnvHiHz / kEnvLoHz, (float) i / (float) (kEnvPoints - 1));
+            float sum = 0.0f;
+            for (int k = -2; k <= 2; ++k)
+                sum += envAt (hz * std::pow (2.0f, (float) k / 24.0f) * binPerHz);
+            const float db = toDb * sum / 5.0f - ref;
+            dispEnv[(size_t) i].store (db + 4.5f * std::log2 (hz / 1000.0f), std::memory_order_relaxed);
+            peak = std::max (peak, db);
+        }
+        dispLevel.store (peak, std::memory_order_relaxed);
+    }
+
     float envAt (float bin) const noexcept
     {
         if (bin <= 0.0f) return logEnv[0];
@@ -511,6 +554,10 @@ private:
     int midiNote = -1;
 
     std::atomic<float> detectedHz { 0.0f }, outputHz { 0.0f };
+
+    int envEvery = 6, envCount = 0;
+    std::array<std::atomic<float>, kEnvPoints> dispEnv {};
+    std::atomic<float> dispLevel { -200.0f };
 };
 
 } // namespace alterivo

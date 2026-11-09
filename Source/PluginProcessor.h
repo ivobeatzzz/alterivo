@@ -47,6 +47,11 @@ public:
     float getDetectedHz() const noexcept { return engine.getDetectedHz(); }
     float getOutputHz() const noexcept   { return engine.getOutputHz(); }
     int getHeldMidiNote() const noexcept { return heldNote.load(); }
+    float getFormantEnvelope (float* dest) const noexcept { return engine.getDisplayEnvelope (dest); }
+    static constexpr int kFormantPoints = alterivo::PitchEngine::kEnvPoints;
+
+    // Tamaño de la ventana (se guarda con la sesión)
+    std::atomic<float> uiScale { 1.0f };
 
     // Medidores: pico desde la última lectura (lineal)
     float takeInputPeak() noexcept  { return inPeak.exchange (0.0f); }

@@ -330,7 +330,9 @@ void AlterIvoProcessor::setCurrentProgram (int index)
 // ---------------------------------------------------------------- estado
 void AlterIvoProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    if (auto xml = apvts.copyState().createXml())
+    auto state = apvts.copyState();
+    state.setProperty ("uiScale", uiScale.load(), nullptr);
+    if (auto xml = state.createXml())
         copyXmlToBinary (*xml, destData);
 }
 
@@ -341,6 +343,7 @@ void AlterIvoProcessor::setStateInformation (const void* data, int sizeInBytes)
         {
             apvts.replaceState (juce::ValueTree::fromXml (*xml));
             currentPreset = juce::jlimit (0, kNumPresets - 1, (int) apvts.state.getProperty ("preset", 0));
+            uiScale = juce::jlimit (0.75f, 2.0f, (float) apvts.state.getProperty ("uiScale", 1.0f));
         }
 }
 
