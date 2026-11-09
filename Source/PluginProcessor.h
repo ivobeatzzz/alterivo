@@ -59,12 +59,28 @@ private:
     std::array<alterivo::DcBlocker, 2> dcBlockers;
     std::unique_ptr<juce::dsp::Oversampling<float>> oversampler;
 
-    juce::AudioBuffer<float> wetBuffer;
-    juce::AudioBuffer<float> dryDelay;
-    int dryWrite = 0, dryLen = 1;
+    // Retardo simple (n muestras; n = 0 deja pasar)
+    struct DelayLine
+    {
+        std::vector<float> buf;
+        size_t pos = 0;
+        void setSize (int n) { buf.assign ((size_t) juce::jmax (0, n), 0.0f); pos = 0; }
+        float process (float x) noexcept
+        {
+            if (buf.empty()) return x;
+            const float y = buf[pos];
+            buf[pos] = x;
+            if (++pos >= buf.size()) pos = 0;
+            return y;
+        }
+    };
+
+    juce::AudioBuffer<float> wetBuffer, cleanBuffer;
+    std::array<DelayLine, 2> dryToEngine, cleanToDrive, dryTotal;
+    bool oversamplerActive = false;
     int maxBlock = 512;
 
-    juce::SmoothedValue<float> mixSmoothed;
+    juce::SmoothedValue<float> mixSmoothed, engineGain, driveGain;
 
     std::array<int, 128> noteStack {};
     int noteCount = 0;

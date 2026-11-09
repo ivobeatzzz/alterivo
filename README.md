@@ -13,7 +13,7 @@ Manipulador de voz (pitch, formantes, hard-tune y robot) en VST3 para **Mac y Wi
 | **PRESETS** | 15 presets de fábrica (Hard Tune, armonías, octavas, robot, ardilla, gigante…), con flechas y menú en la barra de abajo. |
 | **MIDI** | Con una nota pulsada: en Transpose/Quantize marca el intervalo respecto a C3; en Robot es la nota de salida. |
 
-El nivel de salida se compensa solo: al subir o bajar el tono, o mover los formantes, la voz mantiene el mismo volumen.
+Con Pitch y Formant a 0 (y Drive a 0) el plugin deja pasar la voz exactamente igual, en estéreo: puedes tenerlo cargado sin que cambie el sonido. El motor de cambio de tono es un phase vocoder con bloqueo de fase y corrección de formantes por envolvente espectral.
 
 ---
 
@@ -67,7 +67,7 @@ La primera vez se descarga JUCE (unos 200 MB). Si falla con errores dentro de JU
 
 - Activa **Configuración → Plug-Ins → Use VST3 Plug-In System Folders** (y en Mac también *Use Audio Units*) y pulsa **Rescan**. Aparece como **IVO Beatz → alterIVO**.
 - **Para controlarlo por MIDI:** crea una pista MIDI y, en *MIDI To*, elige la pista de la voz y luego **alterIVO**. Pon el monitor de la pista MIDI en *In*.
-- **Latencia:** unos 43 ms. Ableton la compensa sola en la mezcla.
+- **Latencia:** unos 43 ms (2048 muestras a 48 kHz). Ableton la compensa sola en la mezcla.
 
 ## Personalizar
 

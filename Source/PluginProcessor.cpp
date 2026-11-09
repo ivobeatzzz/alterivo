@@ -98,28 +98,37 @@ void AlterIvoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     const int numCh = juce::jlimit (1, 2, getTotalNumOutputChannels());
 
     engine.prepare (sampleRate);
+    const int engineLatency = engine.getLatencySamples();
 
-    // 4x de sobremuestreo para la saturación (latencia entera para alinear el seco)
+    // 4x de sobremuestreo para la saturación (latencia entera para alinear el resto)
     oversampler = std::make_unique<juce::dsp::Oversampling<float>> (
         (size_t) numCh, 2, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR, true, true);
     oversampler->initProcessing ((size_t) maxBlock);
     oversampler->reset();
+    oversamplerActive = false;
 
     const int osLatency = (int) std::lround (oversampler->getLatencyInSamples());
-    const int totalLatency = engine.getLatencySamples() + osLatency;
-    setLatencySamples (totalLatency);
+    setLatencySamples (engineLatency + osLatency);
 
     wetBuffer.setSize (numCh, maxBlock, false, true, true);
-    dryLen = juce::jmax (1, totalLatency);
-    dryDelay.setSize (numCh, dryLen, false, true, true);
-    dryDelay.clear();
-    dryWrite = 0;
+    cleanBuffer.setSize (numCh, maxBlock, false, true, true);
+
+    for (int ch = 0; ch < 2; ++ch)
+    {
+        dryToEngine[(size_t) ch].setSize (engineLatency);
+        cleanToDrive[(size_t) ch].setSize (osLatency);
+        dryTotal[(size_t) ch].setSize (engineLatency + osLatency);
+    }
 
     for (auto& dc : dcBlockers)
         dc.prepare (sampleRate);
 
     mixSmoothed.reset (sampleRate, 0.05);
     mixSmoothed.setCurrentAndTargetValue (pMix->load() / 100.0f);
+    engineGain.reset (sampleRate, 0.03);
+    engineGain.setCurrentAndTargetValue (0.0f);
+    driveGain.reset (sampleRate, 0.03);
+    driveGain.setCurrentAndTargetValue (0.0f);
 
     noteCount = 0;
     heldNote.store (-1);
@@ -177,11 +186,21 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     engine.setPitchSemitones (pPitch->load());
     engine.setFormantSemitones (pFormant->load());
     engine.setLink (pLink->load() > 0.5f);
-    engine.setMode (static_cast<alterivo::Mode> (juce::jlimit (0, 2, (int) std::lround (pMode->load()))));
+    const auto engineMode = static_cast<alterivo::Mode> (juce::jlimit (0, 2, (int) std::lround (pMode->load())));
+    engine.setMode (engineMode);
     engine.setMidiNote (heldNote.load());
 
-    drive.setAmount (pDrive->load() / 100.0f);
+    const float driveAmount = pDrive->load() / 100.0f;
+    drive.setAmount (driveAmount);
+    driveGain.setTargetValue (driveAmount > 0.0005f ? 1.0f : 0.0f);
     mixSmoothed.setTargetValue (pMix->load() / 100.0f);
+
+    // Con Pitch y Formant a 0 (Transpose, sin MIDI) la voz pasa intacta y en estéreo
+    const bool engineNeeded = engineMode != alterivo::Mode::Transpose
+                              || std::abs (pPitch->load()) > 0.005f
+                              || std::abs (pFormant->load()) > 0.005f
+                              || heldNote.load() >= 0;
+    engineGain.setTargetValue (engineNeeded ? 1.0f : 0.0f);
 
     const int total = buffer.getNumSamples();
     for (int start = 0; start < total; start += maxBlock)
@@ -195,7 +214,7 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
     if (numCh <= 0)
         return;
 
-    // 1) Pitch / formantes sobre la suma mono (el efecto es monofónico)
+    // 1) Pitch / formantes (mono, como el original) mezclado con la entrada intacta
     const float inScale = 1.0f / (float) numIn;
     for (int i = 0; i < len; ++i)
     {
@@ -203,40 +222,62 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
         for (int ch = 0; ch < numIn; ++ch)
             mono += buffer.getSample (ch, start + i);
 
-        const float wet = engine.process (mono * inScale);
-        for (int ch = 0; ch < numCh; ++ch)
-            wetBuffer.setSample (ch, i, wet);
-    }
-
-    // 2) Drive a 4x (siempre pasa por el sobremuestreo para mantener la latencia fija)
-    juce::dsp::AudioBlock<float> block (wetBuffer.getArrayOfWritePointers(), (size_t) numCh, 0, (size_t) len);
-    auto up = oversampler->processSamplesUp (block);
-    for (size_t ch = 0; ch < up.getNumChannels(); ++ch)
-    {
-        auto* d = up.getChannelPointer (ch);
-        for (size_t i = 0; i < up.getNumSamples(); ++i)
-            d[i] = drive.process (d[i]);
-    }
-    oversampler->processSamplesDown (block);
-
-    // 3) Mezcla con el seco retrasado (compensado)
-    for (int i = 0; i < len; ++i)
-    {
-        const float mix = mixSmoothed.getNextValue();
+        const float processed = engine.process (mono * inScale);
+        const float g = engineGain.getNextValue();
 
         for (int ch = 0; ch < numCh; ++ch)
         {
-            const float dry = buffer.getSample (juce::jmin (ch, numIn - 1), start + i);
-            float* delayLine = dryDelay.getWritePointer (ch);
-            const float delayedDry = delayLine[dryWrite];
-            delayLine[dryWrite] = dry;
+            const float intact = dryToEngine[(size_t) ch].process (buffer.getSample (juce::jmin (ch, numIn - 1), start + i));
+            wetBuffer.setSample (ch, i, intact + g * (processed - intact));
+        }
+    }
 
-            const float wet = dcBlockers[(size_t) ch].process (wetBuffer.getSample (ch, i));
-            buffer.setSample (ch, start + i, delayedDry * (1.0f - mix) + wet * mix);
+    // 2) Drive a 4x. Con Drive a 0 la señal no pasa por el sobremuestreo (solo se retrasa igual)
+    for (int ch = 0; ch < numCh; ++ch)
+        for (int i = 0; i < len; ++i)
+            cleanBuffer.setSample (ch, i, cleanToDrive[(size_t) ch].process (wetBuffer.getSample (ch, i)));
+
+    const bool driveOn = driveGain.isSmoothing() || driveGain.getTargetValue() > 0.0f;
+    if (driveOn)
+    {
+        if (! oversamplerActive)
+        {
+            oversampler->reset();
+            for (auto& dc : dcBlockers) dc.reset();
+            oversamplerActive = true;
         }
 
-        if (++dryWrite >= dryLen)
-            dryWrite = 0;
+        juce::dsp::AudioBlock<float> block (wetBuffer.getArrayOfWritePointers(), (size_t) numCh, 0, (size_t) len);
+        auto up = oversampler->processSamplesUp (block);
+        for (size_t ch = 0; ch < up.getNumChannels(); ++ch)
+        {
+            auto* d = up.getChannelPointer (ch);
+            for (size_t i = 0; i < up.getNumSamples(); ++i)
+                d[i] = drive.process (d[i]);
+        }
+        oversampler->processSamplesDown (block);
+    }
+    else
+    {
+        oversamplerActive = false;
+    }
+
+    // 3) Mezcla seco / procesado
+    for (int i = 0; i < len; ++i)
+    {
+        const float mix = mixSmoothed.getNextValue();
+        const float dg = driveOn ? driveGain.getNextValue() : 0.0f;
+
+        for (int ch = 0; ch < numCh; ++ch)
+        {
+            const float dry = dryTotal[(size_t) ch].process (buffer.getSample (juce::jmin (ch, numIn - 1), start + i));
+            const float clean = cleanBuffer.getSample (ch, i);
+            float wet = clean;
+            if (driveOn)
+                wet = clean + dg * (dcBlockers[(size_t) ch].process (wetBuffer.getSample (ch, i)) - clean);
+
+            buffer.setSample (ch, start + i, dry + mix * (wet - dry));
+        }
     }
 }
 
