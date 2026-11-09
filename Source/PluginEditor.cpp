@@ -44,7 +44,7 @@ const juce::Point<int> kPitchC   { 124, 236 }, kFormantC { 636, 236 }, kDriveC {
 constexpr int kBigBox = 180, kSmallBox = 96;
 constexpr float kBigR = 58.0f, kSmallR = 24.0f;
 
-const juce::Rectangle<int> kModes    { kW - 36 - 300, 30, 300, 36 };
+const juce::Rectangle<int> kModes    { 215, 30, 330, 40 };
 const juce::Rectangle<int> kCard     { 236, 100, 288, 244 };
 const juce::Rectangle<int> kLink     { 350, 360, 60, 28 };
 const juce::Rectangle<int> kInMeter  { 236, 404, 288, 20 };
@@ -183,38 +183,59 @@ void ModeSelector::setSelected (int index)
     if (index != selected) { selected = index; repaint(); }
 }
 
+static const char* kModeNames[3] = { "TRANSPOSE", "QUANTIZE", "ROBOT" };
+
+// Cada palabra con su ancho real y el mismo espacio entre ellas, todo centrado
+std::array<juce::Rectangle<float>, 3> ModeSelector::segments() const
+{
+    const auto f = font (*fonts, Face::manropeX, 10.0f, 0.22f);
+    std::array<float, 3> w {};
+    float total = 0.0f;
+    for (int i = 0; i < 3; ++i) { w[(size_t) i] = textWidth (f, kModeNames[i]) + 34.0f; total += w[(size_t) i]; }
+    std::array<juce::Rectangle<float>, 3> r;
+    float x = ((float) getWidth() - total) * 0.5f;
+    for (int i = 0; i < 3; ++i) { r[(size_t) i] = { x, 0.0f, w[(size_t) i], (float) getHeight() }; x += w[(size_t) i]; }
+    return r;
+}
+
+int ModeSelector::indexAt (float x) const
+{
+    const auto r = segments();
+    for (int i = 0; i < 3; ++i)
+        if (x >= r[(size_t) i].getX() && x < r[(size_t) i].getRight()) return i;
+    return -1;
+}
+
 void ModeSelector::paint (juce::Graphics& g)
 {
-    const auto r = getLocalBounds().toFloat();
-    g.setColour (theme::surface);
-    g.fillRoundedRectangle (r, r.getHeight() * 0.5f);
-
-    static const char* names[3] = { "TRANSPOSE", "QUANTIZE", "ROBOT" };
-    const auto inner = r.reduced (4.0f);
-    const float segW = inner.getWidth() / 3.0f;
-    g.setFont (font (*fonts, Face::manropeX, 9.5f, 0.16f));
+    // Tres palabras; la activa en tinta con el punto lima del logo debajo
+    const auto segs = segments();
+    g.setFont (font (*fonts, Face::manropeX, 10.0f, 0.22f));
     for (int i = 0; i < 3; ++i)
     {
-        const auto seg = juce::Rectangle<float> (inner.getX() + segW * (float) i, inner.getY(), segW, inner.getHeight());
+        const auto seg = segs[(size_t) i].withY (6.0f).withHeight (16.0f);
+        g.setColour (i == selected ? theme::ink : (i == hover ? theme::textDim : theme::arrows));
+        g.drawText (kModeNames[i], seg.translated (0.11f * 10.0f, 0.0f), juce::Justification::centred, false);
         if (i == selected)
         {
-            g.setColour (theme::ink);
-            g.fillRoundedRectangle (seg, seg.getHeight() * 0.5f);
+            const float cx = seg.getCentreX(), cy = 30.0f;
+            g.setColour (theme::limeBright.withAlpha (0.25f));
+            g.fillEllipse (cx - 6.0f, cy - 6.0f, 12.0f, 12.0f);
+            g.setColour (theme::limeLine);
+            g.fillEllipse (cx - 3.0f, cy - 3.0f, 6.0f, 6.0f);
         }
-        g.setColour (i == selected ? theme::chipText : (i == hover ? theme::ink : theme::textDim));
-        g.drawText (names[i], seg, juce::Justification::centred, false);
     }
 }
 
 void ModeSelector::mouseDown (const juce::MouseEvent& e)
 {
-    const int index = juce::jlimit (0, 2, (int) ((float) (e.x - 4) / ((float) (getWidth() - 8) / 3.0f)));
-    if (onChange) onChange (index);
+    const int index = indexAt ((float) e.x);
+    if (index >= 0 && onChange) onChange (index);
 }
 
 void ModeSelector::mouseMove (const juce::MouseEvent& e)
 {
-    const int h = juce::jlimit (0, 2, (int) ((float) (e.x - 4) / ((float) (getWidth() - 8) / 3.0f)));
+    const int h = indexAt ((float) e.x);
     if (h != hover) { hover = h; repaint(); }
 }
 
@@ -735,7 +756,6 @@ void AlterIvoView::paintBackground (juce::Graphics& g)
                 juce::Justification::centredLeft, false);
 
     // Sombras de las piezas blancas
-    softShadow (g, roundRect (kModes.toFloat(), 18.0f), 0.10f, 18, 6);
     softShadow (g, roundRect (kPresets.toFloat(), 18.0f), 0.10f, 18, 6);
     softShadow (g, roundRect (kLink.toFloat(), 14.0f), 0.14f, 12, 5);
     for (auto c : { kPitchC, kFormantC })

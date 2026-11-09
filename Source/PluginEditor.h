@@ -43,6 +43,8 @@ public:
     void mouseExit (const juce::MouseEvent&) override;
 
 private:
+    std::array<juce::Rectangle<float>, 3> segments() const;
+    int indexAt (float x) const;
     int selected = 0, hover = -1;
     juce::SharedResourcePointer<BrandFonts> fonts;
 };
