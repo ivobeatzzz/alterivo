@@ -25,6 +25,8 @@ OutputBaseFilename=alterIVO-Windows-Instalador
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=ivo-logo.ico
+UninstallDisplayIcon={commonpf64}\{#Publisher}\{#AppName}\ivo-logo.ico
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
@@ -47,6 +49,7 @@ Name: "vst3"; Description: "alterIVO VST3 (Ableton Live, FL Studio, Cubase, Stud
 [Files]
 Source: "{#BuildDir}\alterIVO.vst3\*"; DestDir: "{app}\alterIVO.vst3"; Components: vst3; \
     Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "ivo-logo.ico"; DestDir: "{commonpf64}\{#Publisher}\{#AppName}"; Flags: ignoreversion
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\alterIVO.vst3"
