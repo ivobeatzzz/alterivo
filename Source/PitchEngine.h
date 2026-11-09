@@ -165,7 +165,6 @@ public:
     // ---- Parámetros
     void setPitchSemitones (float s) noexcept   { pitchSemis = s; }
     void setFormantSemitones (float s) noexcept { formantSemis = s; }
-    void setLink (bool b) noexcept              { link = b; }
     void setMode (Mode m) noexcept              { mode = m; }
     void setMidiNote (int note) noexcept        { midiNote = note; }   // -1 = ninguna
 
@@ -213,9 +212,8 @@ private:
         if (mode != Mode::Transpose || (hopCount++ & 3) == 0)
             detectPitch();
         const double ratio = std::clamp (currentRatio(), 0.25, 4.0);
-        double formant = std::pow (2.0, (double) formantSemis / 12.0);
-        if (link) formant *= ratio;
-        formant = std::clamp (formant, 0.25, 4.0);
+        // Link se resuelve en la interfaz (los dos mandos se mueven juntos)
+        const double formant = std::clamp (std::pow (2.0, (double) formantSemis / 12.0), 0.25, 4.0);
 
         // Análisis
         for (int i = 0; i < N; ++i)
@@ -509,7 +507,6 @@ private:
     float curF0 = 0.0f;
 
     float pitchSemis = 0.0f, formantSemis = 0.0f;
-    bool link = false;
     Mode mode = Mode::Transpose;
     int midiNote = -1;
 

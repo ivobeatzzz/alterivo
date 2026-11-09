@@ -48,6 +48,10 @@ public:
     float getOutputHz() const noexcept   { return engine.getOutputHz(); }
     int getHeldMidiNote() const noexcept { return heldNote.load(); }
 
+    // Medidores: pico desde la última lectura (lineal)
+    float takeInputPeak() noexcept  { return inPeak.exchange (0.0f); }
+    float takeOutputPeak() noexcept { return outPeak.exchange (0.0f); }
+
 private:
     void processChunk (juce::AudioBuffer<float>& buffer, int start, int len);
     void handleMidi (const juce::MidiBuffer& midi);
@@ -85,6 +89,7 @@ private:
     std::array<int, 128> noteStack {};
     int noteCount = 0;
     std::atomic<int> heldNote { -1 };
+    std::atomic<float> inPeak { 0.0f }, outPeak { 0.0f };
 
     int currentPreset = 0;
 

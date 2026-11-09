@@ -69,7 +69,7 @@ static std::vector<float> run (const std::vector<float>& in, Mode mode, float pi
     e.setMode (mode);
     e.setPitchSemitones (pitch);
     e.setFormantSemitones (formant);
-    e.setLink (link);
+    if (link) e.setFormantSemitones (formant + pitch);   // Link: los mandos se mueven juntos
     latency = e.getLatencySamples();
     std::vector<float> out (in.size());
     auto t0 = std::chrono::high_resolution_clock::now();

@@ -28,8 +28,8 @@ const FactoryPreset kPresets[] = {
     { "Octava arriba",      12.0f,  2.0f,  0.0f,  40.0f, 0, false },
     { "Voz más grave",      -2.0f, -2.5f,  0.0f, 100.0f, 0, false },
     { "Voz más aguda",       2.0f,  2.0f,  0.0f, 100.0f, 0, false },
-    { "Ardilla",             7.0f,  0.0f,  0.0f, 100.0f, 0, true  },
-    { "Gigante",            -7.0f,  0.0f, 20.0f, 100.0f, 0, true  },
+    { "Ardilla",             7.0f,  7.0f,  0.0f, 100.0f, 0, true  },
+    { "Gigante",            -7.0f, -7.0f, 20.0f, 100.0f, 0, true  },
     { "Robot",               0.0f,  0.0f, 25.0f, 100.0f, 2, false },
     { "Robot grave",       -12.0f, -3.0f, 35.0f, 100.0f, 2, false },
     { "Radio rota",          0.0f,  4.0f, 85.0f, 100.0f, 1, false },
@@ -185,7 +185,6 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
 
     engine.setPitchSemitones (pPitch->load());
     engine.setFormantSemitones (pFormant->load());
-    engine.setLink (pLink->load() > 0.5f);
     const auto engineMode = static_cast<alterivo::Mode> (juce::jlimit (0, 2, (int) std::lround (pMode->load())));
     engine.setMode (engineMode);
     engine.setMidiNote (heldNote.load());
@@ -203,8 +202,21 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     engineGain.setTargetValue (engineNeeded ? 1.0f : 0.0f);
 
     const int total = buffer.getNumSamples();
+    const int numMeter = juce::jmin (numIn, buffer.getNumChannels());
+
+    float pin = 0.0f;
+    for (int ch = 0; ch < numMeter; ++ch)
+        pin = juce::jmax (pin, buffer.getMagnitude (ch, 0, total));
+
     for (int start = 0; start < total; start += maxBlock)
         processChunk (buffer, start, juce::jmin (maxBlock, total - start));
+
+    float pout = 0.0f;
+    for (int ch = 0; ch < juce::jmin (numOut, buffer.getNumChannels()); ++ch)
+        pout = juce::jmax (pout, buffer.getMagnitude (ch, 0, total));
+
+    if (pin > inPeak.load (std::memory_order_relaxed))   inPeak.store (pin, std::memory_order_relaxed);
+    if (pout > outPeak.load (std::memory_order_relaxed)) outPeak.store (pout, std::memory_order_relaxed);
 }
 
 void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int start, int len)

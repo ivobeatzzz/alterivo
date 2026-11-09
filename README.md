@@ -9,7 +9,9 @@ Manipulador de voz (pitch, formantes, hard-tune y robot) en VST3 para **Mac y Wi
 | **DRIVE** | Saturación tipo válvula a 4x de sobremuestreo, con el nivel compensado. |
 | **MIX** | Mezcla seco/procesado, con el seco alineado. |
 | **TRANSPOSE / QUANTIZE / ROBOT** | Intervalo fijo / afinación cromática dura / todo a una sola nota. |
-| **LINK** | Los formantes siguen al tono (efecto ardilla o gigante). |
+| **LINK** | Botón de cadena entre Pitch y Formant: al mover uno, el otro se mueve lo mismo (efecto ardilla o gigante). |
+| **PANTALLA** | Afinación en tiempo real: tono de entrada (gris) y de salida (verde), con la nota actual. |
+| **LEVEL** | Medidores de entrada y salida con retención de pico. |
 | **PRESETS** | 15 presets de fábrica (Hard Tune, armonías, octavas, robot, ardilla, gigante…), con flechas y menú en la barra de abajo. |
 | **MIDI** | Con una nota pulsada: en Transpose/Quantize marca el intervalo respecto a C3; en Robot es la nota de salida. |
 
