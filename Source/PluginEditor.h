@@ -115,6 +115,26 @@ private:
     juce::SharedResourcePointer<BrandFonts> fonts;
 };
 
+// Píldora pequeña dentro de la pantalla (SYNC y A/B)
+class CardPill : public juce::Component, public juce::SettableTooltipClient
+{
+public:
+    CardPill();
+    // text: lo que se lee; active: relleno oscuro; segments: "A|B" dibuja dos letras con la elegida marcada
+    void setState (const juce::String& text, bool active, int selectedSegment = -1);
+    std::function<void()> onClick;
+    void paint (juce::Graphics&) override;
+    void mouseDown (const juce::MouseEvent&) override { if (onClick) onClick(); }
+    void mouseEnter (const juce::MouseEvent&) override { repaint(); }
+    void mouseExit (const juce::MouseEvent&) override { repaint(); }
+
+private:
+    juce::String text;
+    bool active = false;
+    int segment = -1;
+    juce::SharedResourcePointer<BrandFonts> fonts;
+};
+
 // Preferencias guardadas en el ordenador (no en el proyecto)
 struct UserSettings
 {
@@ -172,6 +192,7 @@ private:
     void showPresetMenu();
     void showKeyMenu();
     void showSettingsMenu();
+    void showPatternMenu();
     void loadLogo();
     void setChoice (const char* id, int index);
     void updateKeyText();
@@ -186,6 +207,8 @@ private:
     ModeSelector sourceSelector { { "VOICE", "MIX" }, 9.0f, true };
     KeyBox keyBox;
     SettingsButton settingsButton;
+    CardPill syncPill, abPill;
+    juce::TooltipWindow tooltips { this, 700 };
     LinkButton linkButton;
     VoiceDisplay display;
     LevelMeter inMeter { "IN" }, outMeter { "OUT" };

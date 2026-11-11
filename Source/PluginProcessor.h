@@ -63,6 +63,10 @@ public:
     // Perfil de latencia: 0 LOW, 1 NORMAL (no automatizable; se guarda con la sesión)
     void setLatencyProfile (int profile);
     int getLatencyProfile() const noexcept { return latencyProfile.load(); }
+
+    // CPU por módulo (fracción de tiempo real: 0.02 = 2 %) y estado del patrón de tempo
+    std::atomic<float> cpuEngine { 0.0f }, cpuDrive { 0.0f }, cpuTotal { 0.0f };
+    std::atomic<bool> patternActive { false };
     int getHeldMidiNote() const noexcept { return heldNote.load(); }
     float getFormantEnvelope (float* dest) const noexcept { return engine.getDisplayEnvelope (dest); }
     static constexpr int kFormantPoints = alterivo::PitchEngine::kEnvPoints;
@@ -129,6 +133,10 @@ private:
     std::atomic<float>* pSource  = nullptr;
     std::atomic<float>* pIntensity = nullptr;
     std::atomic<float>* pOutput    = nullptr;
+    std::atomic<float>* pPattern   = nullptr;
+    std::atomic<float>* pCompare   = nullptr;
+    juce::SmoothedValue<float> abGain;
+    juce::int64 engineTicks = 0, driveTicks = 0;
     juce::SmoothedValue<float> outputGain;
 
     // Nivel igualado

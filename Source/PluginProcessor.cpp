@@ -35,6 +35,18 @@ const FactoryPreset kPresets[] = {
     { "Radio rota",          0.0f,  4.0f, 85.0f, 100.0f, 1, false },
 };
 constexpr int kNumPresets = (int) (sizeof (kPresets) / sizeof (kPresets[0]));
+
+// Patrones sincronizados al tempo: saltos de tono (semitonos) que cambian en cada paso
+struct TempoPattern { double stepBeats; int length; int semis[4]; };
+const TempoPattern kPatterns[] = {
+    { 1.0,  1, { 0 } },                    // Off
+    { 1.0,  2, { 0, 12 } },                // Octava arriba cada negra
+    { 0.5,  4, { 0, 12, 0, -12 } },        // Octavas arriba/abajo en corcheas
+    { 0.5,  2, { 0, 7 } },                 // Quinta en corcheas
+    { 1.0,  2, { 0, -12 } },               // Octava abajo cada negra
+    { 0.25, 4, { 0, 3, 7, 12 } },          // Escalera en semicorcheas
+};
+constexpr int kNumPatterns = (int) (sizeof (kPatterns) / sizeof (kPatterns[0]));
 } // namespace
 
 juce::AudioProcessorValueTreeState::ParameterLayout AlterIvoProcessor::createLayout()
@@ -82,6 +94,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout AlterIvoProcessor::createLay
             [] (float v, int) { return String (v, 0) + "%"; })));
 
     // Salida: ajuste final de nivel (el nivel igualado ya mantiene el volumen con 0 dB)
+    // Patrón de tono sincronizado al tempo del DAW (sólo suena con el DAW en reproducción)
+    params.push_back (std::make_unique<AudioParameterChoice> (
+        ParameterID { "pattern", 4 }, "Tempo Pattern",
+        StringArray { "Off", "Octave 1/4", "Octaves 1/8", "Fifth 1/8", "Sub octave 1/4", "Stairs 1/16" }, 0));
+
+    // Comparación A/B a igual volumen: A = voz original (alineada), B = procesada
+    params.push_back (std::make_unique<AudioParameterBool> (ParameterID { "compare", 4 }, "A/B Original", false));
+
     params.push_back (std::make_unique<AudioParameterFloat> (
         ParameterID { "output", 3 }, "Output", NormalisableRange<float> (-12.0f, 12.0f, 0.1f), 0.0f,
         AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (
@@ -107,6 +127,8 @@ AlterIvoProcessor::AlterIvoProcessor()
     pSource  = apvts.getRawParameterValue ("source");
     pIntensity = apvts.getRawParameterValue ("intensity");
     pOutput    = apvts.getRawParameterValue ("output");
+    pPattern   = apvts.getRawParameterValue ("pattern");
+    pCompare   = apvts.getRawParameterValue ("compare");
 }
 
 bool AlterIvoProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -164,6 +186,8 @@ void AlterIvoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     driveGain.reset (sampleRate, 0.03);
     driveGain.setCurrentAndTargetValue (0.0f);
     driveCurrent = pDrive->load() / 100.0f;
+    abGain.reset (sampleRate, 0.03);
+    abGain.setCurrentAndTargetValue (pCompare->load() > 0.5f ? 0.0f : 1.0f);
     outputGain.reset (sampleRate, 0.05);
     outputGain.setCurrentAndTargetValue (juce::Decibels::decibelsToGain (pOutput->load()));
     driveStepPerSample = (float) (1.0 / (0.05 * sampleRate * 4.0));   // recorrido completo en 50 ms
@@ -229,10 +253,42 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     // Link: los formantes siguen al tono (en el motor, así vale para ratón, automatización,
     // MIDI y presets). Formant queda como ajuste adicional. Intensity escala todo el efecto.
     const float intensity = pIntensity->load() / 100.0f;
-    const float pitchSemis = heldNote.load() >= 0 ? (float) (heldNote.load() - 60) : pPitch->load();
-    const float formantSemis = juce::jlimit (-12.0f, 12.0f, pFormant->load() + (pLink->load() > 0.5f ? pitchSemis : 0.0f));
-    engine.setPitchSemitones (pPitch->load());
-    engine.setFormantSemitones (formantSemis * intensity);
+    const bool linked = pLink->load() > 0.5f;
+
+    // Tempo del DAW para el patrón (posición en negras al principio del bloque)
+    const int pattern = juce::jlimit (0, kNumPatterns - 1, (int) std::lround (pPattern->load()));
+    double ppq = 0.0, bpm = 120.0;
+    bool playing = false;
+    if (pattern > 0)
+        if (auto* ph = getPlayHead())
+            if (auto pos = ph->getPosition())
+            {
+                playing = pos->getIsPlaying();
+                if (auto p = pos->getPpqPosition()) ppq = *p; else playing = false;
+                if (auto b = pos->getBpm()) bpm = juce::jmax (1.0, *b);
+            }
+    const bool patternOn = pattern > 0 && playing;
+    patternActive.store (patternOn);
+
+    auto patternSemis = [&] (double atPpq)
+    {
+        if (! patternOn) return 0;
+        const auto& pt = kPatterns[pattern];
+        const auto step = (long long) std::floor (atPpq / pt.stepBeats + 1.0e-9);
+        return pt.semis[(size_t) (((step % pt.length) + pt.length) % pt.length)];
+    };
+
+    // Ajusta el tono (con el paso del patrón), Link y la intensidad en el motor
+    auto applyPitch = [&] (int patternOffset)
+    {
+        const float pitchParam = pPitch->load() + (float) patternOffset;
+        const float pitchSemis = heldNote.load() >= 0 ? (float) (heldNote.load() - 60 + patternOffset) : pitchParam;
+        const float formantSemis = juce::jlimit (-12.0f, 12.0f, pFormant->load() + (linked ? pitchSemis : 0.0f));
+        engine.setPitchSemitones (pitchParam);
+        engine.setFormantSemitones (formantSemis * intensity);
+        return formantSemis;
+    };
+    const float formantSemis = applyPitch (patternSemis (ppq));
     engine.setIntensity (intensity);
     engine.setMode (engineMode);
     engine.setMidiNote (heldNote.load());
@@ -250,7 +306,9 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
                               && (engineMode != alterivo::Mode::Transpose
                                   || std::abs (pPitch->load()) > 0.005f
                                   || std::abs (formantSemis) > 0.005f
-                                  || heldNote.load() >= 0);
+                                  || heldNote.load() >= 0
+                                  || patternOn);
+    abGain.setTargetValue (pCompare->load() > 0.5f ? 0.0f : 1.0f);
     outputGain.setTargetValue (juce::Decibels::decibelsToGain (pOutput->load()));
     engineGain.setTargetValue (engineNeeded ? 1.0f : 0.0f);
     // Sin efecto audible el motor sólo analiza (pantalla y tonalidad): ahorra CPU
@@ -263,8 +321,39 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     for (int ch = 0; ch < numMeter; ++ch)
         pin = juce::jmax (pin, buffer.getMagnitude (ch, 0, total));
 
-    for (int start = 0; start < total; start += maxBlock)
-        processChunk (buffer, start, juce::jmin (maxBlock, total - start));
+    // Se procesa por tramos: cada cambio de paso del patrón cae en su muestra exacta
+    const auto t0 = juce::Time::getHighResolutionTicks();
+    const double samplesPerBeat = sr * 60.0 / bpm;
+    for (int start = 0; start < total;)
+    {
+        int len = juce::jmin (maxBlock, total - start);
+        if (patternOn)
+        {
+            const double here = ppq + start / samplesPerBeat;
+            const double stepBeats = kPatterns[pattern].stepBeats;
+            const double next = (std::floor (here / stepBeats + 1.0e-9) + 1.0) * stepBeats;
+            const int toNext = juce::jmax (1, (int) std::ceil ((next - here) * samplesPerBeat - 1.0e-6));
+            len = juce::jmin (len, toNext);
+            applyPitch (patternSemis (here));
+        }
+        processChunk (buffer, start, len);
+        start += len;
+    }
+
+    // Consumo de CPU por módulo (fracción del tiempo real del bloque, suavizado)
+    {
+        const double blockSecs = total / sr;
+        const double secsTotal = juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - t0);
+        const double eng = juce::Time::highResolutionTicksToSeconds (engineTicks), drv = juce::Time::highResolutionTicksToSeconds (driveTicks);
+        engineTicks = driveTicks = 0;
+        auto smooth = [] (std::atomic<float>& a, double v) { a.store (a.load() + 0.05f * ((float) v - a.load())); };
+        if (blockSecs > 0.0)
+        {
+            smooth (cpuEngine, eng / blockSecs);
+            smooth (cpuDrive, drv / blockSecs);
+            smooth (cpuTotal, secsTotal / blockSecs);
+        }
+    }
 
     float pout = 0.0f;
     for (int ch = 0; ch < juce::jmin (numOut, buffer.getNumChannels()); ++ch)
@@ -306,6 +395,7 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
     // 1) Pitch / formantes: un motor estéreo enlazado (mismo análisis para L y R),
     //    con el mismo nivel que la entrada, mezclado con la entrada intacta
     const int engineCh = juce::jmin (numIn, alterivo::kMaxChannels);
+    const auto tEngine = juce::Time::getHighResolutionTicks();
     for (int i = 0; i < len; ++i)
     {
         float x[2] {}, processed[2] {}, intact[2] {};
@@ -338,7 +428,10 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
         }
     }
 
+    engineTicks += juce::Time::getHighResolutionTicks() - tEngine;
+
     // 2) Drive a 4x. Con Drive a 0 la señal no pasa por el sobremuestreo (solo se retrasa igual)
+    const auto tDrive = juce::Time::getHighResolutionTicks();
     for (int ch = 0; ch < numCh; ++ch)
         for (int i = 0; i < len; ++i)
             cleanBuffer.setSample (ch, i, cleanToDrive[(size_t) ch].process (wetBuffer.getSample (ch, i)));
@@ -378,11 +471,14 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
         driveCurrent = driveTarget;
     }
 
-    // 3) Mezcla seco / procesado
+    driveTicks += juce::Time::getHighResolutionTicks() - tDrive;
+
+    // 3) Mezcla seco / procesado (y A/B: A = original alineado, al mismo nivel de salida)
     for (int i = 0; i < len; ++i)
     {
         const float mix = mixSmoothed.getNextValue();
         const float og = outputGain.getNextValue();
+        const float ab = abGain.getNextValue();
         const float dg = driveOn ? driveGain.getNextValue() : 0.0f;
 
         for (int ch = 0; ch < numCh; ++ch)
@@ -393,7 +489,8 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
             if (driveOn)
                 wet = clean + dg * (dcBlockers[(size_t) ch].process (wetBuffer.getSample (ch, i)) - clean);
 
-            buffer.setSample (ch, start + i, (dry + mix * (wet - dry)) * og);
+            const float processed = dry + mix * (wet - dry);
+            buffer.setSample (ch, start + i, (dry + ab * (processed - dry)) * og);
         }
     }
 }
@@ -535,6 +632,7 @@ void AlterIvoProcessor::setCurrentProgram (int index)
     set ("mode", (float) p.mode);
     set ("link", p.link ? 1.0f : 0.0f);
     set ("intensity", 100.0f);
+    set ("pattern", 0.0f);
     set ("output", 0.0f);
     apvts.state.setProperty ("preset", index, nullptr);
 }

@@ -82,6 +82,8 @@ const juce::Rectangle<int> kPresets  { 270, 482, 220, 36 };
 const juce::Rectangle<int> kKey      { kW - 36 - 166, 32, 166, 32 };
 const juce::Rectangle<int> kSource   { kW - 36 - 166, 70, 166, 18 };
 const juce::Rectangle<int> kSettings { 30, 496, 170, 30 };
+const juce::Rectangle<int> kSyncPill { 252, 112, 70, 20 };     // dentro de la pantalla, arriba
+const juce::Rectangle<int> kAbPill   { 452, 112, 56, 20 };
 
 juce::Rectangle<int> box (juce::Point<int> c, int size) { return { c.x - size / 2, c.y - size / 2, size, size }; }
 juce::Rectangle<int> centredRect (int cx, int y, int w, int h) { return { cx - w / 2, y, w, h }; }
@@ -607,6 +609,56 @@ void KeyBox::paint (juce::Graphics& g)
     g.strokePath (p, juce::PathStrokeType (1.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 }
 
+// ================================================================ CardPill
+CardPill::CardPill() { setMouseCursor (juce::MouseCursor::PointingHandCursor); }
+
+void CardPill::setState (const juce::String& t, bool isActive, int selectedSegment)
+{
+    if (t != text || isActive != active || selectedSegment != segment)
+    {
+        text = t; active = isActive; segment = selectedSegment;
+        repaint();
+    }
+}
+
+void CardPill::paint (juce::Graphics& g)
+{
+    const auto r = getLocalBounds().toFloat().reduced (0.5f);
+    const float rad = r.getHeight() * 0.5f;
+    if (active)
+    {
+        g.setColour (theme::chipBg);
+        g.fillRoundedRectangle (r, rad);
+    }
+    else
+    {
+        g.setColour (isMouseOver() ? theme::textDim : theme::track);
+        g.drawRoundedRectangle (r, rad, 1.0f);
+    }
+    g.setFont (font (*fonts, Face::manropeX, 8.5f, 0.16f));
+
+    if (segment >= 0)
+    {
+        // A | B: la letra elegida en un círculo
+        const float w = r.getWidth() / 2.0f;
+        for (int i = 0; i < 2; ++i)
+        {
+            const auto seg = juce::Rectangle<float> (r.getX() + w * (float) i, r.getY(), w, r.getHeight());
+            if (i == segment)
+            {
+                const float d = r.getHeight() - 6.0f;
+                g.setColour (i == 0 ? theme::warn : theme::limeLine);
+                g.fillEllipse (seg.withSizeKeepingCentre (d, d));
+            }
+            g.setColour (i == segment ? theme::onLime : theme::textDim);
+            g.drawText (i == 0 ? "A" : "B", seg.translated (0.7f, 0.0f), juce::Justification::centred, false);
+        }
+        return;
+    }
+    g.setColour (active ? theme::chipText : (isMouseOver() ? theme::ink : theme::textDim));
+    g.drawText (text, r.translated (0.7f, 0.0f), juce::Justification::centred, false);
+}
+
 // ========================================================== SettingsButton
 SettingsButton::SettingsButton()
 {
@@ -764,6 +816,23 @@ AlterIvoView::AlterIvoView (AlterIvoProcessor& p) : proc (p)
     settingsButton.onClick = [this] { showSettingsMenu(); };
     addAndMakeVisible (settingsButton);
 
+    syncPill.onClick = [this] { showPatternMenu(); };
+    syncPill.setTooltip ("Patrones de tono sincronizados al tempo del DAW");
+    addAndMakeVisible (syncPill);
+
+    abPill.onClick = [this]
+    {
+        if (auto* q = proc.apvts.getParameter ("compare"))
+        {
+            q->beginChangeGesture();
+            q->setValueNotifyingHost (q->getValue() > 0.5f ? 0.0f : 1.0f);
+            q->endChangeGesture();
+        }
+        timerCallback();
+    };
+    abPill.setTooltip ("A/B: A = voz original, B = alterIVO (al mismo volumen)");
+    addAndMakeVisible (abPill);
+
     loadLogo();
 
     setSize (kW, kH);
@@ -865,6 +934,25 @@ void AlterIvoView::loadLogo()
         logoMark = juce::Drawable::createFromSVG (*xml);
 }
 
+void AlterIvoView::showPatternMenu()
+{
+    const int current = (int) std::lround (proc.apvts.getRawParameterValue ("pattern")->load());
+    juce::PopupMenu menu;
+    menu.setLookAndFeel (&lnf);
+    menu.addSectionHeader ("TEMPO SYNC");
+    static const char* names[] = { "Off", "Octava arriba \xc2\xb7 1/4", "Octavas arriba y abajo \xc2\xb7 1/8",
+                                   "Quinta \xc2\xb7 1/8", "Octava abajo \xc2\xb7 1/4", "Escalera menor \xc2\xb7 1/16" };
+    for (int i = 0; i < 6; ++i)
+        menu.addItem (i + 1, juce::String (juce::CharPointer_UTF8 (names[i])), true, i == current);
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&syncPill),
+                        [safe = juce::Component::SafePointer<AlterIvoView> (this)] (int result)
+                        {
+                            if (safe == nullptr || result <= 0) return;
+                            safe->setChoice ("pattern", result - 1);
+                            safe->timerCallback();
+                        });
+}
+
 void AlterIvoView::showSettingsMenu()
 {
     const int profile = proc.getLatencyProfile();
@@ -876,6 +964,12 @@ void AlterIvoView::showSettingsMenu()
     menu.setLookAndFeel (&lnf);
     menu.addSubMenu ("Skin", skins);
     menu.addSubMenu ("Latencia", latency);
+    menu.addSeparator();
+    auto pct = [] (float v) { return juce::String (v * 100.0f, 1) + " %"; };
+    menu.addSectionHeader ("CPU (un núcleo)");
+    menu.addItem (90, "Motor de pitch: " + pct (proc.cpuEngine.load()), false);
+    menu.addItem (91, "Drive: " + pct (proc.cpuDrive.load()), false);
+    menu.addItem (92, "Total alterIVO: " + pct (proc.cpuTotal.load()), false);
 
     menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&settingsButton),
                         [safe = juce::Component::SafePointer<AlterIvoView> (this)] (int result)
@@ -952,6 +1046,14 @@ void AlterIvoView::timerCallback()
         }
         if (keyMessageFrames > 0 && --keyMessageFrames == 0) shownKey = -1;
         if (keyState != shownKey && keyMessageFrames == 0) { shownKey = keyState; updateKeyText(); }
+    }
+
+    // SYNC (patrón de tempo) y A/B
+    {
+        static const char* shortNames[] = { "SYNC", "OCT 1/4", "OCT 1/8", "5TH 1/8", "SUB 1/4", "STAIRS" };
+        const int pat = juce::jlimit (0, 5, (int) std::lround (proc.apvts.getRawParameterValue ("pattern")->load()));
+        syncPill.setState (shortNames[pat], pat > 0);
+        abPill.setState ("A|B", false, proc.apvts.getRawParameterValue ("compare")->load() > 0.5f ? 0 : 1);
     }
 
     // Skin cambiada (en esta ventana o en otra instancia)
@@ -1111,6 +1213,8 @@ void AlterIvoView::resized()
     output.setBounds (box (kOutputC, kSmallBox));
     modeSelector.setBounds (kModes);
     sourceSelector.setBounds (kSource);
+    syncPill.setBounds (kSyncPill);
+    abPill.setBounds (kAbPill);
     settingsButton.setBounds (kSettings);
     keyBox.setBounds (kKey);
     linkButton.setBounds (kLink);
