@@ -26,12 +26,20 @@ jobs:
       - name: Compilar
         run: cmake --build build --config Release -j 4
 
+      - name: Validar con pluginval (VST3)
+        continue-on-error: true
+        run: |
+          curl -sL -o pv.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip -q -o pv.zip
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --timeout-ms 900000 "build/AlterIvo_artefacts/Release/VST3/alterIVO.vst3" > pluginval-mac.txt 2>&1; echo "EXIT $?" >> pluginval-mac.txt
+          tail -40 pluginval-mac.txt
+
       - name: Crear instalador .pkg
         run: bash packaging/mac/build-pkg.sh 1.0.0
 
       - name: Guardar en la rama "instalador-mac"
         run: |
-          mkdir out && cp dist/alterIVO-Mac-Instalador.pkg out/ && cd out
+          mkdir out && cp dist/alterIVO-Mac-Instalador.pkg out/ && (cp pluginval-mac.txt out/ || true) && cd out
           git init -q -b instalador-mac
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add -A
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "alterIVO Mac"
@@ -59,6 +67,15 @@ jobs:
       - name: Compilar
         run: cmake --build build --config Release -j 4
 
+      - name: Validar con pluginval (VST3)
+        continue-on-error: true
+        shell: bash
+        run: |
+          curl -sL -o pv.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Windows.zip
+          unzip -q -o pv.zip
+          ./pluginval.exe --strictness-level 5 --validate-in-process --timeout-ms 900000 "build/AlterIvo_artefacts/Release/VST3/alterIVO.vst3" > pluginval-windows.txt 2>&1; echo "EXIT $?" >> pluginval-windows.txt
+          tail -40 pluginval-windows.txt
+
       - name: Instalar Inno Setup
         run: choco install innosetup -y --no-progress
 
@@ -73,7 +90,7 @@ jobs:
       - name: Guardar en la rama "instalador-windows"
         shell: bash
         run: |
-          mkdir out && cp dist/alterIVO-Windows-Instalador.exe out/ && cd out
+          mkdir out && cp dist/alterIVO-Windows-Instalador.exe out/ && (cp pluginval-windows.txt out/ || true) && cd out
           git init -q -b instalador-windows
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add -A
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "alterIVO Windows"

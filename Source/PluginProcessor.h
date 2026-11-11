@@ -44,13 +44,27 @@ public:
     juce::AudioProcessorValueTreeState apvts;
 
     // Para la pantalla de la interfaz
-    float getDetectedHz() const noexcept { return engines[0].getDetectedHz(); }
-    float getOutputHz() const noexcept   { return engines[0].getOutputHz(); }
+    float getDetectedHz() const noexcept { return engine.getDetectedHz(); }
+    float getOutputHz() const noexcept   { return engine.getOutputHz(); }
 
-    // Tonalidad de lo que ha sonado (raíz 0-11, escala 1 mayor / 2 menor). false si no hay datos
-    bool detectKey (int& root, int& scale);
+    // Detector de tonalidad (hilo de mensajes): se inicia, se consulta ~30 veces/s y
+    // al aceptar un resultado pone Key y Scale
+    struct KeyStatus
+    {
+        enum State { Idle, Analyzing, Done } state = Idle;
+        float progress = 0.0f, confidence = 0.0f;   // 0..1
+        int root = 0, scale = 0;                     // raíz 0-11; escala 1 mayor, 2 menor
+    };
+    void startKeyAnalysis();
+    void cancelKeyAnalysis();
+    const KeyStatus& updateKeyAnalysis();
+    static constexpr float kKeyMinSeconds = 8.0f, kKeyMaxSeconds = 30.0f;
+
+    // Perfil de latencia: 0 LOW, 1 NORMAL (no automatizable; se guarda con la sesión)
+    void setLatencyProfile (int profile);
+    int getLatencyProfile() const noexcept { return latencyProfile.load(); }
     int getHeldMidiNote() const noexcept { return heldNote.load(); }
-    float getFormantEnvelope (float* dest) const noexcept { return engines[0].getDisplayEnvelope (dest); }
+    float getFormantEnvelope (float* dest) const noexcept { return engine.getDisplayEnvelope (dest); }
     static constexpr int kFormantPoints = alterivo::PitchEngine::kEnvPoints;
 
     // Tamaño de la ventana (se guarda con la sesión)
@@ -66,7 +80,10 @@ private:
     void noteOn (int note);
     void noteOff (int note);
 
-    std::array<alterivo::PitchEngine, 2> engines;
+    alterivo::PitchEngine engine;
+    std::atomic<int> latencyProfile { 1 };
+    int preparedProfile = 1;
+    float driveCurrent = 0.0f, driveTarget = 0.0f, driveStepPerSample = 1.0e-4f;
     alterivo::TubeDrive drive;
     std::array<alterivo::DcBlocker, 2> dcBlockers;
     std::unique_ptr<juce::dsp::Oversampling<float>> oversampler;
@@ -116,9 +133,13 @@ private:
     juce::SmoothedValue<float> levelGain;
     double sr = 48000.0;
 
-    // Detección de tonalidad
-    juce::SpinLock pitchClassLock;
-    std::array<float, 12> pitchClasses {};
+    // Detección de tonalidad: el audio escribe, la interfaz lee (sin bloqueos)
+    std::array<std::atomic<float>, 12> keyHist {};
+    std::atomic<float> keySeconds { 0.0f };
+    std::atomic<bool> keyResetRequest { true };
+    KeyStatus keyStatus;
+    int keyEvalCount = 0, keyLastCandidate = -1;
+    float keyLastSeconds = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AlterIvoProcessor)
 };

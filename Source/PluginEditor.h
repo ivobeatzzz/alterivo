@@ -20,6 +20,7 @@ class AlterIvoLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
     AlterIvoLookAndFeel();
+    void applySkinColours();
     void drawRotarySlider (juce::Graphics&, int x, int y, int width, int height, float sliderPos,
                            float rotaryStartAngle, float rotaryEndAngle, juce::Slider&) override;
     juce::Font getPopupMenuFont() override;
@@ -102,6 +103,7 @@ class KeyBox : public juce::Component
 public:
     KeyBox();
     void setText (const juce::String& t, bool active);
+    void setProgress (float p);   // 0..1 mientras analiza; < 0 oculta la barra
     std::function<void()> onClick;
     void paint (juce::Graphics&) override;
     void mouseDown (const juce::MouseEvent&) override { if (onClick) onClick(); }
@@ -109,6 +111,31 @@ public:
 private:
     juce::String text;
     bool active = false;
+    float progress = -1.0f;
+    juce::SharedResourcePointer<BrandFonts> fonts;
+};
+
+// Preferencias guardadas en el ordenador (no en el proyecto)
+struct UserSettings
+{
+    static bool loadDarkSkin();
+    static void saveDarkSkin (bool dark);
+};
+
+// Ajustes: skin y perfil de latencia (abajo a la izquierda)
+class SettingsButton : public juce::Component
+{
+public:
+    SettingsButton();
+    void setText (const juce::String& skin, const juce::String& latency);
+    std::function<void()> onClick;
+    void paint (juce::Graphics&) override;
+    void mouseDown (const juce::MouseEvent&) override;
+    void mouseEnter (const juce::MouseEvent&) override { repaint(); }
+    void mouseExit (const juce::MouseEvent&) override { repaint(); }
+
+private:
+    juce::String skinText, latencyText;
     juce::SharedResourcePointer<BrandFonts> fonts;
 };
 
@@ -145,6 +172,8 @@ private:
     void loadPreset (int index);
     void showPresetMenu();
     void showKeyMenu();
+    void showSettingsMenu();
+    void loadLogo();
     void setChoice (const char* id, int index);
     void updateKeyText();
     void paintBackground (juce::Graphics&);
@@ -157,6 +186,7 @@ private:
     ModeSelector modeSelector;
     ModeSelector sourceSelector { { "VOICE", "MIX" }, 9.0f, true };
     KeyBox keyBox;
+    SettingsButton settingsButton;
     LinkButton linkButton;
     VoiceDisplay display;
     LevelMeter inMeter { "IN" }, outMeter { "OUT" };
@@ -173,7 +203,8 @@ private:
     double lastPitch = 0.0, lastFormant = 0.0;
     bool linking = false;
     int currentMode = -1, shownPreset = -1, shownSource = -1, shownKey = -1;
-    int keyMessageFrames = 0;
+    int keyMessageFrames = 0, seenSkin = -1;
+    bool wasAnalyzing = false;
     std::array<float, AlterIvoProcessor::kFormantPoints> envBuf {};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AlterIvoView)

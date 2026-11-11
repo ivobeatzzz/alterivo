@@ -3,6 +3,33 @@
 
 namespace theme = alterivo::theme;
 
+// ======================================================= Preferencias de usuario
+namespace
+{
+juce::PropertiesFile::Options settingsOptions()
+{
+    juce::PropertiesFile::Options o;
+    o.applicationName = "alterIVO";
+    o.folderName = "IVO Beatz";
+    o.filenameSuffix = ".settings";
+    o.osxLibrarySubFolder = "Application Support";
+    return o;
+}
+} // namespace
+
+bool UserSettings::loadDarkSkin()
+{
+    juce::PropertiesFile f (settingsOptions());
+    return f.getBoolValue ("darkSkin", false);
+}
+
+void UserSettings::saveDarkSkin (bool dark)
+{
+    juce::PropertiesFile f (settingsOptions());
+    f.setValue ("darkSkin", dark);
+    f.saveIfNeeded();
+}
+
 // ============================================================== Fuentes
 BrandFonts::BrandFonts()
 {
@@ -50,19 +77,21 @@ const juce::Rectangle<int> kLink     { 350, 360, 60, 28 };
 const juce::Rectangle<int> kInMeter  { 236, 404, 288, 20 };
 const juce::Rectangle<int> kOutMeter { 236, 430, 288, 20 };
 const juce::Rectangle<int> kPresets  { 270, 482, 220, 36 };
-const juce::Rectangle<int> kKey      { kW - 36 - 150, 32, 150, 32 };
-const juce::Rectangle<int> kSource   { kW - 36 - 200, 68, 200, 18 };
+const juce::Rectangle<int> kKey      { kW - 36 - 166, 32, 166, 32 };
+const juce::Rectangle<int> kSource   { kW - 36 - 166, 70, 166, 18 };
+const juce::Rectangle<int> kSettings { 30, 496, 170, 30 };
 
 juce::Rectangle<int> box (juce::Point<int> c, int size) { return { c.x - size / 2, c.y - size / 2, size, size }; }
 juce::Rectangle<int> centredRect (int cx, int y, int w, int h) { return { cx - w / 2, y, w, h }; }
 
 // Firma IVO (solo letras): tinta oscura y punto lima, mismo trazado que logo/ivo-logo-simbolo.svg
+// La tinta (#15210f) se cambia por la de la skin al cargarlo
 const char* kLogoSvg = R"SVG(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><line x1="17.050" y1="37.2" x2="17.050" y2="63.2" stroke="#15210f" stroke-width="7.2" stroke-linecap="round"/><polyline points="30.050,37.2 37.050,63.2 44.050,37.2" fill="none" stroke="#15210f" stroke-width="7.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M61.381,60.720 A13.35,13.35 0 1 1 77.819,60.720" fill="none" stroke="#15210f" stroke-width="7.2" stroke-linecap="round"/><circle cx="73.714" cy="45.297" r="2.75" fill="#7cc23c"/></svg>)SVG";
 
 // Sombra suave (equivale a box-shadow 0 dy blur)
 void softShadow (juce::Graphics& g, const juce::Path& p, float alpha, int blur, int dy)
 {
-    juce::DropShadow (theme::shadow.withAlpha (alpha), blur, { 0, dy }).drawForPath (g, p);
+    juce::DropShadow (theme::shadow.withAlpha (juce::jmin (0.9f, alpha * theme::shadowStrength)), blur, { 0, dy }).drawForPath (g, p);
 }
 
 juce::Path roundRect (juce::Rectangle<float> r, float radius)
@@ -94,11 +123,13 @@ juce::String noteName (int note) { return juce::MidiMessage::getMidiNoteName (no
 } // namespace
 
 // ============================================================ LookAndFeel
-AlterIvoLookAndFeel::AlterIvoLookAndFeel()
+AlterIvoLookAndFeel::AlterIvoLookAndFeel() { applySkinColours(); }
+
+void AlterIvoLookAndFeel::applySkinColours()
 {
     setColour (juce::PopupMenu::backgroundColourId, theme::surface);
     setColour (juce::PopupMenu::textColourId, theme::ink);
-    setColour (juce::PopupMenu::highlightedBackgroundColourId, theme::ink);
+    setColour (juce::PopupMenu::highlightedBackgroundColourId, theme::chipBg);
     setColour (juce::PopupMenu::highlightedTextColourId, theme::chipText);
     setColour (juce::PopupMenu::headerTextColourId, theme::textDim);
 }
@@ -158,7 +189,7 @@ void AlterIvoLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int
     {
         juce::Path valuePath;
         valuePath.addCentredArc (c.x, c.y, ringR, ringR, 0.0f, juce::jmin (from, angle), juce::jmax (from, angle), true);
-        g.setGradientFill (juce::ColourGradient (theme::green, c.x - ringR, c.y - ringR, theme::limeBright, c.x + ringR, c.y + ringR, false));
+        g.setGradientFill (juce::ColourGradient (theme::arcStart, c.x - ringR, c.y - ringR, theme::limeBright, c.x + ringR, c.y + ringR, false));
         g.strokePath (valuePath, PST (ringW, PST::curved, PST::rounded));
     }
 
@@ -199,7 +230,7 @@ std::vector<juce::Rectangle<float>> ModeSelector::segments() const
     for (auto& n : names) { w.push_back (inlineDot ? 14.0f + textWidth (f, n) + 16.0f : textWidth (f, n) + pad * 2.0f); total += w.back(); }
     if (inlineDot) total -= 16.0f;
     std::vector<juce::Rectangle<float>> r;
-    float x = inlineDot ? (float) getWidth() - total : ((float) getWidth() - total) * 0.5f;
+    float x = ((float) getWidth() - total) * 0.5f;
     for (auto wi : w) { r.push_back ({ x, 0.0f, wi, (float) getHeight() }); x += wi; }
     return r;
 }
@@ -291,7 +322,7 @@ void LinkButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
     if (down) fill = fill.darker (0.06f);
     g.setColour (fill);
     g.fillRoundedRectangle (r, r.getHeight() * 0.5f);
-    drawChain (g, r.getCentre(), 6.0f, on || highlighted ? theme::ink : theme::textDim);
+    drawChain (g, r.getCentre(), 6.0f, on ? theme::onLime : (highlighted ? theme::ink : theme::textDim));
 }
 
 // =========================================================== VoiceDisplay
@@ -358,7 +389,7 @@ void VoiceDisplay::paint (juce::Graphics& g)
         const float wa = textWidth (f, a), wb = textWidth (f, b), wd = textWidth (f, d);
         const float chipW = 18.0f + wa + gap + arrowW + gap + wb + gap + dotW + gap + wd;
         const auto chip = juce::Rectangle<float> ((W - chipW) * 0.5f, 74.0f, chipW, 20.0f);
-        g.setColour (theme::ink);
+        g.setColour (theme::chipBg);
         g.fillRoundedRectangle (chip, 10.0f);
 
         float x = chip.getX() + 9.0f;
@@ -427,7 +458,7 @@ void VoiceDisplay::paint (juce::Graphics& g)
     g.reduceClipRegion (plot.expanded (2.0f).toNearestInt());
     g.setColour (theme::traceIn);
     g.strokePath (buildPath (inNotes), PST (1.2f, PST::curved, PST::rounded));
-    g.setGradientFill (juce::ColourGradient (theme::green, plot.getX(), 0.0f, theme::limeBright, plot.getRight(), 0.0f, false));
+    g.setGradientFill (juce::ColourGradient (theme::arcStart, plot.getX(), 0.0f, theme::limeBright, plot.getRight(), 0.0f, false));
     g.strokePath (buildPath (outNotes), PST (2.0f, PST::curved, PST::rounded));
     g.restoreState();
 
@@ -531,19 +562,38 @@ void KeyBox::setText (const juce::String& t, bool isActive)
     if (t != text || isActive != active) { text = t; active = isActive; repaint(); }
 }
 
+void KeyBox::setProgress (float p)
+{
+    if (std::abs (p - progress) > 0.001f) { progress = p; repaint(); }
+}
+
 void KeyBox::paint (juce::Graphics& g)
 {
     const auto r = getLocalBounds().toFloat();
     g.setColour (theme::surface);
     g.fillRoundedRectangle (r, r.getHeight() * 0.5f);
+    if (progress >= 0.0f)
+    {
+        // Progreso del análisis: línea lima en la base de la píldora
+        const auto bar = r.reduced (16.0f, 0.0f).withTop (r.getBottom() - 5.0f).withHeight (2.0f);
+        g.setColour (theme::track);
+        g.fillRoundedRectangle (bar, 1.0f);
+        g.setColour (theme::limeLine);
+        g.fillRoundedRectangle (bar.withWidth (bar.getWidth() * progress), 1.0f);
+    }
 
-    g.setFont (font (*fonts, Face::manropeX, 8.5f, 0.2f));
-    g.setColour (theme::textFaint);
-    g.drawText ("KEY", juce::Rectangle<float> (16.0f, 0.0f, 40.0f, r.getHeight()), juce::Justification::centredLeft, false);
+    // Mientras analiza, el texto usa todo el ancho (sin el rótulo KEY)
+    const float textX = progress >= 0.0f ? 16.0f : 46.0f;
+    if (progress < 0.0f)
+    {
+        g.setFont (font (*fonts, Face::manropeX, 8.5f, 0.2f));
+        g.setColour (theme::textFaint);
+        g.drawText ("KEY", juce::Rectangle<float> (16.0f, 0.0f, 40.0f, r.getHeight()), juce::Justification::centredLeft, false);
+    }
 
     g.setFont (font (*fonts, Face::manropeX, 10.0f, 0.12f));
     g.setColour (active ? theme::ink : theme::textDim);
-    g.drawText (text, juce::Rectangle<float> (46.0f, 0.0f, r.getWidth() - 46.0f - 26.0f, r.getHeight()), juce::Justification::centredLeft, false);
+    g.drawText (text, juce::Rectangle<float> (textX, 0.0f, r.getWidth() - textX - 26.0f, r.getHeight()), juce::Justification::centredLeft, false);
 
     // Flecha del menú
     juce::Path p;
@@ -554,6 +604,45 @@ void KeyBox::paint (juce::Graphics& g)
     g.setColour (theme::arrows);
     g.strokePath (p, juce::PathStrokeType (1.5f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
 }
+
+// ========================================================== SettingsButton
+SettingsButton::SettingsButton()
+{
+    setMouseCursor (juce::MouseCursor::PointingHandCursor);
+}
+
+void SettingsButton::setText (const juce::String& skin, const juce::String& latency)
+{
+    if (skin != skinText || latency != latencyText) { skinText = skin; latencyText = latency; repaint(); }
+}
+
+void SettingsButton::paint (juce::Graphics& g)
+{
+    // Engranaje + skin y latencia actuales
+    const float cy = (float) getHeight() * 0.5f, cx = 13.0f;
+    const auto col = isMouseOver() ? theme::ink : theme::textDim;
+    juce::Path gear;
+    for (int i = 0; i < 8; ++i)
+    {
+        const float a = juce::MathConstants<float>::twoPi * (float) i / 8.0f;
+        gear.addRectangle (-1.4f, -7.0f, 2.8f, 3.0f);
+        gear.applyTransform (juce::AffineTransform::rotation (juce::MathConstants<float>::twoPi / 8.0f));
+        juce::ignoreUnused (a);
+    }
+    gear.addEllipse (-5.0f, -5.0f, 10.0f, 10.0f);
+    gear.applyTransform (juce::AffineTransform::translation (cx, cy));
+    g.setColour (col);
+    g.fillPath (gear);
+    g.setColour (theme::bg);
+    g.fillEllipse (cx - 2.2f, cy - 2.2f, 4.4f, 4.4f);
+
+    g.setFont (font (*fonts, Face::manropeX, 9.0f, 0.22f));
+    g.setColour (col);
+    g.drawText (skinText + juce::String (juce::CharPointer_UTF8 (" \xc2\xb7 ")) + latencyText,
+                juce::Rectangle<float> (28.0f, 0.0f, (float) getWidth() - 28.0f, (float) getHeight()), juce::Justification::centredLeft, false);
+}
+
+void SettingsButton::mouseDown (const juce::MouseEvent&) { if (onClick) onClick(); }
 
 // ============================================================== PresetBox
 PresetBox::PresetBox() { setMouseCursor (juce::MouseCursor::PointingHandCursor); }
@@ -572,7 +661,7 @@ void PresetBox::paint (juce::Graphics& g)
     const float cy = r.getCentreY();
     g.setColour (theme::limeBright.withAlpha (0.3f));
     g.fillEllipse (20.0f - 6.5f, cy - 6.5f, 13.0f, 13.0f);
-    g.setColour (juce::Colour (0xff8fd14a));
+    g.setColour (theme::presetDot);
     g.fillEllipse (20.0f - 3.5f, cy - 3.5f, 7.0f, 7.0f);
 
     g.setColour (theme::ink);
@@ -606,6 +695,12 @@ void PresetBox::mouseDown (const juce::MouseEvent& e)
 // =================================================================== View
 AlterIvoView::AlterIvoView (AlterIvoProcessor& p) : proc (p)
 {
+    // Skin guardada como preferencia (la misma para todos los proyectos)
+    static bool skinLoaded = false;
+    if (! skinLoaded) { theme::applySkin (UserSettings::loadDarkSkin()); skinLoaded = true; }
+    seenSkin = theme::skinVersion.load();
+    lnf.applySkinColours();
+
     setLookAndFeel (&lnf);
     setOpaque (true);
 
@@ -657,8 +752,10 @@ AlterIvoView::AlterIvoView (AlterIvoProcessor& p) : proc (p)
     presetBox.onNext  = [this] { loadPreset ((proc.getCurrentProgram() + 1) % proc.getNumPrograms()); };
     addAndMakeVisible (presetBox);
 
-    if (auto xml = juce::XmlDocument::parse (kLogoSvg))
-        logoMark = juce::Drawable::createFromSVG (*xml);
+    settingsButton.onClick = [this] { showSettingsMenu(); };
+    addAndMakeVisible (settingsButton);
+
+    loadLogo();
 
     setSize (kW, kH);
     timerCallback();
@@ -742,7 +839,9 @@ void AlterIvoView::showKeyMenu()
         minor.addItem (200 + r, juce::String (kRoots[r]) + " minor", true, scale == 2 && root == r);
     }
     menu.setLookAndFeel (&lnf);
-    menu.addItem (1, juce::String (juce::CharPointer_UTF8 ("Detectar tonalidad (de lo que ha sonado)")));
+    const bool analyzing = proc.updateKeyAnalysis().state == AlterIvoProcessor::KeyStatus::Analyzing;
+    if (analyzing) menu.addItem (3, juce::String (juce::CharPointer_UTF8 ("Cancelar el análisis")));
+    else menu.addItem (1, juce::String (juce::CharPointer_UTF8 ("Detectar tonalidad (reproduce el clip)")));
     menu.addSeparator();
     menu.addItem (2, "Chromatic (todas las notas)", true, scale == 0);
     menu.addSubMenu ("Major", major, true, nullptr, scale == 1);
@@ -753,17 +852,48 @@ void AlterIvoView::showKeyMenu()
                         {
                             if (safe == nullptr || result <= 0) return;
                             auto& v = *safe;
-                            if (result == 1)
-                            {
-                                int r = 0, sc = 0;
-                                if (v.proc.detectKey (r, sc)) { v.setChoice ("key", r); v.setChoice ("scale", sc); }
-                                else { v.keyBox.setText ("PLAY THE CLIP", false); v.keyMessageFrames = 75; }
-                            }
-                            else if (result == 2) v.setChoice ("scale", 0);
+                            if (result == 1) v.proc.startKeyAnalysis();
+                            else if (result == 3) v.proc.cancelKeyAnalysis();
+                            if (result == 2 || result >= 100) v.proc.cancelKeyAnalysis();
+                            if (result == 2) v.setChoice ("scale", 0);
                             else if (result >= 200) { v.setChoice ("key", result - 200); v.setChoice ("scale", 2); }
                             else if (result >= 100) { v.setChoice ("key", result - 100); v.setChoice ("scale", 1); }
                             v.shownKey = -1;
                             v.timerCallback();
+                        });
+}
+
+void AlterIvoView::loadLogo()
+{
+    juce::String svg (kLogoSvg);
+    svg = svg.replace ("#15210f", "#" + theme::ink.toDisplayString (false).toLowerCase());
+    if (auto xml = juce::XmlDocument::parse (svg))
+        logoMark = juce::Drawable::createFromSVG (*xml);
+}
+
+void AlterIvoView::showSettingsMenu()
+{
+    const int profile = proc.getLatencyProfile();
+    juce::PopupMenu skins, latency, menu;
+    skins.addItem (1, "Light", true, ! theme::darkSkin);
+    skins.addItem (2, "Dark", true, theme::darkSkin);
+    latency.addItem (10, "Low latency (41 ms)", true, profile == 0);
+    latency.addItem (11, "Normal (78 ms, mejor afinación)", true, profile == 1);
+    menu.setLookAndFeel (&lnf);
+    menu.addSubMenu ("Skin", skins);
+    menu.addSubMenu ("Latencia", latency);
+
+    menu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&settingsButton),
+                        [safe = juce::Component::SafePointer<AlterIvoView> (this)] (int result)
+                        {
+                            if (safe == nullptr || result <= 0) return;
+                            if (result == 1 || result == 2)
+                            {
+                                theme::applySkin (result == 2);
+                                UserSettings::saveDarkSkin (result == 2);
+                            }
+                            else if (result >= 10) safe->proc.setLatencyProfile (result - 10);
+                            safe->timerCallback();
                         });
 }
 
@@ -805,8 +935,44 @@ void AlterIvoView::timerCallback()
 
     const int keyState = (int) std::lround (proc.apvts.getRawParameterValue ("key")->load()) * 4
                        + (int) std::lround (proc.apvts.getRawParameterValue ("scale")->load());
-    if (keyMessageFrames > 0 && --keyMessageFrames == 0) shownKey = -1;
-    if (keyState != shownKey) { shownKey = keyState; updateKeyText(); }
+    // Detector de tonalidad: progreso mientras analiza y resultado con su seguridad
+    const auto& ks = proc.updateKeyAnalysis();
+    if (ks.state == AlterIvoProcessor::KeyStatus::Analyzing)
+    {
+        keyBox.setText ("ANALYZING " + juce::String (juce::roundToInt (ks.progress * 100.0f)) + "%", true);
+        keyBox.setProgress (ks.progress);
+        wasAnalyzing = true;
+        shownKey = -1;
+    }
+    else
+    {
+        if (wasAnalyzing)
+        {
+            wasAnalyzing = false;
+            keyBox.setProgress (-1.0f);
+            if (ks.state == AlterIvoProcessor::KeyStatus::Done)
+            {
+                keyBox.setText (juce::String (kRoots[ks.root]) + (ks.scale == 1 ? " MAJ " : " MIN ")
+                                + juce::String (juce::roundToInt (ks.confidence * 100.0f)) + "%", true);
+                keyMessageFrames = 90;
+            }
+            else shownKey = -1;
+        }
+        if (keyMessageFrames > 0 && --keyMessageFrames == 0) shownKey = -1;
+        if (keyState != shownKey && keyMessageFrames == 0) { shownKey = keyState; updateKeyText(); }
+    }
+
+    // Skin cambiada (en esta ventana o en otra instancia)
+    if (seenSkin != theme::skinVersion.load())
+    {
+        seenSkin = theme::skinVersion.load();
+        lnf.applySkinColours();
+        loadLogo();
+        background = {};
+        repaint();
+    }
+    settingsButton.setText (theme::darkSkin ? "DARK" : "LIGHT",
+                            juce::String (juce::roundToInt (1000.0 * proc.getLatencySamples() / juce::jmax (1.0, proc.getSampleRate()))) + " MS");
 
     if (proc.getCurrentProgram() != shownPreset)
     {
@@ -873,8 +1039,8 @@ void AlterIvoView::paintBackground (juce::Graphics& g)
 
     // Halo lima detrás de la pantalla
     {
-        juce::ColourGradient glow (theme::lime.withAlpha (0.55f), 380.0f, 262.0f, theme::bg.withAlpha (0.0f), 380.0f + 312.0f, 262.0f, true);
-        glow.addColour (0.35, theme::lime.withAlpha (0.18f));
+        juce::ColourGradient glow (theme::lime.withAlpha (theme::glowStrength), 380.0f, 262.0f, theme::bg.withAlpha (0.0f), 380.0f + 312.0f, 262.0f, true);
+        glow.addColour (0.35, theme::lime.withAlpha (theme::glowStrength * 0.33f));
         glow.addColour (0.68, theme::lime.withAlpha (0.0f));
         g.setGradientFill (glow);
         g.fillRect (getLocalBounds());
@@ -884,13 +1050,19 @@ void AlterIvoView::paintBackground (juce::Graphics& g)
     juce::AttributedString title;
     title.append ("alter", font (*fonts, Face::soraLight, 26.0f, -0.01f), theme::ink);
     title.append ("IVO", font (*fonts, Face::soraBold, 26.0f, -0.01f), theme::green);
-    title.setJustification (juce::Justification::centredLeft);
-    title.draw (g, juce::Rectangle<float> (36.0f, 28.0f, 300.0f, 36.0f));
+    // Frase descriptiva centrada bajo el nombre (los dos sobre el mismo eje)
+    const auto tagFont = font (*fonts, Face::manropeX, 9.5f, 0.24f);
+    const juce::String tag (juce::CharPointer_UTF8 ("FORMANT \xc2\xb7 PITCH \xc2\xb7 VOICE"));
+    const float tagW = textWidth (tagFont, tag) - 9.5f * 0.24f;   // sin el espaciado tras la última letra
+    const float titleW = textWidth (font (*fonts, Face::soraLight, 26.0f, -0.01f), "alter")
+                       + textWidth (font (*fonts, Face::soraBold, 26.0f, -0.01f), "IVO");
+    const float axis = 36.0f + juce::jmax (tagW, titleW) * 0.5f;
+    title.setJustification (juce::Justification::centred);
+    title.draw (g, juce::Rectangle<float> (axis - 150.0f, 28.0f, 300.0f, 36.0f));
 
     g.setColour (theme::textDim);
-    g.setFont (font (*fonts, Face::manropeX, 9.5f, 0.24f));
-    g.drawText (juce::String (juce::CharPointer_UTF8 ("FORMANT \xc2\xb7 PITCH \xc2\xb7 VOICE")), 38, 64, 300, 14,
-                juce::Justification::centredLeft, false);
+    g.setFont (tagFont);
+    g.drawText (tag, juce::Rectangle<float> (axis - tagW * 0.5f, 64.0f, tagW + 20.0f, 14.0f), juce::Justification::centredLeft, false);
 
     // Sombras de las piezas blancas
     softShadow (g, roundRect (kPresets.toFloat(), 18.0f), 0.10f, 18, 6);
@@ -904,7 +1076,7 @@ void AlterIvoView::paintBackground (juce::Graphics& g)
     // Tarjeta de la pantalla
     const auto card = kCard.toFloat();
     softShadow (g, roundRect (card, 26.0f), 0.17f, 50, 26);
-    g.setGradientFill (juce::ColourGradient (theme::surface, 0.0f, card.getY(), juce::Colour (0xfffbfdf8), 0.0f, card.getBottom(), false));
+    g.setGradientFill (juce::ColourGradient (theme::surface, 0.0f, card.getY(), theme::cardBottom, 0.0f, card.getBottom(), false));
     g.fillRoundedRectangle (card, 26.0f);
     g.setColour (theme::green.withAlpha (0.06f));
     g.drawRoundedRectangle (card.reduced (0.5f), 26.0f, 1.0f);
@@ -934,6 +1106,7 @@ void AlterIvoView::resized()
     mix.setBounds (box (kMixC, kSmallBox));
     modeSelector.setBounds (kModes);
     sourceSelector.setBounds (kSource);
+    settingsButton.setBounds (kSettings);
     keyBox.setBounds (kKey);
     linkButton.setBounds (kLink);
     display.setBounds (kCard);
