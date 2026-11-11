@@ -17,11 +17,19 @@ permissions:
 jobs:
   mac:
     runs-on: macos-15-intel   # Intel: suele tener más máquinas libres que macos-latest
+    env:
+      AAX_SDK_URL: ${{ secrets.AAX_SDK_URL }}   # Pro Tools: vacío = sin AAX
     steps:
       - uses: actions/checkout@v4
 
+      - name: AAX SDK (sólo si está configurado el secreto AAX_SDK_URL)
+        if: env.AAX_SDK_URL != ''
+        run: |
+          curl -sL -o aax.zip "$AAX_SDK_URL" && unzip -q aax.zip -d aax
+          echo "AAX_ARG=-DALTERIVO_AAX_SDK=$(cd aax/* && pwd)" >> $GITHUB_ENV
+
       - name: Configurar
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release $AAX_ARG
 
       - name: Compilar
         run: cmake --build build --config Release -j 4
@@ -34,12 +42,24 @@ jobs:
           ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --timeout-ms 900000 "build/AlterIvo_artefacts/Release/VST3/alterIVO.vst3" > pluginval-mac.txt 2>&1; echo "EXIT $?" >> pluginval-mac.txt
           tail -40 pluginval-mac.txt
 
+      - name: Validar el Audio Unit (auval, la prueba que usa Logic)
+        continue-on-error: true
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R "build/AlterIvo_artefacts/Release/AU/alterIVO.component" ~/Library/Audio/Plug-Ins/Components/
+          codesign --force --deep -s - ~/Library/Audio/Plug-Ins/Components/alterIVO.component
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          sleep 3
+          { echo "== auval"; auval -strict -v aumf Aivo Ivob; echo "EXIT $?"; } > auval-mac.txt 2>&1
+          { echo "== pluginval AU"; ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --timeout-ms 900000 ~/Library/Audio/Plug-Ins/Components/alterIVO.component; echo "EXIT $?"; } >> auval-mac.txt 2>&1
+          grep -E "AU VALIDATION|PASSED|FAILED|SUCCESS|EXIT" auval-mac.txt | tail -20
+
       - name: Crear instalador .pkg
         run: bash packaging/mac/build-pkg.sh 1.0.0
 
       - name: Guardar en la rama "instalador-mac"
         run: |
-          mkdir out && cp dist/alterIVO-Mac-Instalador.pkg out/ && (cp pluginval-mac.txt out/ || true) && cd out
+          mkdir out && cp dist/alterIVO-Mac-Instalador.pkg out/ && (cp pluginval-mac.txt auval-mac.txt out/ || true) && cd out
           git init -q -b instalador-mac
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add -A
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "alterIVO Mac"
@@ -58,11 +78,21 @@ jobs:
 
   windows:
     runs-on: windows-latest
+    env:
+      AAX_SDK_URL: ${{ secrets.AAX_SDK_URL }}   # Pro Tools: vacío = sin AAX
     steps:
       - uses: actions/checkout@v4
 
+      - name: AAX SDK (sólo si está configurado el secreto AAX_SDK_URL)
+        if: env.AAX_SDK_URL != ''
+        shell: bash
+        run: |
+          curl -sL -o aax.zip "$AAX_SDK_URL" && unzip -q aax.zip -d aax
+          echo "AAX_ARG=-DALTERIVO_AAX_SDK=$(cd aax/* && pwd -W)" >> $GITHUB_ENV
+
       - name: Configurar
-        run: cmake -B build -A x64
+        shell: bash
+        run: cmake -B build -A x64 $AAX_ARG
 
       - name: Compilar
         run: cmake --build build --config Release -j 4

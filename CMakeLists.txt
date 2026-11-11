@@ -25,6 +25,15 @@ else()
     set(ALTERIVO_FORMATS VST3)
 endif()
 
+# Pro Tools (AAX): se activa sólo si se indica la ruta del AAX SDK de Avid, que se
+# descarga con una cuenta de desarrollador de Avid. Sin él, se compila VST3 y AU.
+set(ALTERIVO_AAX_SDK "" CACHE PATH "Ruta al AAX SDK de Avid (opcional)")
+if(ALTERIVO_AAX_SDK AND EXISTS "${ALTERIVO_AAX_SDK}")
+    juce_set_aax_sdk_path("${ALTERIVO_AAX_SDK}")
+    list(APPEND ALTERIVO_FORMATS AAX)
+    message(STATUS "alterIVO: AAX activado con el SDK de ${ALTERIVO_AAX_SDK}")
+endif()
+
 juce_add_plugin(AlterIvo
     COMPANY_NAME                "IVO Beatz"
     BUNDLE_ID                   com.ivobeatz.alterivo
@@ -39,6 +48,7 @@ juce_add_plugin(AlterIvo
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     VST3_CATEGORIES             Fx "Pitch Shift"
     AU_MAIN_TYPE                kAudioUnitType_MusicEffect
+    AAX_CATEGORY                AAX_ePlugInCategory_PitchShift
     COPY_PLUGIN_AFTER_BUILD     ${ALTERIVO_COPY})
 
 target_sources(AlterIvo PRIVATE

@@ -83,3 +83,13 @@ La primera vez se descarga JUCE (unos 200 MB). Si falla con errores dentro de JU
 ## Licencia
 
 JUCE 8 es gratuito con licencia AGPLv3. Si vendes o repartes el plugin sin publicar el código, necesitas la licencia comercial de JUCE.
+
+## Compatibilidad (base para todos los plugins IVO)
+
+| DAW | Formato | Cómo se comprueba en cada compilación |
+| --- | --- | --- |
+| Ableton Live, FL Studio, Cubase, Studio One, REAPER, Bitwig | VST3 (Mac y Windows) | pluginval nivel 5 |
+| Logic Pro (y GarageBand) | Audio Unit (Mac) | `auval -strict` + pluginval |
+| Pro Tools | AAX | Se activa al configurar el secreto `AAX_SDK_URL` con el AAX SDK de Avid; hace falta además firmarlo con PACE/iLok |
+
+Cada plugin IVO nuevo parte de esta misma base: mismo CMake, mismos instaladores y mismas validaciones.
