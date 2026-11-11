@@ -76,6 +76,12 @@ jobs:
           ./pluginval.exe --strictness-level 5 --validate-in-process --timeout-ms 900000 "build/AlterIvo_artefacts/Release/VST3/alterIVO.vst3" > pluginval-windows.txt 2>&1; echo "EXIT $?" >> pluginval-windows.txt
           tail -40 pluginval-windows.txt
 
+      - name: Zip del VST3 (instalación copiando la carpeta, sin ejecutar nada)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path "build\AlterIvo_artefacts\Release\VST3\alterIVO.vst3" -DestinationPath "dist\alterIVO-Windows-VST3.zip" -Force
+
       - name: Instalar Inno Setup
         run: choco install innosetup -y --no-progress
 
@@ -90,7 +96,7 @@ jobs:
       - name: Guardar en la rama "instalador-windows"
         shell: bash
         run: |
-          mkdir out && cp dist/alterIVO-Windows-Instalador.exe out/ && (cp pluginval-windows.txt out/ || true) && cd out
+          mkdir out && cp dist/alterIVO-Windows-Instalador.exe dist/alterIVO-Windows-VST3.zip out/ && (cp pluginval-windows.txt out/ || true) && cd out
           git init -q -b instalador-windows
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add -A
           git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "alterIVO Windows"
