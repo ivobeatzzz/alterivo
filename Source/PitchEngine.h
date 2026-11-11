@@ -306,6 +306,8 @@ public:
     void setFormantSemitones (float s) noexcept { formantSemis = s; }
     void setMode (Mode m) noexcept              { mode = m; }
     void setMidiNote (int note) noexcept        { midiNote = note; }   // -1 = ninguna
+    // Intensidad 0..1: fracción del cambio de tono que se aplica (en semitonos)
+    void setIntensity (float i) noexcept        { intensity = std::clamp (i, 0.0f, 1.0f); }
     // La escala nueva entra en la siguiente nota (o a los 0,5 s), no a mitad de una
     void setScale (uint16_t m) noexcept         { if (m != pendingAllowed) { pendingAllowed = m; scalePendingAge = 0; } }
     // Síntesis activa: si no hace falta (todo a 0 o modo MIX) sólo se analiza
@@ -510,7 +512,7 @@ private:
             const float hz = m.voiced ? f0At (m.pos) : 0.0f;
             if (m.voiced && hz > 0.0f)
             {
-                ratio = std::clamp (targetRatio (hz), 0.25, 4.0);
+                ratio = std::clamp (std::pow (targetRatio (hz), (double) intensity), 0.25, 4.0);
                 advance = Pr / ratio;
             }
             outputHz.store (hz > 0.0f ? (float) (hz * ratio) : 0.0f, std::memory_order_relaxed);
@@ -694,7 +696,7 @@ private:
     float curF0 = 0.0f;
     int quantNote = -1;
 
-    float pitchSemis = 0.0f, formantSemis = 0.0f;
+    float pitchSemis = 0.0f, formantSemis = 0.0f, intensity = 1.0f;
     Mode mode = Mode::Transpose;
     int midiNote = -1;
     uint16_t allowed = 0xFFF, pendingAllowed = 0xFFF;
@@ -786,6 +788,7 @@ public:
     void setMode (Mode m) noexcept              { mode = m; }
     void setMidiNote (int note) noexcept        { midiNote = note; }
     void setScale (uint16_t m) noexcept         { allowed = m; }
+    void setIntensity (float i) noexcept        { intensity = std::clamp (i, 0.0f, 1.0f); }
 
     void process (const float* x, float* y) noexcept
     {
@@ -826,7 +829,7 @@ private:
     {
         if (mode != Mode::Transpose || (hopCount++ & 3) == 0)
             detectPitch();
-        const double ratio = std::clamp (currentRatio(), 0.25, 4.0);
+        const double ratio = std::clamp (std::pow (currentRatio(), (double) intensity), 0.25, 4.0);
         const double formant = std::clamp (std::pow (2.0, (double) formantSemis / 12.0), 0.25, 4.0);
 
         const float expect = (float) (2.0 * kPi * H / N);
@@ -1059,7 +1062,7 @@ private:
     YinDetector yin;
     int hopCount = 0, glitches = 0, unvoicedRun = 0, quantNote = -1;
     float curF0 = 0.0f;
-    float pitchSemis = 0.0f, formantSemis = 0.0f;
+    float pitchSemis = 0.0f, formantSemis = 0.0f, intensity = 1.0f;
     Mode mode = Mode::Transpose;
     int midiNote = -1;
     uint16_t allowed = 0xFFF;
@@ -1108,6 +1111,7 @@ public:
     void setMidiNote (int n) noexcept           { psola.setMidiNote (n); vocoder.setMidiNote (n); }
     void setScale (int root, Scale s) noexcept  { const auto m = scaleMask (root, s); psola.setScale (m); vocoder.setScale (m); }
     void setVoiceSource (bool voice) noexcept   { voiceSource = voice; }
+    void setIntensity (float i) noexcept        { psola.setIntensity (i); vocoder.setIntensity (i); }
     void setActive (bool on) noexcept           { active = on; }
     void setHighQuality (bool hq) noexcept      { psola.setHighQuality (hq); }
 

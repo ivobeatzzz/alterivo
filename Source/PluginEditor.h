@@ -168,7 +168,6 @@ private:
     void timerCallback() override;
     void setMode (int index);
     void setupKnob (juce::Slider&, bool big);
-    void linkedMove (juce::Slider& moved, juce::Slider& other, double& lastMoved, double& lastOther);
     void loadPreset (int index);
     void showPresetMenu();
     void showKeyMenu();
@@ -182,7 +181,7 @@ private:
     AlterIvoLookAndFeel lnf;
     juce::SharedResourcePointer<BrandFonts> fonts;
 
-    juce::Slider pitch, formant, drive, mix;
+    juce::Slider pitch, formant, drive, mix, intensity, output;
     ModeSelector modeSelector;
     ModeSelector sourceSelector { { "VOICE", "MIX" }, 9.0f, true };
     KeyBox keyBox;
@@ -197,11 +196,9 @@ private:
 
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
-    std::unique_ptr<SliderAttachment> pitchAtt, formantAtt, driveAtt, mixAtt;
+    std::unique_ptr<SliderAttachment> pitchAtt, formantAtt, driveAtt, mixAtt, intensityAtt, outputAtt;
     std::unique_ptr<ButtonAttachment> linkAtt;
 
-    double lastPitch = 0.0, lastFormant = 0.0;
-    bool linking = false;
     int currentMode = -1, shownPreset = -1, shownSource = -1, shownKey = -1;
     int keyMessageFrames = 0, seenSkin = -1;
     bool wasAnalyzing = false;

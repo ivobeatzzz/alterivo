@@ -28,8 +28,8 @@ const FactoryPreset kPresets[] = {
     { "Octava arriba",      12.0f,  2.0f,  0.0f,  40.0f, 0, false },
     { "Voz más grave",      -2.0f, -2.5f,  0.0f, 100.0f, 0, false },
     { "Voz más aguda",       2.0f,  2.0f,  0.0f, 100.0f, 0, false },
-    { "Ardilla",             7.0f,  7.0f,  0.0f, 100.0f, 0, true  },
-    { "Gigante",            -7.0f, -7.0f, 20.0f, 100.0f, 0, true  },
+    { "Ardilla",             7.0f,  0.0f,  0.0f, 100.0f, 0, true  },
+    { "Gigante",            -7.0f,  0.0f, 20.0f, 100.0f, 0, true  },
     { "Robot",               0.0f,  0.0f, 25.0f, 100.0f, 2, false },
     { "Robot grave",       -12.0f, -3.0f, 35.0f, 100.0f, 2, false },
     { "Radio rota",          0.0f,  4.0f, 85.0f, 100.0f, 1, false },
@@ -75,6 +75,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout AlterIvoProcessor::createLay
     params.push_back (std::make_unique<AudioParameterChoice> (
         ParameterID { "source", 2 }, "Source", StringArray { "Voice", "Mix" }, 0));
 
+    // Intensidad: cuánto del efecto (tono y formantes) se aplica, sin mezclar la señal seca
+    params.push_back (std::make_unique<AudioParameterFloat> (
+        ParameterID { "intensity", 3 }, "Intensity", NormalisableRange<float> (0.0f, 100.0f, 0.1f), 100.0f,
+        AudioParameterFloatAttributes().withLabel ("%").withStringFromValueFunction (
+            [] (float v, int) { return String (v, 0) + "%"; })));
+
+    // Salida: ajuste final de nivel (el nivel igualado ya mantiene el volumen con 0 dB)
+    params.push_back (std::make_unique<AudioParameterFloat> (
+        ParameterID { "output", 3 }, "Output", NormalisableRange<float> (-12.0f, 12.0f, 0.1f), 0.0f,
+        AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (
+            [] (float v, int) { return signedValue (v, 1, " dB"); })));
+
     return { params.begin(), params.end() };
 }
 
@@ -93,6 +105,8 @@ AlterIvoProcessor::AlterIvoProcessor()
     pKey     = apvts.getRawParameterValue ("key");
     pScale   = apvts.getRawParameterValue ("scale");
     pSource  = apvts.getRawParameterValue ("source");
+    pIntensity = apvts.getRawParameterValue ("intensity");
+    pOutput    = apvts.getRawParameterValue ("output");
 }
 
 bool AlterIvoProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -150,6 +164,8 @@ void AlterIvoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     driveGain.reset (sampleRate, 0.03);
     driveGain.setCurrentAndTargetValue (0.0f);
     driveCurrent = pDrive->load() / 100.0f;
+    outputGain.reset (sampleRate, 0.05);
+    outputGain.setCurrentAndTargetValue (juce::Decibels::decibelsToGain (pOutput->load()));
     driveStepPerSample = (float) (1.0 / (0.05 * sampleRate * 4.0));   // recorrido completo en 50 ms
     keyResetRequest.store (true);
 
@@ -210,8 +226,14 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     const int keyRoot = juce::jlimit (0, 11, (int) std::lround (pKey->load()));
     const auto scale = static_cast<alterivo::Scale> (juce::jlimit (0, 2, (int) std::lround (pScale->load())));
     const bool voiceSource = pSource->load() < 0.5f;
+    // Link: los formantes siguen al tono (en el motor, así vale para ratón, automatización,
+    // MIDI y presets). Formant queda como ajuste adicional. Intensity escala todo el efecto.
+    const float intensity = pIntensity->load() / 100.0f;
+    const float pitchSemis = heldNote.load() >= 0 ? (float) (heldNote.load() - 60) : pPitch->load();
+    const float formantSemis = juce::jlimit (-12.0f, 12.0f, pFormant->load() + (pLink->load() > 0.5f ? pitchSemis : 0.0f));
     engine.setPitchSemitones (pPitch->load());
-    engine.setFormantSemitones (pFormant->load());
+    engine.setFormantSemitones (formantSemis * intensity);
+    engine.setIntensity (intensity);
     engine.setMode (engineMode);
     engine.setMidiNote (heldNote.load());
     engine.setScale (keyRoot, scale);
@@ -224,10 +246,12 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     mixSmoothed.setTargetValue (pMix->load() / 100.0f);
 
     // Con Pitch y Formant a 0 (Transpose, sin MIDI) la voz pasa intacta y en estéreo
-    const bool engineNeeded = engineMode != alterivo::Mode::Transpose
-                              || std::abs (pPitch->load()) > 0.005f
-                              || std::abs (pFormant->load()) > 0.005f
-                              || heldNote.load() >= 0;
+    const bool engineNeeded = intensity > 0.0005f
+                              && (engineMode != alterivo::Mode::Transpose
+                                  || std::abs (pPitch->load()) > 0.005f
+                                  || std::abs (formantSemis) > 0.005f
+                                  || heldNote.load() >= 0);
+    outputGain.setTargetValue (juce::Decibels::decibelsToGain (pOutput->load()));
     engineGain.setTargetValue (engineNeeded ? 1.0f : 0.0f);
     // Sin efecto audible el motor sólo analiza (pantalla y tonalidad): ahorra CPU
     engine.setActive (engineNeeded || engineGain.isSmoothing() || engineGain.getCurrentValue() > 0.0f);
@@ -358,6 +382,7 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
     for (int i = 0; i < len; ++i)
     {
         const float mix = mixSmoothed.getNextValue();
+        const float og = outputGain.getNextValue();
         const float dg = driveOn ? driveGain.getNextValue() : 0.0f;
 
         for (int ch = 0; ch < numCh; ++ch)
@@ -368,7 +393,7 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
             if (driveOn)
                 wet = clean + dg * (dcBlockers[(size_t) ch].process (wetBuffer.getSample (ch, i)) - clean);
 
-            buffer.setSample (ch, start + i, dry + mix * (wet - dry));
+            buffer.setSample (ch, start + i, (dry + mix * (wet - dry)) * og);
         }
     }
 }
@@ -509,6 +534,8 @@ void AlterIvoProcessor::setCurrentProgram (int index)
     set ("mix", p.mix);
     set ("mode", (float) p.mode);
     set ("link", p.link ? 1.0f : 0.0f);
+    set ("intensity", 100.0f);
+    set ("output", 0.0f);
     apvts.state.setProperty ("preset", index, nullptr);
 }
 

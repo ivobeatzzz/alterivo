@@ -67,7 +67,9 @@ constexpr float kEnd   = juce::MathConstants<float>::pi * 2.75f;
 constexpr int kW = AlterIvoEditor::kBaseW, kH = AlterIvoEditor::kBaseH;
 
 // Posiciones del diseño (760 x 540)
-const juce::Point<int> kPitchC   { 124, 236 }, kFormantC { 636, 236 }, kDriveC { 124, 426 }, kMixC { 636, 426 };
+// Fila inferior: INTENSITY y DRIVE bajo Pitch, MIX y OUTPUT bajo Formant
+const juce::Point<int> kPitchC   { 124, 236 }, kFormantC { 636, 236 };
+const juce::Point<int> kIntensityC { 78, 426 }, kDriveC { 170, 426 }, kMixC { 590, 426 }, kOutputC { 682, 426 };
 constexpr int kBigBox = 180, kSmallBox = 96;
 constexpr float kBigR = 58.0f, kSmallR = 24.0f;
 
@@ -706,29 +708,36 @@ AlterIvoView::AlterIvoView (AlterIvoProcessor& p) : proc (p)
 
     setupKnob (pitch, true);
     setupKnob (formant, true);
+    setupKnob (intensity, false);
     setupKnob (drive, false);
     setupKnob (mix, false);
+    setupKnob (output, false);
 
     pitchAtt   = std::make_unique<SliderAttachment> (proc.apvts, "pitch", pitch);
     formantAtt = std::make_unique<SliderAttachment> (proc.apvts, "formant", formant);
     driveAtt   = std::make_unique<SliderAttachment> (proc.apvts, "drive", drive);
     mixAtt     = std::make_unique<SliderAttachment> (proc.apvts, "mix", mix);
+    intensityAtt = std::make_unique<SliderAttachment> (proc.apvts, "intensity", intensity);
+    outputAtt    = std::make_unique<SliderAttachment> (proc.apvts, "output", output);
+    intensity.setDoubleClickReturnValue (true, 100.0);
+    output.setDoubleClickReturnValue (true, 0.0);
 
     pitch.setDoubleClickReturnValue (true, 0.0);
     formant.setDoubleClickReturnValue (true, 0.0);
     drive.setDoubleClickReturnValue (true, 0.0);
     mix.setDoubleClickReturnValue (true, 100.0);
 
-    lastPitch = pitch.getValue();
-    lastFormant = formant.getValue();
     auto repaintValue = [this] (juce::Point<int> c, bool big)
     {
         repaint (big ? centredRect (c.x, c.y + 78, 180, 34) : centredRect (c.x, c.y + 44, 120, 24));
     };
-    pitch.onValueChange   = [this, repaintValue] { linkedMove (pitch, formant, lastPitch, lastFormant); repaintValue (kPitchC, true); };
-    formant.onValueChange = [this, repaintValue] { linkedMove (formant, pitch, lastFormant, lastPitch); repaintValue (kFormantC, true); };
-    drive.onValueChange   = [repaintValue] { repaintValue (kDriveC, false); };
-    mix.onValueChange     = [repaintValue] { repaintValue (kMixC, false); };
+    // Con Link, el valor de Formant muestra el total (su ajuste + lo que mueve Pitch)
+    pitch.onValueChange     = [this, repaintValue] { repaintValue (kPitchC, true); repaintValue (kFormantC, true); };
+    formant.onValueChange   = [repaintValue] { repaintValue (kFormantC, true); };
+    drive.onValueChange     = [repaintValue] { repaintValue (kDriveC, false); };
+    mix.onValueChange       = [repaintValue] { repaintValue (kMixC, false); };
+    intensity.onValueChange = [repaintValue] { repaintValue (kIntensityC, false); };
+    output.onValueChange    = [repaintValue] { repaintValue (kOutputC, false); };
 
     modeSelector.onChange = [this] (int i) { setMode (i); };
     addAndMakeVisible (modeSelector);
@@ -739,7 +748,7 @@ AlterIvoView::AlterIvoView (AlterIvoProcessor& p) : proc (p)
     keyBox.onClick = [this] { showKeyMenu(); };
     addAndMakeVisible (keyBox);
 
-    linkButton.onStateChange = [this] { repaint (260, 364, 240, 20); };
+    linkButton.onStateChange = [this] { repaint (260, 364, 240, 20); repaint (centredRect (kFormantC.x, kFormantC.y + 78, 180, 34)); };
     addAndMakeVisible (linkButton);
     linkAtt = std::make_unique<ButtonAttachment> (proc.apvts, "link", linkButton);
 
@@ -778,21 +787,6 @@ void AlterIvoView::setupKnob (juce::Slider& s, bool big)
     s.setMouseCursor (juce::MouseCursor::UpDownResizeCursor);
     s.setPaintingIsUnclipped (true);
     addAndMakeVisible (s);
-}
-
-// Link: al mover un mando con el ratón, el otro se mueve lo mismo
-void AlterIvoView::linkedMove (juce::Slider& moved, juce::Slider& other, double& lastMoved, double& lastOther)
-{
-    const double now = moved.getValue();
-    if (! linking && linkButton.getToggleState() && moved.isMouseButtonDown())
-    {
-        linking = true;
-        other.setValue (juce::jlimit (other.getMinimum(), other.getMaximum(), other.getValue() + (now - lastMoved)),
-                        juce::sendNotificationSync);
-        linking = false;
-    }
-    lastMoved = now;
-    lastOther = other.getValue();
 }
 
 void AlterIvoView::setMode (int index)
@@ -900,8 +894,6 @@ void AlterIvoView::showSettingsMenu()
 void AlterIvoView::loadPreset (int index)
 {
     proc.setCurrentProgram (index);
-    lastPitch = pitch.getValue();
-    lastFormant = formant.getValue();
     timerCallback();
 }
 
@@ -1018,9 +1010,18 @@ void AlterIvoView::paint (juce::Graphics& g)
         g.drawText (s.getTextFromValue (s.getValue()), r, juce::Justification::centred, false);
     };
     value (pitch, kPitchC, true);
-    value (formant, kFormantC, true);
     value (drive, kDriveC, false);
     value (mix, kMixC, false);
+    value (intensity, kIntensityC, false);
+    value (output, kOutputC, false);
+    {
+        // Formant: con Link se muestra el total en verde
+        const bool linked = linkButton.getToggleState();
+        const double total = juce::jlimit (-12.0, 12.0, formant.getValue() + (linked ? pitch.getValue() : 0.0));
+        g.setColour (linked ? theme::limeDeep : theme::ink);
+        g.setFont (font (*fonts, Face::soraSemi, 22.0f, -0.01f));
+        g.drawText (formant.getTextFromValue (total), centredRect (kFormantC.x, kFormantC.y + 80, 180, 30), juce::Justification::centred, false);
+    }
 
     // ---- Líneas del Link
     const bool on = linkButton.getToggleState();
@@ -1070,7 +1071,7 @@ void AlterIvoView::paintBackground (juce::Graphics& g)
     softShadow (g, roundRect (kLink.toFloat(), 14.0f), 0.14f, 12, 5);
     for (auto c : { kPitchC, kFormantC })
         softShadow (g, circle (c.toFloat(), kBigR), 0.20f, 30, 16);
-    for (auto c : { kDriveC, kMixC })
+    for (auto c : { kDriveC, kMixC, kIntensityC, kOutputC })
         softShadow (g, circle (c.toFloat(), kSmallR), 0.16f, 12, 6);
 
     // Tarjeta de la pantalla
@@ -1088,6 +1089,8 @@ void AlterIvoView::paintBackground (juce::Graphics& g)
     g.drawText ("FORMANT", centredRect (kFormantC.x, 116, 160, 14), juce::Justification::centred, false);
     g.drawText ("DRIVE",   centredRect (kDriveC.x, kDriveC.y - 72, 120, 14), juce::Justification::centred, false);
     g.drawText ("MIX",     centredRect (kMixC.x, kMixC.y - 72, 120, 14), juce::Justification::centred, false);
+    g.drawText ("INTENSITY", centredRect (kIntensityC.x, kIntensityC.y - 72, 120, 14), juce::Justification::centred, false);
+    g.drawText ("OUTPUT",  centredRect (kOutputC.x, kOutputC.y - 72, 120, 14), juce::Justification::centred, false);
 
     // Firma IVO abajo a la derecha (las letras ocupan del 13.45 % al 86.55 % del ancho del SVG)
     if (logoMark != nullptr)
@@ -1104,6 +1107,8 @@ void AlterIvoView::resized()
     formant.setBounds (box (kFormantC, kBigBox));
     drive.setBounds (box (kDriveC, kSmallBox));
     mix.setBounds (box (kMixC, kSmallBox));
+    intensity.setBounds (box (kIntensityC, kSmallBox));
+    output.setBounds (box (kOutputC, kSmallBox));
     modeSelector.setBounds (kModes);
     sourceSelector.setBounds (kSource);
     settingsButton.setBounds (kSettings);

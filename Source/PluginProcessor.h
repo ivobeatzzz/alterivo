@@ -127,6 +127,9 @@ private:
     std::atomic<float>* pKey     = nullptr;
     std::atomic<float>* pScale   = nullptr;
     std::atomic<float>* pSource  = nullptr;
+    std::atomic<float>* pIntensity = nullptr;
+    std::atomic<float>* pOutput    = nullptr;
+    juce::SmoothedValue<float> outputGain;
 
     // Nivel igualado
     float levelCoef = 0.0f, levelIn = 0.0f, levelOut = 0.0f;
