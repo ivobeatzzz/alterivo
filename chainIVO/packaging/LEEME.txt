@@ -1,0 +1,62 @@
+chainIVO 0.1 — Secondary vocal chain · IVO Beatz
+https://ivobeatz.com
+
+Procesa ad-libs, coros, dobles, armonías y efectos vocales: analiza la pista,
+la compara con la voz principal (si se la mandas) y monta la cadena.
+
+
+INSTALAR EN WINDOWS (opción recomendada, sin avisos)
+----------------------------------------
+1. Descomprime chainIVO-Windows-VST3.zip.
+2. Copia la carpeta chainIVO.vst3 en  C:\Program Files\Common Files\VST3
+   (Windows pide permiso de administrador: Continuar).
+Opción B: chainIVO-Windows-Instalador.exe. Si sale "Windows protegió su PC":
+Más información → Ejecutar de todas formas.
+
+INSTALAR EN MAC
+----------------------------------------
+1. Doble clic en chainIVO-Mac-Instalador.pkg.
+2. Si macOS no lo deja abrir: Ajustes del Sistema → Privacidad y seguridad →
+   "Abrir igualmente".
+3. Marca VST3 y/o Audio Unit (AU) e instala.
+
+Después, abre el DAW y vuelve a escanear plugins (aparece como IVO Beatz → chainIVO).
+
+
+CÓMO SE USA (AUTO)
+----------------------------------------
+1. Pon chainIVO en la pista de la voz secundaria (ad-lib, coro, doble...).
+2. Dale al play: en unos 8 segundos de voz sabe qué tipo de pista es y monta la cadena.
+3. Si quieres, elige tú el TIPO DE VOZ y el ESTILO (Rage, Plugg, reggaetón...).
+4. Elige un preset (pulsa en el nombre para buscar) o deja la propuesta automática.
+5. Ajusta INTENSITY: 0 % = la voz tal cual, 100 % = el tratamiento completo.
+POR QUÉ explica cada decisión. ANALIZAR DE NUEVO vuelve a empezar el análisis.
+
+PRO
+----------------------------------------
+Los mismos motores con todos sus ajustes a la vista. Pulsa una ficha para editarla,
+el punto la enciende o apaga, ‹ › cambian el orden, LOCK impide que AUTO la toque.
+
+LA VOZ PRINCIPAL (opcional, pero mejora mucho el resultado)
+----------------------------------------
+chainIVO no modifica nunca la voz principal: sólo la escucha por sidechain para dejarle sitio.
+- Ableton Live: en el dispositivo, abre el triángulo de sidechain y en "Audio From" elige la pista
+  de la voz principal.
+- FL Studio: en el mezclador, desde la pista de la voz principal haz clic derecho en la flecha de
+  la pista de chainIVO → "Sidechain to this track"; en el plugin, en el engranaje → Processing,
+  asigna la entrada lateral.
+- Logic Pro: arriba a la derecha del plugin, "Side Chain" → elige la pista de la voz principal.
+Sin voz principal también funciona, pero no puede distinguir doble, armonía o respuesta.
+
+QUALITY
+----------------------------------------
+ECO: saturación 2x y reverb de 4 líneas (menos CPU).
+NORMAL: 4x y 8 líneas. HIGH: 4x con filtro máximo e interpolación fina.
+ULTRA: 8x y reverb de 16 líneas. Cambiar la calidad cambia un poco la latencia (el DAW la compensa).
+
+OTROS
+----------------------------------------
+GAIN MATCH iguala el volumen al original para comparar de forma justa (A/B incluido).
+CLIP SAFE es una protección suave por encima de -1 dBFS, no un limitador.
+Tus presets se guardan en Documentos/IVO Beatz/chainIVO/Presets.
+Todo se procesa en tu ordenador: el audio nunca sale de él.

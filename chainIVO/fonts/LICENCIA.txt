@@ -1,0 +1,3 @@
+Fuentes Sora (Jonathan Barnbrook / Julián Moncada) y Manrope (Mikhail Sharanda),
+publicadas bajo la SIL Open Font License 1.1 (https://openfontlicense.org).
+Aquí van recortadas a los caracteres latinos y en pesos fijos para incrustarlas en el plugin.

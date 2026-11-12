@@ -1,0 +1,33 @@
+[null] INTENSITY 0 %: latencia 38 muestras, diferencia con la entrada -300.0 dB
+[alias] ECO    latencia  31 | aliasing frente a armonicos: -35.6 dB
+[alias] NORMAL latencia  38 | aliasing frente a armonicos: -55.8 dB
+[alias] HIGH   latencia  61 | aliasing frente a armonicos: -55.7 dB
+[alias] ULTRA  latencia  65 | aliasing frente a armonicos: -55.7 dB
+[comp] FET      rango dinamico 15.7 dB (original 26.5) | nivel medio -43.2 dB
+[comp] Opto     rango dinamico 21.8 dB (original 26.5) | nivel medio -37.2 dB
+[comp] VCA      rango dinamico 18.4 dB (original 26.5) | nivel medio -40.7 dB
+[comp] Vari-Mu  rango dinamico 21.7 dB (original 26.5) | nivel medio -37.0 dB
+[comp] Clean    rango dinamico 17.6 dB (original 26.5) | nivel medio -41.0 dB
+[comp] diferencia entre topologias (dB, normalizada al nivel):
+   FET-Opto -12.0   FET-VCA -15.6   FET-Vari-Mu -11.9   FET-Clean -16.8   Opto-VCA -14.1   Opto-Vari-Mu -26.4   Opto-Clean -14.3   VCA-Vari-Mu -14.3   VCA-Clean -26.9   Vari-Mu-Clean -14.4
+[reverb] Plate    (8 lineas) decay ajustado 2.0 s -> medido T60 1.98 s
+[reverb] Hall     (8 lineas) decay ajustado 2.0 s -> medido T60 2.03 s
+[reverb] Room     (8 lineas) decay ajustado 2.0 s -> medido T60 1.38 s
+[reverb] Chamber  (8 lineas) decay ajustado 2.0 s -> medido T60 1.96 s
+[reverb] Ambience (8 lineas) decay ajustado 2.0 s -> medido T60 0.60 s
+[mono] anchura 200 % + doblador 60 %: suma mono frente a estereo -1.8 dB, correlacion L/R 0.31
+[deess] tramos de 's' (79): agudos -5.8 dB | tramos de vocal (899): nivel -0.02 dB
+[cpu] ECO    2.3 % de un nucleo (latencia 31 muestras = 0.65 ms)
+[cpu] NORMAL 3.7 % de un nucleo (latencia 38 muestras = 0.79 ms)
+[cpu] HIGH   4.3 % de un nucleo (latencia 61 muestras = 1.27 ms)
+[cpu] ULTRA  6.6 % de un nucleo (latencia 65 muestras = 1.35 ms)
+[stress] 158 s con automatizacion aleatoria: 0 valores no validos, pico 5.24 (14.4 dBFS)
+[auto] sin principal: 33.7 s de voz, tipo Segunda voz (58 %): Suena casi todo el tiempo
+       medidas: actividad 0.64, frase mediana 0.73 s, tono claro 0.85, sibilancia -25.7 dB en 5080 Hz, graves -6.9, nasal -18.7, p90 -26.5 dB
+       preset: Propuesta automática | por que EQ: Paso alto en 198 Hz, graves cargados: -2.9 dB en 250 Hz.
+[auto] doble con principal: tipo Doble (66 %) | corr. envolvente 0.76, solape 0.76, mismo tono 0.49, choque banda 17 (3200 Hz) 0.77
+       por que EQ: Choca con la voz principal en 4.0 kHz: baja 3.3 dB ahí sólo cuando canta la principal.
+[auto] respuesta: tipo Respuesta (100 %) | suena con principal 0.00, sin principal 0.84
+[state] parametros distintos 0 | orden igual | PRO 1 | lock COMP 1 | preset 'Ad-lib Dark Echo' | B recuperado reverb 33 %
+[ui] ui_auto.png guardada
+[ui] ui_pro.png guardada

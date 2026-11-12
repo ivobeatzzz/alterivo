@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>chainIVO</title>
+    <organization>com.ivobeatz</organization>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <!-- customize="always": muestra siempre la pantalla para elegir VST3 / AU -->
+    <options customize="always" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+    <domains enable_localSystem="true"/>
+
+    <choices-outline>
+        <line choice="vst3"/>
+        <line choice="au"/>
+    </choices-outline>
+
+    <choice id="vst3" title="VST3"
+            description="chainIVO.vst3 en /Library/Audio/Plug-Ins/VST3. Para Ableton Live, FL Studio, Cubase, Studio One, Reaper…">
+        <pkg-ref id="com.ivobeatz.chainivo.vst3"/>
+    </choice>
+
+    <choice id="au" title="Audio Unit (AU)"
+            description="chainIVO.component en /Library/Audio/Plug-Ins/Components. Para Logic Pro, GarageBand y Ableton Live.">
+        <pkg-ref id="com.ivobeatz.chainivo.au"/>
+    </choice>
+
+    <pkg-ref id="com.ivobeatz.chainivo.vst3" version="0.1.0" onConclusion="none">chainIVO-VST3.pkg</pkg-ref>
+    <pkg-ref id="com.ivobeatz.chainivo.au" version="0.1.0" onConclusion="none">chainIVO-AU.pkg</pkg-ref>
+</installer-gui-script>
