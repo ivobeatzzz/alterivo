@@ -92,7 +92,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     add<APF> (l, breath, "Breath", NR (0.0f, 100.0f, 0.1f), 0.0f, pctAttr());
     // SPACE
     add<APB> (l, spaceOn, "Space On", true);
-    add<APC> (l, revType, "Reverb Type", juce::StringArray { "Plate", "Hall", "Room", "Chamber", "Ambience" }, 0);
+    add<APC> (l, revType, "Reverb Type", juce::StringArray { "Plate", "Hall", "Room", "Chamber", "Ambience", "IR" }, 0);
     add<APF> (l, revMix, "Reverb Mix", NR (0.0f, 100.0f, 0.1f), 15.0f, pctAttr());
     add<APF> (l, revDecay, "Reverb Decay", logRange (0.2f, 8.0f), 1.6f,
               juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (float v, int) { return juce::String (v, 2) + " s"; }));
@@ -105,40 +105,51 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     add<APF> (l, duck, "Ducking", NR (0.0f, 100.0f, 0.1f), 50.0f, pctAttr());
     add<APF> (l, width, "Width", NR (0.0f, 200.0f, 0.1f), 100.0f, pctAttr());
     add<APF> (l, doubler, "Doubler", NR (0.0f, 100.0f, 0.1f), 0.0f, pctAttr());
+    l.add (std::make_unique<APF> (juce::ParameterID { dlyThrow, 2 }, "Phrase-end Throw", NR (0.0f, 100.0f, 0.1f), 0.0f, pctAttr()));
+    l.add (std::make_unique<APF> (juce::ParameterID { revSwell, 2 }, "Phrase-end Swell", NR (0.0f, 100.0f, 0.1f), 0.0f, pctAttr()));
     // CREATIVE
     add<APB> (l, creaOn, "Creative On", false);
-    add<APC> (l, creaType, "Creative Type", juce::StringArray { "Stutter", "Gate", "Reverse" }, 0);
+    add<APC> (l, creaType, "Creative Type", juce::StringArray { "Stutter", "Gate", "Reverse", "Pitch", "Granular" }, 0);
     add<APC> (l, creaNote, "Creative Rate", chainivo::noteNames(), 4);
     add<APF> (l, creaAmount, "Creative Amount", NR (0.0f, 100.0f, 0.1f), 50.0f, pctAttr());
+    l.add (std::make_unique<APF> (juce::ParameterID { creaPitch, 2 }, "Creative Pitch", NR (-24.0f, 24.0f, 1.0f), -12.0f,
+                                  juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (float v, int) { return (v > 0 ? "+" : "") + juce::String (juce::roundToInt (v)) + " st"; })));
     return l;
 }
 
+namespace
+{
+const std::array<juce::StringArray, 6>& perEngine()
+{
+    static const std::array<juce::StringArray, 6> e {
+        juce::StringArray { eqOn, hpf, hpfSlope, lowFreq, lowGain, midFreq, midGain, midQ, presFreq, presGain, presQ, presDyn, airFreq, airGain },
+        juce::StringArray { compOn, compType, compThresh, compRatio, compAttack, compRelease, compMakeup, compMix },
+        juce::StringArray { harmOn, harmType, harmDrive, harmTone, harmMix },
+        juce::StringArray { vocOn, deess, deessFreq, harsh, breath },
+        juce::StringArray { spaceOn, revType, revMix, revDecay, revPredelay, revTone, dlyType, dlyNote, dlyFeedback, dlyMix, duck, width, doubler, dlyThrow, revSwell },
+        juce::StringArray { creaOn, creaType, creaNote, creaAmount, creaPitch } };
+    return e;
+}
+} // namespace
+
 const juce::StringArray& engineParamIds()
 {
-    static const juce::StringArray ids {
-        eqOn, hpf, hpfSlope, lowFreq, lowGain, midFreq, midGain, midQ, presFreq, presGain, presQ, presDyn, airFreq, airGain,
-        compOn, compType, compThresh, compRatio, compAttack, compRelease, compMakeup, compMix,
-        harmOn, harmType, harmDrive, harmTone, harmMix,
-        vocOn, deess, deessFreq, harsh, breath,
-        spaceOn, revType, revMix, revDecay, revPredelay, revTone, dlyType, dlyNote, dlyFeedback, dlyMix, duck, width, doubler,
-        creaOn, creaType, creaNote, creaAmount };
+    static const juce::StringArray ids = [] { juce::StringArray a; for (auto& e : perEngine()) a.addArray (e); return a; }();
     return ids;
 }
 
 int engineOf (const juce::String& id)
 {
-    const int i = engineParamIds().indexOf (id);
-    if (i < 0) return -1;
-    if (i < 14) return 0;
-    if (i < 22) return 1;
-    if (i < 27) return 2;
-    if (i < 32) return 3;
-    if (i < 45) return 4;
-    return 5;
+    for (int e = 0; e < 6; ++e) if (perEngine()[(size_t) e].contains (id)) return e;
+    return -1;
 }
+
 juce::String helpFor (const juce::String& id)
 {
     static const std::map<juce::String, juce::String> h {
+        { "dlyThrow", juce::String::fromUTF8 ("Automatizaci\xc3\xb3n: al acabar cada frase, la \xc3\xbaltima palabra se manda al delay (remate o \"throw\"). 0 = desactivada.") },
+        { "revSwell", juce::String::fromUTF8 ("Automatizaci\xc3\xb3n: la reverb crece justo al acabar cada frase y vuelve a bajar cuando entra la voz. 0 = desactivada.") },
+        { "creaPitch", juce::String::fromUTF8 ("Pitch creativo: capa con otra afinaci\xc3\xb3n (s\xc3\xb3lo si eliges Pitch; nunca se activa sola).") },
         { "input", juce::String::fromUTF8 ("Nivel que entra en la cadena. Útil si la toma llega muy floja o muy fuerte.") },
         { "output", juce::String::fromUTF8 ("Nivel final, después de todo (y del Gain Match).") },
         { "mix", juce::String::fromUTF8 ("Mezcla entre la voz original y la procesada (alineadas, sin desfase).") },
@@ -171,7 +182,7 @@ juce::String helpFor (const juce::String& id)
         { "deessFreq", juce::String::fromUTF8 ("Dónde están las eses de esta voz (AUTO lo mide).") },
         { "harsh", juce::String::fromUTF8 ("Dureza: baja de forma dinámica la zona de 2.5-5 kHz cuando molesta.") },
         { "breath", juce::String::fromUTF8 ("Baja las respiraciones (tramos flojos y ruidosos de más de 80 ms).") },
-        { "revType", juce::String::fromUTF8 ("Tipo de reverb: Plate densa y brillante · Hall grande · Room corta · Chamber media · Ambience casi sin cola.") },
+        { "revType", juce::String::fromUTF8 ("Tipo de reverb: Plate densa y brillante · Hall grande · Room corta · Chamber media · Ambience casi sin cola · IR = convolución con la respuesta de impulso que cargues (BEAT · EXPORTAR → Cargar IR).") },
         { "revMix", juce::String::fromUTF8 ("Cantidad de reverb.") },
         { "revDecay", juce::String::fromUTF8 ("Duración de la cola.") },
         { "revPredelay", juce::String::fromUTF8 ("Separación entre la voz y la reverb (más = la voz queda delante).") },
@@ -183,7 +194,7 @@ juce::String helpFor (const juce::String& id)
         { "duck", juce::String::fromUTF8 ("Ducking: la reverb y el delay bajan mientras la voz suena y vuelven en los huecos.") },
         { "width", juce::String::fromUTF8 ("Anchura estéreo (sólo abre los lados: en mono la voz no se pierde).") },
         { "doubler", juce::String::fromUTF8 ("Doblador: dos copias con micro-afinación a los lados.") },
-        { "creaType", juce::String::fromUTF8 ("Efecto rítmico: Stutter repite · Gate corta · Reverse eco al revés. Nunca se activa solo.") },
+        { "creaType", juce::String::fromUTF8 ("Efecto creativo: Stutter repite · Gate corta · Reverse eco al revés · Pitch capa afinada · Granular nube de granos. Nunca se activa solo.") },
         { "creaNote", juce::String::fromUTF8 ("Tamaño de cada división, al tempo.") },
         { "creaAmount", juce::String::fromUTF8 ("Cantidad del efecto.") },
         { "gainMatch", juce::String::fromUTF8 ("Iguala el volumen al de la voz original para comparar de forma justa.") },

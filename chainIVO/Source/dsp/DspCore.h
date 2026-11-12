@@ -144,6 +144,7 @@ struct DelayLine
     void reset() { std::fill (buf.begin(), buf.end(), 0.0f); }
     void push (float x) { buf[(size_t) w] = x; w = (w + 1) & mask; }
     float tap (int d) const { return buf[(size_t) ((w - 1 - d) & mask)]; }
+    void addAgo (int d, float v) { buf[(size_t) ((w - 1 - d) & mask)] += v; }   // suma en una muestra ya escrita (aún no leída)
     float readLinear (float d) const
     {
         const int i = (int) d; const float f = d - (float) i;

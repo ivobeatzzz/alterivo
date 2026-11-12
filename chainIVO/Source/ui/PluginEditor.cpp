@@ -64,7 +64,8 @@ void ChainTile::refresh()
         case 3:
             h = "De-ess"; a = dbs (-std::max (proc.deessGr(), proc.harshGr())); b = hz (pv (proc, pid::deessFreq)); break;
         case 4:
-            h = choiceText (proc, pid::revType); a = juce::String (pv (proc, pid::revDecay), 1) + " s";
+            h = choiceText (proc, pid::revType);
+            a = (int) pv (proc, pid::revType) == 5 ? (proc.hasIR() ? proc.getIRName() : u8 ("sin IR: plate")) : juce::String (pv (proc, pid::revDecay), 1) + " s";
             b = pv (proc, pid::dlyMix) > 0.5f ? "delay " + choiceText (proc, pid::dlyNote) : "sin delay"; break;
         case 5:
             h = on ? choiceText (proc, pid::creaType) : "Off"; a = on ? choiceText (proc, pid::creaNote) : "pulsa el punto"; b = on ? juce::String (juce::roundToInt (pv (proc, pid::creaAmount))) + " %" : "para activar"; break;
@@ -130,7 +131,9 @@ void ChainTile::mouseDown (const juce::MouseEvent& e)
 EngineView::EngineView (ChainIvoProcessor& p) : proc (p)
 {
     histComp.assign (180, 0.0f); histDeess.assign (180, 0.0f); histHarsh.assign (180, 0.0f); histBreath.assign (180, 0.0f);
-    addChildComponent (lockToggle); addChildComponent (autoButton);
+    addChildComponent (lockToggle); addChildComponent (autoButton); addChildComponent (soloToggle);
+    soloToggle.setTooltip (u8 ("Escucha por m\xc3\xb3" "dulo: s\xc3\xb3lo suena este motor (los dem\xc3\xa1s se saltan)"));
+    soloToggle.onChange = [this] (bool v) { proc.soloEngine = v ? engine : -1; };
     lockToggle.setTooltip (u8 ("Bloquear: AUTO no cambiar\xc3\xa1 este motor"));
     autoButton.setTooltip (u8 ("Propuesta AUTO para lo que no est\xc3\xa9 bloqueado"));
     lockToggle.onChange = [this] (bool v) { proc.setLocked (engine, v); };
@@ -148,8 +151,10 @@ void EngineView::setEngine (int e, bool isPro)
 void EngineView::buildControls()
 {
     controls.clear(); layout.clear();
-    lockToggle.setVisible (pro); autoButton.setVisible (pro);
+    lockToggle.setVisible (pro); autoButton.setVisible (pro); soloToggle.setVisible (pro);
     lockToggle.setOn (proc.isLocked (engine));
+    if (proc.soloEngine.load() >= 0) proc.soloEngine = pro ? engine : -1;   // el solo sigue al motor elegido; fuera de PRO se apaga
+    soloToggle.setOn (proc.soloEngine.load() >= 0);
     if (! pro) return;
     auto* um = &proc.undo;
     auto knob = [&] (const char* name, const char* id)
@@ -187,16 +192,17 @@ void EngineView::buildControls()
             knob ("DE-ESS", pid::deess); knob ("FREQ", pid::deessFreq); knob ("HARSH", pid::harsh); knob ("BREATH", pid::breath);
             row (top + 20, 4, 18); break;
         case 4:
-            choice (pid::revType); layout.push_back ({ 18, 50, 330, 30 });
-            choice (pid::dlyType); layout.push_back ({ 360, 50, 296, 30 });
+            choice (pid::revType); layout.push_back ({ 430, 50, 226, 30 });
+            choice (pid::dlyType); layout.push_back ({ 430, 86, 226, 30 });
             knob ("REV MIX", pid::revMix); knob ("DECAY", pid::revDecay); knob ("PRE", pid::revPredelay); knob ("TONE", pid::revTone);
-            knob ("TIME", pid::dlyNote); knob ("FEEDBACK", pid::dlyFeedback); knob ("DLY MIX", pid::dlyMix);
-            knob ("DUCK", pid::duck); knob ("WIDTH", pid::width); knob ("DOUBLER", pid::doubler);
-            row (top + 38, 10, 18); break;
+            knob ("DUCK", pid::duck); knob ("SWELL", pid::revSwell);
+            knob ("TIME", pid::dlyNote); knob ("FEEDBACK", pid::dlyFeedback); knob ("DLY MIX", pid::dlyMix); knob ("THROW", pid::dlyThrow);
+            knob ("WIDTH", pid::width); knob ("DOUBLER", pid::doubler);
+            row (top - 6, 6); row (top + 84, 6); break;
         case 5:
-            choice (pid::creaType); layout.push_back ({ 18, 50, 300, 32 });
-            knob ("RATE", pid::creaNote); knob ("AMOUNT", pid::creaAmount);
-            row (top + 40, 2, 18); break;
+            choice (pid::creaType); layout.push_back ({ 18, 50, 400, 32 });
+            knob ("RATE", pid::creaNote); knob ("AMOUNT", pid::creaAmount); knob ("PITCH", pid::creaPitch);
+            row (top + 40, 3, 18); break;
         default: break;
     }
 }
@@ -205,6 +211,7 @@ void EngineView::resized()
 {
     for (size_t i = 0; i < controls.size() && i < layout.size(); ++i) controls[i]->setBounds (layout[i]);
     lockToggle.setBounds (getWidth() - 236, 12, 100, 30);
+    soloToggle.setBounds (getWidth() - 340, 12, 100, 30);
     autoButton.setBounds (getWidth() - 112, 10, 94, 34);
 }
 
@@ -234,7 +241,8 @@ void EngineView::paint (juce::Graphics& g)
             case 0: ga = { 430, 96, 226, 132 }; break;
             case 1: case 2: ga = { 430, 50, 226, 178 }; break;
             case 3: ga = { 290, 50, 366, 178 }; break;
-            case 5: ga = { 340, 50, 316, 178 }; break;
+            case 4: ga = { 430, 124, 226, 104 }; break;
+            case 5: ga = { 430, 96, 226, 132 }; break;
             default: break;
         }
         if (! ga.isEmpty()) { screen (g, ga, 12.0f); paintGraph (g, ga.reduced (10.0f, 8.0f)); }
@@ -453,6 +461,8 @@ void EngineView::paintSpace (juce::Graphics& g, juce::Rectangle<float> r)
     g.setColour (body); g.setFont (font (F::man, 12.0f));
     g.drawText (choiceText (proc, pid::revType) + " " + juce::String (decay, 1) + u8 (" s \xc2\xb7 ") + (dlyMix > 0.001f ? "delay " + choiceText (proc, pid::dlyNote) + " " + choiceText (proc, pid::dlyType) : juce::String ("sin delay"))
                 + u8 (" \xc2\xb7 ducking ") + juce::String (juce::roundToInt (pv (proc, pid::duck))) + " %", r.withHeight (16), juce::Justification::centredRight, false);
+    if (pv (proc, pid::dlyThrow) > 0.5f || pv (proc, pid::revSwell) > 0.5f)
+        g.drawText (u8 ("Automatizaciones: ") + juce::String (proc.phraseEnds()) + u8 (" finales de frase detectados"), r.withTrimmedTop (18).withHeight (16), juce::Justification::centredRight, false);
 }
 
 void EngineView::paintCreative (juce::Graphics& g, juce::Rectangle<float> r)
@@ -473,12 +483,16 @@ void EngineView::paintCreative (juce::Graphics& g, juce::Rectangle<float> r)
         bool active = true; juce::String t;
         if (type == 1) { static const int pat[4] = { 1, 0, 1, 1 }; active = pat[i] == 1; t = active ? "abre" : "cierra"; }
         else if (type == 0) { t = i < 2 ? "voz" : "repite 2"; active = true; }
+        else if (type == 3) { t = "capa " + proc.apvts.getParameter (pid::creaPitch)->getCurrentValueAsText(); active = true; }
+        else if (type == 4) { t = "granos"; active = (i % 2) == 0; }
         else { t = u8 ("al rev\xc3\xa9s"); }
         if (active) limeFill (g, c, 10.0f); else well (g, c, 10.0f);
         g.setColour (active ? onLime : ink); g.setFont (font (F::manX, 11.0f, 0.1f)); g.drawText (t.toUpperCase(), c, juce::Justification::centred, false);
     }
     g.setColour (body); g.setFont (font (F::man, 12.0f));
-    g.drawText (u8 ("Grupo de 4 divisiones de ") + choiceText (proc, pid::creaNote) + u8 (" \xc2\xb7 sincronizado al tempo del proyecto"), r.withTrimmedTop (r.getHeight() - 18), juce::Justification::centred, false);
+    g.drawText (type == 3 ? u8 ("Capa afinada mezclada con la voz (la voz original no se toca)")
+                : type == 4 ? u8 ("Nube de granos del \xc3\xbaltimo segundo \xc2\xb7 tama\xc3\xb1o seg\xc3\xban RATE (") + choiceText (proc, pid::creaNote) + ")"
+                : u8 ("Grupo de 4 divisiones de ") + choiceText (proc, pid::creaNote) + u8 (" \xc2\xb7 sincronizado al tempo del proyecto"), r.withTrimmedTop (r.getHeight() - 18), juce::Justification::centred, false);
 }
 
 // =================================================================== TrackCard
@@ -560,6 +574,7 @@ void TrackCard::paint (juce::Graphics& g)
     g.setColour (dim2); g.setFont (font (F::man, 11.0f));
     juce::String reason = an.activeSeconds >= 2.0f ? cl.reason : u8 ("Pon la pista a sonar unos segundos");
     if (cl.needsLead && an.ready) reason += u8 (". Sin voz principal no distingo doble, armon\xc3\xad" "a o respuesta");
+    if (an.groupCount > 0) reason = u8 ("Grupo: ") + juce::String (an.groupCount + 1) + u8 (" capas con chainIVO \xc2\xb7 ") + reason;
     g.drawFittedText (reason, juce::Rectangle<int> (24, 118, getWidth() - 48, 30), juce::Justification::topLeft, 2, 0.9f);
 
     label (g, "Tipo de voz", { 24, 158, 200, 14 }, juce::Justification::centredLeft);
@@ -593,6 +608,9 @@ void TrackCard::showTools()
     m.addSectionHeader (u8 ("EXPORTAR CON ESTA CADENA (el original no se toca)"));
     m.addItem (3, u8 ("Procesar un archivo \xe2\x86\x92 WAV 24 bits\xe2\x80\xa6"), ! proc.isExporting());
     m.addItem (4, u8 ("Procesar un archivo \xe2\x86\x92 WAV 32 bits float\xe2\x80\xa6"), ! proc.isExporting());
+    m.addSectionHeader ("REVERB IR (CONVOLUCI\xc3\x93N)");
+    m.addItem (6, proc.hasIR() ? u8 ("Cambiar IR (ahora: ") + proc.getIRName() + ")" : u8 ("Cargar una respuesta de impulso (WAV)\xe2\x80\xa6"));
+    m.addItem (7, "Quitar la IR", proc.hasIR());
     m.addSectionHeader ("VISTA");
     m.addItem (5, u8 ("Tema oscuro"), true, theme::dark);
     m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (localAreaToGlobal (toolsBox.toNearestInt())),
@@ -601,6 +619,14 @@ void TrackCard::showTools()
         if (safe == nullptr || r == 0) return;
         auto& pr = safe->proc;
         if (r == 2) { pr.clearInstrumental(); return; }
+        if (r == 7) { pr.clearIR(); return; }
+        if (r == 6)
+        {
+            safe->chooser = std::make_unique<juce::FileChooser> ("Respuesta de impulso", juce::File(), "*.wav;*.aif;*.aiff");
+            safe->chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                                        [safe] (const juce::FileChooser& fc) { if (safe != nullptr && fc.getResult().existsAsFile()) safe->proc.loadIR (fc.getResult()); });
+            return;
+        }
         if (r == 5)
         {
             theme::applySkin (! theme::dark); saveDarkSkin (theme::dark);
@@ -940,7 +966,7 @@ void MainView::paint (juce::Graphics& g)
     label (g, "Quality", { 646, 548, 200, 14 }, juce::Justification::centredLeft);
     g.setColour (dim2); g.setFont (font (F::man, 12.0f));
     const float latMs = (float) proc.getLatencySamples() * 1000.0f / (float) proc.getSampleRateSafe();
-    g.drawText ("CPU " + juce::String (juce::roundToInt (proc.cpuLoad.load() * 100.0f)) + u8 (" % \xc2\xb7 latencia ") + juce::String (latMs, 1) + u8 (" ms \xc2\xb7 gain match ") + dbs (proc.gainMatchDb.load()),
+    g.drawText ("CPU " + juce::String (juce::roundToInt (proc.cpuLoad.load() * 100.0f)) + u8 (" % \xc2\xb7 ") + juce::String (latMs, 1) + u8 (" ms \xc2\xb7 GM ") + dbs (proc.gainMatchDb.load()) + u8 (" \xc2\xb7 corr. ") + juce::String (proc.correlation.load(), 2),
                 juce::Rectangle<float> (646, 690, 300, 18), juce::Justification::centredLeft, false);
     drawLogo (g, { 922, 684, 78, 26 });
 }

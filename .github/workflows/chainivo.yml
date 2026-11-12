@@ -165,7 +165,7 @@ jobs:
           mkdir -p "chainIVO Instaladores"
           cp descargas/chainIVO-Mac-Instalador.pkg "chainIVO Instaladores/"
           cp descargas/chainIVO-Windows-Instalador.exe descargas/chainIVO-Windows-VST3.zip "chainIVO Instaladores/"
-          cp packaging/LEEME.txt "chainIVO Instaladores/"
+          cp packaging/LEEME.txt MANUAL.md "chainIVO Instaladores/"
           ls -la "chainIVO Instaladores"
 
       - uses: actions/upload-artifact@v4

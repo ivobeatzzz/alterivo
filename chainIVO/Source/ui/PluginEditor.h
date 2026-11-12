@@ -63,7 +63,7 @@ private:
     int engine = 0; bool pro = false;
     std::vector<std::unique_ptr<juce::Component>> controls;
     std::vector<juce::Rectangle<int>> layout;
-    Toggle lockToggle { "LOCK" };
+    Toggle lockToggle { "LOCK" }, soloToggle { "SOLO" };
     PillButton autoButton { "AUTO", PillButton::lime };
     std::vector<float> histComp, histDeess, histHarsh, histBreath;
 };

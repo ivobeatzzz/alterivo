@@ -35,18 +35,19 @@ Source/
   engines/CompEngine.h       COMPRESSOR ENGINE (FET, Opto, VCA, Vari-Mu, Clean)
   engines/HarmonicsEngine.h  HARMONICS ENGINE (Tube, Tape, Transformer, Exciter + sobremuestreo)
   engines/VocalEngine.h      VOCAL CONTROL ENGINE (de-ess, dureza, respiraciones)
-  engines/SpatialEngine.h    SPATIAL ENGINE (reverb FDN, delay, ducking, doblador, anchura M/S)
-  engines/CreativeEngine.h   CREATIVE ENGINE (stutter, gate, reverse al tempo)
+  engines/SpatialEngine.h    SPATIAL ENGINE (reverb FDN e IR por convolución, delay, ducking, doblador, anchura M/S)
+                             + AUTOMATION ENGINE musical: remate (throw) y cola (swell) en cada final de frase
+  engines/CreativeEngine.h   CREATIVE ENGINE (stutter, gate, reverse al tempo; pitch creativo; granular)
   analysis/Analyzer.*        ANALYSIS ENGINE (hilo propio, FIFO sin bloqueos)
   (PluginProcessor::exportFile) RENDERING / AUDIO EXPORT ENGINE (WAV 24/32 float, en segundo plano)
+  intelligence/Group.h       Coordinación entre instancias (grupo de capas vocales)
   intelligence/Musical.*     MUSICAL INTELLIGENCE + CHAIN BUILDER (tipos de voz, estilos, clasificación, recetas)
   presets/PresetLibrary.*    PRESET ENGINE (presets IVO, usuario, favoritos, importar/exportar)
   core/Params.*              STATE: parámetros versionados (IDs fijos)
   PluginProcessor.*          AUDIO CORE + gestión de ganancia + A/B + estado + capa DAW (JUCE)
   ui/                        USER INTERFACE (Widgets, editor)
 ```
-Pendientes como módulos propios (fases siguientes): Automation Engine,
-Diagnostics, Licensing.
+Pendientes: Diagnostics como módulo propio y Licensing (ver limitaciones).
 
 ## 4. Flujo de la señal
 
@@ -77,7 +78,8 @@ sidechain (voz principal) → sólo análisis y llave de la banda dinámica del 
 - Instrumental de referencia: el usuario carga el archivo del beat (BEAT · EXPORTAR). Se analiza en segundo plano
   y sólo se guarda su espectro (nunca el audio). AUTO pone la presencia donde el beat deja hueco y sube el paso
   alto si el beat tiene graves muy fuertes.
-- Pendiente: instancias coordinadas entre pistas.
+- Instancias coordinadas: las instancias de chainIVO del mismo proyecto comparten (sin tocar el audio) tipo y
+  espectro; cada capa busca su hueco de presencia y usa un pre-delay distinto.
 
 ## 7. Realtime y offline
 
@@ -108,11 +110,16 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | Estado | guardar/abrir proyecto: 0 parámetros distintos, orden, LOCK, preset y A/B recuperados |
 | Exportar WAV | 24 bits o 32 bits float, misma frecuencia y canales, cola completa, alineado con el original (con INTENSITY 0 la diferencia es −300 dB) y el original sin tocar |
 | Instrumental | beat sintético con hueco en 4 kHz y graves fuertes: AUTO pone la presencia en 4.0 kHz y sube el paso alto |
-| Presets | 120 presets, todos con estilo válido; a igual volumen, la pareja más parecida difiere −19.7 dB (ninguna pareja por debajo de −20 dB) |
+| Presets | 122 presets, todos con estilo válido; a igual volumen, la pareja más parecida difiere −19.6 dB (ninguna por debajo de −20 dB) |
+| Automatizaciones | 4 de 4 finales de frase detectados; THROW pone el remate en los silencios; SWELL sube la cola +8.4 dB al acabar la frase |
+| Pitch creativo | capa −12 st sobre 440 Hz: aparece 220 Hz a −0.6 dB y la voz sigue en 440 Hz |
+| Granular | estable (0 valores inválidos), nivel parecido a la voz |
+| Reverb IR | la cola sigue la IR cargada (0.8 s) y termina con ella |
+| Grupo | dos instancias se ven; la segunda separa su presencia y su pre-delay (20 → 28 ms) |
 
 ## 10. Limitaciones conocidas (versión 0.1)
 
-1. 120 presets IVO (30 ad-libs, 30 coros, 20 dobles/segundas, 20 armonías, 20 efectos). La prueba automática
+1. 122 presets IVO (30 ad-libs, 30 coros, 20 dobles/segundas, 20 armonías, 22 efectos). La prueba automática
    comprueba que todos suenan distintos entre sí, pero están **sin validar de oído con voces reales**:
    es lo siguiente que hay que hacer con grabaciones del usuario.
 2. La clasificación es por reglas: con una sola voz de prueba no se puede afirmar su precisión.
@@ -139,7 +146,7 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | 1 Investigación y arquitectura | hecha (este documento) |
 | 2 Core y prototipo funcional | hecha y medida (falta validación con voces reales) |
 | 3 Calidad de procesamiento | en gran parte (medidas arriba); faltan escuchas comparativas |
-| 4 Inteligencia musical | parcial: tipos de voz, voz principal, recetas; faltan grupos, secciones y automatizaciones |
-| 5 Presets y motor creativo | 120 presets hechos y diferenciados (falta escucharlos); 3 efectos creativos |
-| 6 Producto completo | parcial: exportar WAV, skin clara/oscura, ayuda en cada control; faltan licencias y manual |
+| 4 Inteligencia musical | tipos de voz, voz principal, beat, grupo de capas, automatizaciones por frase; faltan secciones y género automático |
+| 5 Presets y motor creativo | 122 presets diferenciados (falta escucharlos); 5 efectos creativos |
+| 6 Producto completo | exportar WAV, skins, ayuda, manual; faltan licencias (coste) |
 | 7 QA y lanzamiento | pendiente (pruebas en cada DAW con el usuario) |

@@ -33,9 +33,11 @@ inline constexpr const char* spaceOn = "spaceOn"; inline constexpr const char* r
 inline constexpr const char* revDecay = "revDecay"; inline constexpr const char* revPredelay = "revPredelay"; inline constexpr const char* revTone = "revTone";
 inline constexpr const char* dlyType = "dlyType"; inline constexpr const char* dlyNote = "dlyNote"; inline constexpr const char* dlyFeedback = "dlyFeedback";
 inline constexpr const char* dlyMix = "dlyMix"; inline constexpr const char* duck = "duck"; inline constexpr const char* width = "width"; inline constexpr const char* doubler = "doubler";
+inline constexpr const char* dlyThrow = "dlyThrow"; inline constexpr const char* revSwell = "revSwell";   // automatizaciones al final de frase
 // CREATIVE
 inline constexpr const char* creaOn = "creaOn"; inline constexpr const char* creaType = "creaType";
 inline constexpr const char* creaNote = "creaNote"; inline constexpr const char* creaAmount = "creaAmount";
+inline constexpr const char* creaPitch = "creaPitch";
 
 juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 

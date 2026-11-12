@@ -27,12 +27,13 @@ ChainIvoProcessor::ChainIvoProcessor()
     s.setProperty (kOrder, "0,1,2,3,4,5", nullptr); s.setProperty (kLocks, "000000", nullptr);
     s.setProperty (kQuality, (int) Quality::normal, nullptr); s.setProperty (kAutoDone, false, nullptr);
     s.setProperty (kVersion, kStateVersion, nullptr);
+    groupId = group->join();
     startTimerHz (3);
 }
 
 ChainIvoProcessor::~ChainIvoProcessor()
 {
-    stopTimer(); instCancel = true;
+    stopTimer(); instCancel = true; group->leave (groupId);
     for (int i = 0; i < 200 && (instBusy.load() || exporting.load()); ++i) juce::Thread::sleep (20);
     analyzer.releaseResources();
 }
@@ -125,9 +126,10 @@ void ChainIvoProcessor::readSettings (EqSettings& e, CompSettings& c, HarmSettin
     s.dlyType = (DlyType) (int) p (pid::dlyType); s.dlyNote = (int) p (pid::dlyNote); s.dlyFeedback = p (pid::dlyFeedback) * 0.01f;
     s.dlyMix = p (pid::dlyMix) * 0.01f * I; s.duck = p (pid::duck) * 0.01f;
     s.width = 1.0f + (p (pid::width) * 0.01f - 1.0f) * I; s.doubler = p (pid::doubler) * 0.01f * I;
+    s.throwAmt = p (pid::dlyThrow) * 0.01f * I; s.swell = p (pid::revSwell) * 0.01f * I;
 
     cr.on = p (pid::creaOn) > 0.5f; cr.type = (CreaType) (int) p (pid::creaType); cr.note = (int) p (pid::creaNote);
-    cr.amount = p (pid::creaAmount) * 0.01f * I;
+    cr.amount = p (pid::creaAmount) * 0.01f * I; cr.pitch = p (pid::creaPitch);
 }
 
 EqSettings ChainIvoProcessor::eqSettingsNow() const
@@ -206,6 +208,17 @@ void ChainIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     const float I = p (pid::intensity) * 0.01f;
     EqSettings es; CompSettings cs; HarmSettings hs; VocalSettings vs; SpaceSettings ss; CreativeSettings crs;
     readSettings (es, cs, hs, vs, ss, crs, I);
+    // Escucha por módulo: los demás motores se saltan (HARMONICS pasa en seco para no cambiar la latencia)
+    const int solo = soloEngine.load();
+    if (solo >= 0)
+    {
+        if (solo != 0) es.on = false;
+        if (solo != 1) cs.on = false;
+        if (solo != 2) hs.on = false;
+        if (solo != 3) vs.on = false;
+        if (solo != 4) ss.on = false;
+        if (solo != 5) crs.on = false;
+    }
     for (int slot = 0; slot < 6; ++slot)
     {
         switch (order[(size_t) slot].load())
@@ -269,6 +282,12 @@ void ChainIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     if (clips > 0) clipCount += clips;
     if (nch == 1 && main.getNumChannels() > 1) main.copyFrom (1, 0, main, 0, 0, n);
     outMeter.feed (ch, nch, n);
+    if (nch > 1)
+    {
+        double lr = 0, ll = 0, rr = 0;
+        for (int i = 0; i < n; ++i) { lr += (double) ch[0][i] * ch[1][i]; ll += (double) ch[0][i] * ch[0][i]; rr += (double) ch[1][i] * ch[1][i]; }
+        if (ll > 1.0e-7 && rr > 1.0e-7) correlation.store (0.95f * correlation.load() + 0.05f * (float) (lr / std::sqrt (ll * rr)));
+    }
 
     const double secs = juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - t0);
     const float load = (float) (secs / ((double) n / currentSr));
@@ -321,6 +340,7 @@ void ChainIvoProcessor::applyBuild (const BuildResult& b, const juce::String& pr
 
 void ChainIvoProcessor::loadFactoryPreset (int i)
 {
+    fillGroup (lastAnalysis);
     lastAnalysis.hasInstrumental = instName.isNotEmpty(); lastAnalysis.instrumentalSpectrum = instSpectrum;
     const auto& list = presets.recipes();
     if (i < 0 || i >= (int) list.size()) return;
@@ -333,6 +353,7 @@ void ChainIvoProcessor::loadFactoryPreset (int i)
 
 void ChainIvoProcessor::autoPropose()
 {
+    fillGroup (lastAnalysis);
     lastAnalysis.hasInstrumental = instName.isNotEmpty(); lastAnalysis.instrumentalSpectrum = instSpectrum;
     const auto r = defaultRecipe ((VoiceType) juce::jlimit (0, (int) VoiceType::count - 1, getVoiceType()));
     applyBuild (buildChain (r, lastAnalysis, getGenre()), juce::String::fromUTF8 ("Propuesta autom\xc3\xa1tica"));
@@ -388,6 +409,20 @@ void ChainIvoProcessor::clearInstrumental()
 }
 
 juce::String ChainIvoProcessor::getInstrumentalName() const { return instName; }
+
+void ChainIvoProcessor::loadIR (const juce::File& f)
+{
+    if (! f.existsAsFile()) return;
+    irFile = f;
+    space.loadIR (f);
+    apvts.state.setProperty ("irPath", f.getFullPathName(), nullptr);
+    if (auto* prm = apvts.getParameter (pid::revType)) { prm->beginChangeGesture(); prm->setValueNotifyingHost (prm->convertTo0to1 ((float) (int) RevType::ir)); prm->endChangeGesture(); }
+}
+
+void ChainIvoProcessor::clearIR()
+{
+    irFile = juce::File(); space.clearIR(); apvts.state.removeProperty ("irPath", nullptr);
+}
 
 void ChainIvoProcessor::exportFile (const juce::File& in, const juce::File& out, bool float32, std::function<void (juce::String)> done)
 {
@@ -451,6 +486,22 @@ void ChainIvoProcessor::exportFile (const juce::File& in, const juce::File& out,
     });
 }
 
+void ChainIvoProcessor::fillGroup (AnalysisResult& a) const
+{
+    int idx = 0;
+    auto others = group->others (groupId, idx);
+    a.groupCount = (int) others.size(); a.groupIndex = idx; a.groupHasSpectrum = false; a.groupNames.clear();
+    std::array<double, kBands> sum {};
+    for (auto& m : others)
+    {
+        a.groupNames.add (m.name.isNotEmpty() ? m.name : voiceTypeName ((VoiceType) juce::jlimit (0, (int) VoiceType::count - 1, std::max (0, m.type))));
+        if (! m.hasSpectrum) continue;
+        a.groupHasSpectrum = true;
+        for (int b = 0; b < kBands; ++b) sum[(size_t) b] += std::pow (10.0, m.spectrum[(size_t) b] / 10.0);
+    }
+    for (int b = 0; b < kBands; ++b) a.groupSpectrum[(size_t) b] = powToDb ((float) sum[(size_t) b]);
+}
+
 void ChainIvoProcessor::timerCallback()
 {
     if (instReady.exchange (false))
@@ -464,6 +515,12 @@ void ChainIvoProcessor::timerCallback()
     lastAnalysis = analyzer.getResult();
     lastAnalysis.hasInstrumental = instName.isNotEmpty();
     lastAnalysis.instrumentalSpectrum = instSpectrum;
+    // Publicar esta capa para las demás instancias y leer las suyas
+    {
+        GroupMember me; me.name = trackName; me.type = getVoiceType(); me.hasSpectrum = lastAnalysis.ready; me.spectrum = lastAnalysis.spectrum;
+        group->update (groupId, me);
+        fillGroup (lastAnalysis);
+    }
     if (lastAnalysis.activeSeconds >= 2.0f)
     {
         lastClass = classify (lastAnalysis);
@@ -580,6 +637,10 @@ void ChainIvoProcessor::setStateInformation (const void* data, int size)
     for (int i = 0; i < 6; ++i) explanations[(size_t) i] = tree.getProperty (whyId (i)).toString();
     enginesBuilt = tree.getProperty (kBuilt, 0);
     instName = tree.getProperty ("instName").toString();
+    {
+        const juce::File ir (tree.getProperty ("irPath").toString());
+        if (tree.hasProperty ("irPath") && ir.existsAsFile()) { irFile = ir; space.loadIR (ir); } else { irFile = juce::File(); space.clearIR(); }
+    }
     {
         auto v = juce::StringArray::fromTokens (tree.getProperty ("instSpec").toString(), ",", "");
         if (v.size() == kBands) for (int b = 0; b < kBands; ++b) instSpectrum[(size_t) b] = v[b].getFloatValue(); else instName = {};

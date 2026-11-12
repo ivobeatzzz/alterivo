@@ -50,7 +50,9 @@ struct Recipe
     RevType rev = RevType::plate; float revMix = 0.15f, decay = 1.5f, predelay = 20.0f, revTone = 0.6f;
     DlyType dly = DlyType::digital; int dlyNote = 5; float dlyFb = 0.3f, dlyMix = 0.0f, duck = 0.5f, width = 1.0f, doubler = 0.0f;
     // Creativo
-    bool creaOn = false; CreaType crea = CreaType::stutter; int creaNote = 4; float creaAmount = 0.5f;
+    bool creaOn = false; CreaType crea = CreaType::stutter; int creaNote = 4; float creaAmount = 0.5f; float creaPitch = -12.0f;
+    // Automatizaciones musicales al final de cada frase
+    float throwAmt = 0.0f, swell = 0.0f;
 };
 
 // Receta base para un tipo de voz (cuando el usuario pide "propuesta automática" sin preset)

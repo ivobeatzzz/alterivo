@@ -3,12 +3,15 @@
 //  STUTTER : en cada grupo de 4 divisiones, las dos últimas repiten la segunda (beat repeat).
 //  GATE    : puerta rítmica (patrón 1-0-1-1) con bordes de 3 ms (sin clics).
 //  REVERSE : eco invertido: cada división suena al revés la anterior, con ventana para no hacer clic.
+//  PITCH   : capa con otra afinación (±24 st) mezclada con la voz: dos lectores con ventanas cruzadas
+//            (desplazamiento de tono por retardo modulado). La voz original no se reafina nunca.
+//  GRANULAR: nube de granos (Hann) tomados del último segundo de voz; el tamaño del grano sigue a RATE.
 #pragma once
 #include "../dsp/DspCore.h"
 
 namespace chainivo
 {
-enum class CreaType { stutter = 0, gate, reverse };
+enum class CreaType { stutter = 0, gate, reverse, pitch, granular };
 
 struct CreativeSettings
 {
@@ -16,6 +19,7 @@ struct CreativeSettings
     CreaType type = CreaType::stutter;
     int note = 4;          // 1/8
     float amount = 0.5f;   // 0..1
+    float pitch = -12.0f;  // semitonos (sólo PITCH)
 };
 
 class CreativeEngine
@@ -56,6 +60,55 @@ public:
 
             switch (s.type)
             {
+                case CreaType::pitch:
+                {
+                    // Dos lectores separados media ventana; el retardo cambia a ritmo (1 - ratio) y se reinicia en cada ventana
+                    const float ratio = std::pow (2.0f, juce::jlimit (-24.0f, 24.0f, s.pitch) / 12.0f);
+                    const float W = (float) (0.06 * sr);
+                    pitchPhase += (1.0f - ratio) / W;
+                    pitchPhase -= std::floor (pitchPhase);
+                    float layer[kMaxCh] {};
+                    for (int h = 0; h < 2; ++h)
+                    {
+                        const float ph = std::fmod (pitchPhase + 0.5f * (float) h, 1.0f);
+                        const float d = 2.0f + ph * W;
+                        const float win = std::sin (kPi * ph);
+                        for (int c = 0; c < nch; ++c) layer[c] += win * win * buf[(size_t) c].readLinear (d);
+                    }
+                    for (int c = 0; c < nch; ++c) ch[c][i] += a * layer[c];
+                    break;
+                }
+                case CreaType::granular:
+                {
+                    const float grainLen = (float) juce::jlimit (0.03 * sr, 0.25 * sr, 0.5 * sliceSamples);
+                    if (--nextGrain <= 0)
+                    {
+                        for (auto& gr : grains)
+                            if (gr.left <= 0)
+                            {
+                                gr.len = (int) (grainLen * (0.7f + 0.6f * rnd.nextFloat()));
+                                gr.left = gr.len;
+                                gr.back = (float) (gr.len + 64) + rnd.nextFloat() * (float) (0.9 * sr);
+                                gr.pan = rnd.nextFloat();
+                                break;
+                            }
+                        nextGrain = (int) (grainLen / 4.0f * (0.6f + 0.8f * rnd.nextFloat()));   // unas 4 capas a la vez
+                    }
+                    float l = 0.0f, r = 0.0f;
+                    for (auto& gr : grains)
+                        if (gr.left > 0)
+                        {
+                            const float ph = 1.0f - (float) gr.left / (float) gr.len;
+                            const float w = std::sin (kPi * ph); const float ww = w * w * 0.5f;
+                            // el grano avanza con la reproducción: se lee siempre a la misma distancia hacia atrás
+                            const float v0 = buf[0].readLinear (gr.back), v1 = buf[(size_t) (nch > 1 ? 1 : 0)].readLinear (gr.back);
+                            l += ww * v0 * (1.0f - gr.pan) * 2.0f; r += ww * v1 * gr.pan * 2.0f;
+                            --gr.left;
+                        }
+                    ch[0][i] += a * l;
+                    if (nch > 1) ch[1][i] += a * r; else ch[0][i] += a * r;
+                    break;
+                }
                 case CreaType::gate:
                 {
                     static const int pattern[4] = { 1, 0, 1, 1 };
@@ -104,6 +157,11 @@ private:
         return 1.0f;
     }
 
+    struct Grain { int len = 0, left = 0; float back = 0, pan = 0.5f; };
+    std::array<Grain, 12> grains {};
+    int nextGrain = 0;
+    float pitchPhase = 0.0f;
+    juce::Random rnd { 1234 };
     double sr = 48000.0, freePos = 0.0;
     bool first = true;
     std::array<DelayLine, kMaxCh> buf;

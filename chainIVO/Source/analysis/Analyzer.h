@@ -44,6 +44,12 @@ struct AnalysisResult
     // Instrumental de referencia (archivo que carga el usuario; sólo se guarda su espectro, nunca el audio)
     bool hasInstrumental = false;
     std::array<float, kBands> instrumentalSpectrum {};
+
+    // Otras capas vocales con chainIVO en el proyecto
+    int groupCount = 0, groupIndex = 0;
+    bool groupHasSpectrum = false;
+    std::array<float, kBands> groupSpectrum {};   // suma de las otras capas (dB)
+    juce::StringArray groupNames;
 };
 
 class Analyzer : private juce::Thread

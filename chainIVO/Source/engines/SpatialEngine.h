@@ -5,13 +5,15 @@
 //   ULTRA: 16 líneas, Hermite.
 // Tipos: PLATE (densa y brillante) · HALL (grande, más oscura) · ROOM (corta, primeras reflexiones fuertes)
 //        CHAMBER (media) · AMBIENCE (casi sólo reflexiones, da cuerpo sin cola).
+// IR: convolución (juce::dsp::Convolution, sin latencia añadida) con la respuesta de impulso que carga el usuario.
+//      Sin IR cargada se usa la Plate (y la interfaz lo dice).
 // La señal original (M) nunca cambia con la anchura: sólo se abre la parte lateral (S), así que es compatible en mono.
 #pragma once
 #include "../dsp/DspCore.h"
 
 namespace chainivo
 {
-enum class RevType { plate = 0, hall, room, chamber, ambience };
+enum class RevType { plate = 0, hall, room, chamber, ambience, ir };
 enum class DlyType { digital = 0, analog, tape, pingpong };
 
 struct SpaceSettings
@@ -22,6 +24,7 @@ struct SpaceSettings
     DlyType dlyType = DlyType::digital;
     int dlyNote = 5;
     float dlyFeedback = 0.3f, dlyMix = 0.0f, duck = 0.5f, width = 1.0f, doubler = 0.0f;
+    float throwAmt = 0.0f, swell = 0.0f;   // automatizaciones al final de cada frase (0..1)
 };
 
 class SpatialEngine
@@ -39,7 +42,11 @@ public:
         for (auto& p : pre) p.prepare ((int) (0.25 * sr));
         for (auto& d : dly) d.prepare ((int) (4.2 * sr));
         for (auto& d : dbl) d.prepare ((int) (0.04 * sr));
+        for (auto& d : recent) d.prepare ((int) (0.5 * sr));
+        phraseEnv.prepare (sr, 3.0f, 40.0f);
         wetL.assign ((size_t) maxBlock, 0.0f); wetR.assign ((size_t) maxBlock, 0.0f);
+        conv.prepare ({ sr, (juce::uint32) maxBlock, 2 });
+        irLp.reset();
         for (auto* s : { &revMixS, &dlyMixS, &widthS, &dblS, &fbS }) s->prepare (sr, 40.0f);
         dlyTimeS.prepare (sr, 250.0f);
         duckEnv.prepare (sr, 10.0f, 300.0f);
@@ -53,6 +60,8 @@ public:
         for (auto& p : pre) p.reset();
         for (auto& d : dly) d.reset();
         for (auto& d : dbl) d.reset();
+        for (auto& d : recent) d.reset();
+        activeFor = 0; quietFor = 0; swellEnv = 0.0f; peak = -40.0f;
         std::fill (std::begin (damp), std::end (damp), 0.0f);
         inHp.reset(); fbHp.reset(); fbLp.reset();
         lfo = 0.0; wow = 0.0; flutter = 0.0;
@@ -67,6 +76,7 @@ public:
         dlyTimeS.set ((float) std::min (4.0 * sr, secs * sr));
         if (! dlyInit) { dlyTimeS.reset (dlyTimeS.target); dlyInit = true; }
         setupReverb (s);
+        swellFall = std::exp (-1.0f / (1.5f * (float) sr));
         inHp.setup (sr, 180.0f, 0.7071f);
         const bool analogish = s.dlyType == DlyType::analog || s.dlyType == DlyType::tape;
         fbHp.setup (sr, analogish ? 220.0f : 120.0f, 0.7071f);
@@ -76,6 +86,22 @@ public:
         float* L = ch[0]; float* R = stereo ? ch[1] : ch[0];
         const float duckAmt = s.duck;
 
+        const bool irMode = s.revType == RevType::ir && irLoaded.load();
+        if (irMode)
+        {
+            // Entrada de la convolución: misma cadena que la reverb algorítmica (paso alto + pre-delay)
+            irLp.setup (sr, 2500.0f * std::pow (6.0f, s.tone), 0.7071f);
+            for (int i = 0; i < n; ++i)
+            {
+                pre[0].push (inHp.tick (0, L[i]).hp); pre[1].push (inHp.tick (1, R[i]).hp);
+                wetL[(size_t) i] = pre[0].tap (predelaySamples); wetR[(size_t) i] = pre[1].tap (predelaySamples);
+            }
+            float* wp[2] = { wetL.data(), wetR.data() };
+            juce::dsp::AudioBlock<float> blk (wp, 2, (size_t) n);
+            conv.process (juce::dsp::ProcessContextReplacing<float> (blk));
+            for (int i = 0; i < n; ++i) { wetL[(size_t) i] = irLp.tick (0, wetL[(size_t) i]).lp; wetR[(size_t) i] = irLp.tick (1, wetR[(size_t) i]).lp; }
+        }
+
         for (int i = 0; i < n; ++i)
         {
             const float xl = L[i], xr = R[i], mono = 0.5f * (xl + xr);
@@ -83,7 +109,8 @@ public:
 
             // ---- Reverb
             float rl = 0.0f, rr = 0.0f;
-            if (rm > 1.0e-4f || ! revSilent)
+            if (irMode) { rl = wetL[(size_t) i]; rr = wetR[(size_t) i]; }
+            else if (rm > 1.0e-4f || ! revSilent)
             {
                 pre[0].push (inHp.tick (0, xl).hp); pre[1].push (inHp.tick (1, xr).hp);
                 float il = pre[0].tap (predelaySamples), ir = pre[1].tap (predelaySamples);
@@ -97,9 +124,38 @@ public:
                 revSilent = rm <= 1.0e-4f && e < 1.0e-6f;
             }
 
+            // ---- Automatizaciones musicales: detectar el final de cada frase en la voz seca
+            recent[0].push (xl); recent[1].push (xr);
+            {
+                const float e = phraseEnv.tick (powToDb (mono * mono));
+                peak = std::max (e, peak - 20.0f / (3.0f * (float) sr));
+                const bool active = e > std::max (-50.0f, peak - 28.0f);
+                if (active) { ++activeFor; quietFor = 0; }
+                else if (++quietFor == (int) (0.06 * sr) && activeFor > (int) (0.35 * sr))
+                {
+                    // Final de frase: la última palabra (hasta 0.45 s) entra al delay como si el envío se hubiera subido a mano.
+                    // Se escribe en muestras ya pasadas que el delay todavía no ha leído, así el eco sale en su sitio.
+                    const int back = quietFor;
+                    const int len = std::min ({ (int) (0.45 * sr), activeFor, (int) dt - back - 16 });
+                    if (s.throwAmt > 0.001f && s.on && len > 64)
+                        for (int k = 0; k < len; ++k)
+                        {
+                            const float w = std::min (1.0f, std::min ((float) k, (float) (len - k)) / (0.005f * (float) sr));   // bordes sin clic
+                            const float a = s.throwAmt * w;
+                            if (s.dlyType == DlyType::pingpong) dly[0].addAgo (back + k, a * 0.5f * (recent[0].tap (back + k) + recent[1].tap (back + k)));
+                            else { dly[0].addAgo (back + k, a * recent[0].tap (back + k)); dly[1].addAgo (back + k, a * recent[1].tap (back + k)); }
+                        }
+                    swellEnv = 1.0f;
+                    phraseEnds.store (phraseEnds.load() + 1);
+                    activeFor = 0;
+                }
+                swellEnv *= swellFall;
+                if (active && activeFor > (int) (0.05 * sr)) swellEnv *= 0.9995f;   // la voz vuelve: la cola baja
+            }
+
             // ---- Delay
             float dl = 0.0f, dr = 0.0f;
-            if (dm > 1.0e-4f || ! dlySilent)
+            if (dm > 1.0e-4f || ! dlySilent || s.throwAmt > 0.001f)
             {
                 float mod = 0.0f;
                 if (s.dlyType == DlyType::analog) mod = 0.00015f * (float) sr * (float) std::sin (lfo * 0.6);
@@ -131,8 +187,9 @@ public:
             const float env = duckEnv.tick (powToDb (mono * mono));
             const float duckDb = duckAmt * 15.0f * juce::jlimit (0.0f, 1.0f, (env + 42.0f) / 24.0f);
             const float dg = dbToGain (-duckDb);
-            float ol = xl + dg * (rl * rm * 1.4f + dl);
-            float orr = xr + dg * (rr * rm * 1.4f + dr);
+            const float sw = 1.0f + 2.0f * s.swell * swellEnv;   // hasta +9.5 dB de cola justo al acabar la frase
+            float ol = xl + dg * (rl * rm * 1.4f * sw + dl);
+            float orr = xr + dg * (rr * rm * 1.4f * sw + dr);
 
             // ---- Doblador (micro-pitch: dos retardos cortos modulados, uno a cada lado)
             const float db = dblS.next();
@@ -164,6 +221,15 @@ public:
     }
 
     int lineCount() const { return lines; }
+    // Carga de la IR: JUCE la prepara en segundo plano (seguro mientras suena el audio)
+    void loadIR (const juce::File& f)
+    {
+        conv.loadImpulseResponse (f, juce::dsp::Convolution::Stereo::yes, juce::dsp::Convolution::Trim::yes, 0, juce::dsp::Convolution::Normalise::yes);
+        irLoaded = true;
+    }
+    void clearIR() { irLoaded = false; }
+    bool hasIR() const { return irLoaded.load(); }
+    int phraseEndCount() const { return phraseEnds.load(); }
 
 private:
     struct Allpass
@@ -181,6 +247,7 @@ private:
         erTaps = 0;
         switch (s.revType)
         {
+            case RevType::ir:
             case RevType::plate:    scale = 0.45f; diffG = 0.72f; if (quality != Quality::eco) diffStages = 4; break;
             case RevType::hall:     scale = 1.35f; er = 0.25f; erTaps = 6; break;
             case RevType::room:     scale = 0.28f; er = 0.6f; erTaps = 8; decay = std::min (decay, 1.4f * 1.13f); break;
@@ -262,9 +329,17 @@ private:
     int erDelay[8] {}; float erGain[8] {}; float erLevel = 0.0f, tailGain = 1.0f;
     Svf inHp, fbHp, fbLp;
     std::vector<float> wetL, wetR;
+    juce::dsp::Convolution conv;
+    Svf irLp;
+    std::atomic<bool> irLoaded { false };
     Smooth revMixS, dlyMixS, widthS, dblS, fbS, dlyTimeS;
     EnvDb duckEnv;
     double lfo = 0, wow = 0, flutter = 0;
     std::atomic<float> duckShown { 1.0f };
+    std::array<DelayLine, 2> recent;
+    EnvDb phraseEnv;
+    int activeFor = 0, quietFor = 0;
+    float swellEnv = 0.0f, swellFall = 0.9999f, peak = -40.0f;
+    std::atomic<int> phraseEnds { 0 };
 };
 } // namespace chainivo

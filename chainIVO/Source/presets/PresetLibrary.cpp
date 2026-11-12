@@ -33,6 +33,8 @@ struct R
     R& dly (DlyType t, int note, float mix, float fb, float duck = 0.5f) { r.dly = t; r.dlyNote = note; r.dlyMix = mix; r.dlyFb = fb; r.duck = duck; return *this; }
     R& stereo (float width, float doubler = 0) { r.width = width; r.doubler = doubler; return *this; }
     R& crea (CreaType t, int note, float amount) { r.creaOn = true; r.crea = t; r.creaNote = note; r.creaAmount = amount; return *this; }
+    R& pitch (float st) { r.creaPitch = st; return *this; }
+    R& autom (float throwAmt, float swell) { r.throwAmt = throwAmt; r.swell = swell; return *this; }
 };
 
 // Notas: 0 1/32 · 1 1/16T · 2 1/16 · 3 1/8T · 4 1/8 · 5 1/8D · 6 1/4T · 7 1/4 · 8 1/4D · 9 1/2 · 10 compás
@@ -42,17 +44,17 @@ std::vector<Recipe> makeFactory()
     std::vector<R> p;
     // ---------------- AD-LIBS
     p.push_back (R (V::adlib, "Ad-lib Glow", "Rage", "Ad-lib brillante que vuela por encima con delay corto", "brillante,delay,rage")
-        .eq (1.3f, 2.5f, 3.0f).comp (C::fet, 7, 6, 1.5f, 80).harm (H::transformer, 0.35f).rev (RV::plate, 0.18f, 1.2f).dly (D::digital, 5, 0.2f, 0.3f, 0.7f).stereo (1.4f));
+        .eq (1.3f, 2.5f, 3.0f).comp (C::fet, 7, 6, 1.5f, 80).harm (H::transformer, 0.35f).rev (RV::plate, 0.18f, 1.2f).dly (D::digital, 5, 0.2f, 0.3f, 0.7f).stereo (1.4f).autom (0.5f, 0.0f));
     p.push_back (R (V::adlib, "Ad-lib Crank Dirt", "Crank", "Sucio y agresivo, saturado, casi seco", "sucio,saturado,seco")
         .eq (1.4f, 3.0f, 2.0f).comp (C::fet, 9, 8, 0.8f, 60).harm (H::transformer, 0.6f).rev (RV::room, 0.1f, 0.7f).dly (D::analog, 4, 0.12f, 0.2f).stereo (1.2f));
     p.push_back (R (V::adlib, "Ad-lib Plugg Air", "Plugg", "Suave y aireado, lejos, con eco largo", "aire,suave,lejano")
-        .eq (1.5f, 0.5f, 3.5f, -1.5f).comp (C::opto, 4, 3, 10, 200).noHarm().rev (RV::hall, 0.3f, 2.8f, 35).dly (D::tape, 7, 0.25f, 0.45f, 0.6f).stereo (1.6f));
+        .eq (1.5f, 0.5f, 3.5f, -1.5f).comp (C::opto, 4, 3, 10, 200).noHarm().rev (RV::hall, 0.3f, 2.8f, 35).dly (D::tape, 7, 0.25f, 0.45f, 0.6f).stereo (1.6f).autom (0.4f, 0.3f));
     p.push_back (R (V::adlib, "Ad-lib Dark Echo", "Dark Trap", "Oscuro, con eco en ping-pong y cola grande", "oscuro,pingpong,espacio")
-        .eq (1.3f, 0.0f, -1.0f).comp (C::vca, 6, 4, 4, 120).harm (H::tube, 0.3f).rev (RV::hall, 0.25f, 3.2f, 30, 0.35f).dly (D::pingpong, 5, 0.25f, 0.4f, 0.6f).stereo (1.5f));
+        .eq (1.3f, 0.0f, -1.0f).comp (C::vca, 6, 4, 4, 120).harm (H::tube, 0.3f).rev (RV::hall, 0.25f, 3.2f, 30, 0.35f).dly (D::pingpong, 5, 0.25f, 0.4f, 0.6f).stereo (1.5f).autom (0.4f, 0.4f));
     p.push_back (R (V::adlib, "Ad-lib Street", "Street rap", "Seco y al frente, como en un directo de calle", "seco,frente,rap")
         .eq (1.2f, 2.0f, 1.0f).comp (C::fet, 8, 6, 2, 90).harm (H::tape, 0.35f).rev (RV::ambience, 0.12f, 0.5f).dly (D::digital, 4, 0.0f, 0.2f).stereo (1.0f));
     p.push_back (R (V::adlib, "Ad-lib Perreo", "Reggaet\xc3\xb3n moderno", "Ad-lib de reggaetón: presente, con plate corto y eco a corcheas", "reggaeton,plate,corchea")
-        .eq (1.3f, 2.0f, 2.5f).comp (C::vca, 6, 4, 3, 100).harm (H::exciter, 0.3f).rev (RV::plate, 0.15f, 1.0f).dly (D::digital, 4, 0.18f, 0.25f, 0.6f).stereo (1.3f));
+        .eq (1.3f, 2.0f, 2.5f).comp (C::vca, 6, 4, 3, 100).harm (H::exciter, 0.3f).rev (RV::plate, 0.15f, 1.0f).dly (D::digital, 4, 0.18f, 0.25f, 0.6f).stereo (1.3f).autom (0.5f, 0.0f));
     p.push_back (R (V::adlib, "Ad-lib 2000s Tape", "Rap de los 2000", "Color de cinta y eco de cinta, sabor dosmilero", "cinta,2000,vintage")
         .eq (1.3f, 1.0f, -0.5f).comp (C::opto, 6, 4, 10, 150).harm (H::tape, 0.45f, 1, -0.3f).rev (RV::room, 0.12f, 0.9f).dly (D::tape, 5, 0.2f, 0.35f));
     p.push_back (R (V::adlib, "Ad-lib Radio", "Trap experimental", "Banda estrecha tipo radio, para que se distinga sin subir volumen", "radio,lofi,filtro")
@@ -67,7 +69,7 @@ std::vector<Recipe> makeFactory()
     p.push_back (R (V::coro, "Coro Church", "Experimental", "Coro grande, oscuro y lejano, como en una nave", "grande,oscuro,catedral")
         .eq (1.8f, -1.0f, 1.0f, -2.0f).comp (C::varimu, 4, 3, 20, 400).harm (H::tube, 0.2f).rev (RV::hall, 0.5f, 5.0f, 45, 0.35f).stereo (1.8f, 0.3f));
     p.push_back (R (V::coro, "Coro Plugg Clouds", "PluggnB", "Coro etéreo con eco de cinta y mucho aire", "etereo,cinta,aire")
-        .eq (1.7f, 0.0f, 4.0f, -2.5f).comp (C::opto, 4, 3, 10, 300).noHarm().rev (RV::hall, 0.35f, 3.5f, 40).dly (D::tape, 7, 0.2f, 0.4f, 0.5f).stereo (1.8f, 0.3f));
+        .eq (1.7f, 0.0f, 4.0f, -2.5f).comp (C::opto, 4, 3, 10, 300).noHarm().rev (RV::hall, 0.35f, 3.5f, 40).dly (D::tape, 7, 0.2f, 0.4f, 0.5f).stereo (1.8f, 0.3f).autom (0.0f, 0.5f));
     p.push_back (R (V::coro, "Coro Reggaet\xc3\xb3n", "Est\xc3\xa9tica La Bendici\xc3\xb3n", "Coro de estribillo de reggaetón, ancho pero firme", "reggaeton,estribillo,firme")
         .eq (1.5f, 1.0f, 2.5f, -1.0f).comp (C::vca, 6, 4, 4, 120).harm (H::tube, 0.25f).rev (RV::plate, 0.2f, 1.4f).stereo (1.6f, 0.2f));
     p.push_back (R (V::coro, "Coro Indie Room", "Indie rock", "Coro de banda en una sala, natural", "sala,natural,indie")
@@ -114,7 +116,7 @@ std::vector<Recipe> makeFactory()
     p.push_back (R (V::efecto, "FX Tape Wobble", "Indie experimental", "Eco de cinta inestable y saturado", "cinta,wobble")
         .eq (1.4f, 0.0f, -1.0f).comp (C::opto, 5, 4, 10, 200).harm (H::tape, 0.55f, 1, -0.3f).rev (RV::chamber, 0.2f, 1.6f).dly (D::tape, 5, 0.35f, 0.55f, 0.3f));
     p.push_back (R (V::efecto, "FX Ping-Pong Throw", "Reggaet\xc3\xb3n + trap", "Eco que salta de lado a lado para remates", "pingpong,eco")
-        .eq (1.4f, 1.5f, 2.0f).comp (C::vca, 6, 4, 3, 100).noHarm().rev (RV::plate, 0.12f, 1.2f).dly (D::pingpong, 4, 0.35f, 0.5f, 0.5f).stereo (1.5f));
+        .eq (1.4f, 1.5f, 2.0f).comp (C::vca, 6, 4, 3, 100).noHarm().rev (RV::plate, 0.12f, 1.2f).dly (D::pingpong, 4, 0.35f, 0.5f, 0.5f).stereo (1.5f).autom (0.8f, 0.0f));
     p.push_back (R (V::efecto, "FX Distant Ghost", "Dark Trap", "Voz lejana, casi solo reverb", "lejos,reverb")
         .eq (2.2f, -3.0f, 1.0f, -3.0f).comp (C::opto, 4, 3, 10, 300).noHarm().rev (RV::hall, 0.6f, 5.5f, 60, 0.3f).stereo (1.9f, 0.3f));
     p.push_back (R (V::efecto, "FX Megaphone", "Alternative rock", "Megáfono: medios duros y distorsión", "megafono,distorsion")
@@ -129,7 +131,7 @@ std::vector<Recipe> makeFactory()
     p.push_back (R (V::adlib, "Ad-lib Rage Wide", "Rage", "Ad-lib abierto a los lados, saturado y brillante", "ancho,brillante,rage")
         .eq (1.3f, 2.5f, 3.5f).comp (C::fet, 8, 6, 1, 70).harm (H::transformer, 0.45f).rev (RV::plate, 0.15f, 1.3f).dly (D::pingpong, 4, 0.18f, 0.3f, 0.6f).stereo (1.8f, 0.3f));
     p.push_back (R (V::adlib, "Ad-lib PluggnB Silk", "PluggnB", "Suave y melódico, flotando detrás", "suave,melodico,cinta")
-        .eq (1.5f, 0.5f, 3.0f, -1.5f).comp (C::opto, 5, 3, 10, 250).noHarm().voc (1.3f, 0.5f, 0.6f).rev (RV::hall, 0.28f, 2.6f, 30).dly (D::tape, 7, 0.22f, 0.4f, 0.6f).stereo (1.5f));
+        .eq (1.5f, 0.5f, 3.0f, -1.5f).comp (C::opto, 5, 3, 10, 250).noHarm().voc (1.3f, 0.5f, 0.6f).rev (RV::hall, 0.28f, 2.6f, 30).dly (D::tape, 7, 0.22f, 0.4f, 0.6f).stereo (1.5f).autom (0.4f, 0.3f));
     p.push_back (R (V::adlib, "Ad-lib Dark Whisper", "Dark Trap", "Ad-lib susurrado y oscuro, muy de fondo", "oscuro,susurro,fondo")
         .eq (1.4f, -1.5f, 0.0f, -1.0f).comp (C::opto, 6, 4, 10, 300).harm (H::tube, 0.2f, 1, -0.5f).voc (1.6f, 0.5f, 0.2f).rev (RV::hall, 0.35f, 3.8f, 40, 0.3f).stereo (1.6f, 0.2f));
     p.push_back (R (V::adlib, "Ad-lib Melodic Trap", "Trap mel\xc3\xb3" "dico", "Ad-lib cantado, limpio y con plate", "melodico,limpio")
@@ -157,7 +159,7 @@ std::vector<Recipe> makeFactory()
     p.push_back (R (V::respuesta, "Respuesta Call", "Street rap", "Respuesta al verso, seca y contundente", "respuesta,seco")
         .eq (1.2f, 2.0f, 1.0f).comp (C::fet, 8, 6, 2, 90).harm (H::transformer, 0.35f).rev (RV::room, 0.1f, 0.7f).stereo (1.2f));
     p.push_back (R (V::respuesta, "Respuesta Echo", "Trap mel\xc3\xb3" "dico", "Respuesta que se queda en el aire con eco", "respuesta,eco")
-        .eq (1.3f, 1.0f, 2.5f).comp (C::opto, 5, 4, 10, 200).noHarm().rev (RV::plate, 0.2f, 1.6f).dly (D::pingpong, 7, 0.25f, 0.4f, 0.3f).stereo (1.5f));
+        .eq (1.3f, 1.0f, 2.5f).comp (C::opto, 5, 4, 10, 200).noHarm().rev (RV::plate, 0.2f, 1.6f).dly (D::pingpong, 7, 0.25f, 0.4f, 0.3f).stereo (1.5f).autom (0.7f, 0.3f));
     p.push_back (R (V::chop, "Chop Tight", "Electr\xc3\xb3nica", "Chop vocal seco y rítmico", "chop,seco,ritmo")
         .eq (1.3f, 2.0f, 2.0f).comp (C::fet, 7, 6, 0.5f, 60).harm (H::exciter, 0.3f).rev (RV::ambience, 0.1f, 0.4f).stereo (1.2f));
     p.push_back (R (V::chop, "Chop Gate Bounce", "Electr\xc3\xb3nica", "Chop con puerta a corcheas", "chop,gate")
@@ -279,13 +281,13 @@ std::vector<Recipe> makeFactory()
     p.push_back (R (V::efecto, "FX Radio Ghost", "Dark Trap", "Radio lejana con reverb oscura", "radio,lejos")
         .eq (3.0f, 4.0f, -5.0f, -3.0f).comp (C::fet, 9, 8, 1, 70).harm (H::transformer, 0.55f).rev (RV::hall, 0.35f, 3.5f, 40, 0.3f).stereo (1.5f));
     p.push_back (R (V::efecto, "FX Tape Echo Throw", "Rap de los 2000", "Eco de cinta para remates de frase", "cinta,eco,remate")
-        .eq (1.4f, 0.5f, -0.5f).comp (C::opto, 5, 4, 10, 200).harm (H::tape, 0.45f).rev (RV::room, 0.1f, 0.8f).dly (D::tape, 7, 0.4f, 0.55f, 0.4f));
+        .eq (1.4f, 0.5f, -0.5f).comp (C::opto, 5, 4, 10, 200).harm (H::tape, 0.45f).rev (RV::room, 0.1f, 0.8f).dly (D::tape, 7, 0.4f, 0.55f, 0.4f).autom (0.8f, 0.2f));
     p.push_back (R (V::efecto, "FX Analog Dub", "Reggaet\xc3\xb3n underground", "Eco analógico tipo dub", "dub,analogico")
         .eq (1.5f, 1.0f, -1.0f).comp (C::vca, 6, 4, 3, 100).harm (H::tube, 0.35f).rev (RV::chamber, 0.15f, 1.5f).dly (D::analog, 5, 0.4f, 0.65f, 0.3f).stereo (1.4f));
     p.push_back (R (V::introOutro, "Intro Big Hall", "R&B", "Intro con mucho espacio y eco a negras", "intro,hall")
-        .eq (1.2f, 0.5f, 2.5f).comp (C::opto, 4, 3, 10, 300).noHarm().rev (RV::hall, 0.4f, 3.5f, 40).dly (D::digital, 7, 0.22f, 0.45f, 0.3f).stereo (1.6f, 0.2f));
+        .eq (1.2f, 0.5f, 2.5f).comp (C::opto, 4, 3, 10, 300).noHarm().rev (RV::hall, 0.4f, 3.5f, 40).dly (D::digital, 7, 0.22f, 0.45f, 0.3f).stereo (1.6f, 0.2f).autom (0.3f, 0.5f));
     p.push_back (R (V::introOutro, "Outro Fade Space", "Plugg", "Outro que se pierde en el espacio", "outro,espacio")
-        .eq (1.5f, -1.0f, 2.0f, -1.5f).comp (C::opto, 4, 3, 10, 400).harm (H::tape, 0.25f).rev (RV::hall, 0.55f, 5.5f, 50, 0.4f).dly (D::tape, 9, 0.25f, 0.5f, 0.2f).stereo (1.8f, 0.25f));
+        .eq (1.5f, -1.0f, 2.0f, -1.5f).comp (C::opto, 4, 3, 10, 400).harm (H::tape, 0.25f).rev (RV::hall, 0.55f, 5.5f, 50, 0.4f).dly (D::tape, 9, 0.25f, 0.5f, 0.2f).stereo (1.8f, 0.25f).autom (0.3f, 0.6f));
     p.push_back (R (V::ambiente, "Ambient Wash", "Experimental", "La voz como lavado ambiental", "ambiente,lavado")
         .eq (2.4f, -3.0f, 2.0f, -3.0f).comp (C::opto, 3, 3, 10, 500).noHarm().rev (RV::hall, 0.7f, 7.0f, 60, 0.35f).stereo (2.0f, 0.35f));
     p.push_back (R (V::susurro, "Whisper Close", "Trap alternativo", "Susurro cercano, sin eses molestas", "susurro,cerca")
@@ -293,6 +295,10 @@ std::vector<Recipe> makeFactory()
 
     p.push_back (R (V::efecto, "FX Doubler Spread", "Pop", "Doblador extremo: la voz ocupa todo el estéreo", "doblador,ancho")
         .eq (1.4f, 0.5f, 2.5f).comp (C::clean, 5, 3, 5, 150).noHarm().rev (RV::plate, 0.12f, 1.2f).stereo (2.0f, 0.6f));
+    p.push_back (R (V::efecto, "FX Octave Down Layer", "Dark Trap", "Capa una octava abajo debajo del ad-lib (efecto, no afinación)", "pitch,octava,oscuro")
+        .eq (1.3f, 1.0f, 1.0f).comp (C::fet, 7, 6, 2, 80).harm (H::tube, 0.3f).rev (RV::hall, 0.2f, 2.2f).crea (CR::pitch, 4, 0.55f).pitch (-12.0f).stereo (1.4f));
+    p.push_back (R (V::textura, "FX Grain Cloud", "Experimental", "La voz deshecha en una nube de granos", "granular,textura,nube")
+        .eq (1.8f, -1.0f, 2.5f, -2.0f).comp (C::opto, 4, 3, 10, 400).noHarm().rev (RV::hall, 0.4f, 4.0f, 30, 0.45f).crea (CR::granular, 5, 0.7f).stereo (1.9f, 0.2f));
     std::vector<Recipe> out;
     for (auto& r : p) out.push_back (r.r);
     return out;

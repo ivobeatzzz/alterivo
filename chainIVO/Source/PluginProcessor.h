@@ -12,6 +12,7 @@
 #include "analysis/Analyzer.h"
 #include "intelligence/Musical.h"
 #include "presets/PresetLibrary.h"
+#include "intelligence/Group.h"
 
 class ChainIvoProcessor : public juce::AudioProcessor, private juce::Timer
 {
@@ -61,6 +62,11 @@ public:
     // Instrumental de referencia (archivo): se analiza en segundo plano; sólo se guarda su espectro
     void loadInstrumental (const juce::File&);
     void clearInstrumental();
+    // Respuesta de impulso para la reverb IR (se guarda la ruta del archivo en el proyecto)
+    void loadIR (const juce::File&);
+    void clearIR();
+    juce::String getIRName() const { return irFile.getFileNameWithoutExtension(); }
+    bool hasIR() const { return space.hasIR(); }
     juce::String getInstrumentalName() const;
     bool isInstrumentalBusy() const { return instBusy.load(); }
     // Exportar un archivo procesado con la cadena actual (WAV 24 bits o 32 bits float), en segundo plano.
@@ -89,12 +95,15 @@ public:
     std::atomic<float> gainMatchDb { 0.0f }, cpuLoad { 0.0f };
     std::atomic<int> clipCount { 0 };
     std::atomic<bool> leadConnected { false };
+    std::atomic<float> correlation { 1.0f };   // correlación L/R de la salida (1 = mono, 0 = muy abierto, <0 = problemas de fase)
+    std::atomic<int> soloEngine { -1 };        // escucha por módulo: sólo suena ese motor (-1 = todos)
     float eqKey() const { return eq.dynamicKey(); }
     float eqPresNow() const { return eq.currentPresGain(); }
     float compGr() const { return comp.gainReduction(); }
     float deessGr() const { return vocal.deessReduction(); }
     float harshGr() const { return vocal.harshReduction(); }
     float breathGr() const { return vocal.breathReduction(); }
+    int phraseEnds() const { return space.phraseEndCount(); }
     chainivo::EqSettings eqSettingsNow() const;   // para dibujar la curva real
     double getSampleRateSafe() const { return currentSr; }
     std::atomic<float> uiScale { 1.0f };
@@ -140,6 +149,12 @@ private:
     std::atomic<bool> instBusy { false }, instReady { false }, instCancel { false }, exporting { false };
     std::array<float, chainivo::kBands> instSpectrum {}, instPending {};
     juce::String instName, instPendingName;
+    juce::File irFile;
+    juce::SharedResourcePointer<chainivo::GroupRegistry> group;
+    int groupId = 0;
+    juce::String trackName;
+    void fillGroup (chainivo::AnalysisResult&) const;
+    void updateTrackProperties (const TrackProperties& p) override { trackName = p.name.value_or (juce::String()); }
     juce::CriticalSection instLock;
     juce::ValueTree abSlots[2];
 

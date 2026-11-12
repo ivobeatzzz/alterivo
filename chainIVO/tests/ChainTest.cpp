@@ -362,6 +362,104 @@ int main (int argc, char** argv)
         std::printf ("[beat] cargado '%s' | por que EQ: %s\n", q.getInstrumentalName().toRawUTF8(), q.getExplanations()[0].toRawUTF8());
     }
 
+
+    // 14. Automatizaciones al final de frase, pitch creativo y granular
+    if (doAll || only == "autom")
+    {
+        // frases de 0.8 s de voz seguidas de 1.2 s de silencio
+        std::vector<float> ph; size_t src = 0;
+        for (int k = 0; k < 4; ++k)
+        {
+            while (src < voice.size() && std::abs (voice[src]) < 0.05f) ++src;
+            for (int i = 0; i < (int) (0.8 * sr) && src < voice.size(); ++i) ph.push_back (voice[src++] );
+            for (int i = 0; i < (int) (1.2 * sr); ++i) ph.push_back (0.0f);
+        }
+        auto gapEnergy = [&] (float throwAmt, float swell, int& ends)
+        {
+            ChainIvoProcessor p; p.prepareToPlay (sr, 512); neutral (p);
+            setP (p, pid::intensity, 100); setP (p, pid::eqOn, 0); setP (p, pid::compOn, 0); setP (p, pid::vocOn, 0);
+            setP (p, pid::spaceOn, 1); setP (p, pid::revMix, swell > 0 ? 15 : 0); setP (p, pid::dlyMix, 0); setP (p, pid::dlyNote, 7); setP (p, pid::dlyFeedback, 0);
+            setP (p, pid::duck, 0); setP (p, pid::width, 100); setP (p, pid::doubler, 0); setP (p, pid::dlyThrow, throwAmt); setP (p, pid::revSwell, swell);
+            auto out = run (p, ph, ph);
+            double e = 0; const int per = (int) (2.0 * sr);
+            for (int k = 0; k < 4; ++k) for (int i = k * per + (int) (0.85 * sr); i < k * per + (int) (1.9 * sr) && i < (int) ph.size(); ++i) e += out.getSample (0, i) * out.getSample (0, i);
+            ends = p.phraseEnds();
+            return e;
+        };
+        int e0, e1, e2, e3;
+        const double off = gapEnergy (0, 0, e0), thr = gapEnergy (100, 0, e1), swOff = gapEnergy (0, 0, e2), sw = gapEnergy (0, 100, e3);
+        double revOnly; { int x; revOnly = [&] { ChainIvoProcessor p; p.prepareToPlay (sr, 512); neutral (p); setP (p, pid::intensity, 100); setP (p, pid::eqOn, 0); setP (p, pid::compOn, 0); setP (p, pid::vocOn, 0); setP (p, pid::revMix, 15); setP (p, pid::dlyMix, 0); setP (p, pid::duck, 0); setP (p, pid::doubler, 0); auto out = run (p, ph, ph); double e = 0; const int per = (int) (2.0 * sr); for (int k = 0; k < 4; ++k) for (int i = k * per + (int) (0.85 * sr); i < k * per + (int) (1.9 * sr); ++i) e += out.getSample (0, i) * out.getSample (0, i); x = 0; return e; }(); }
+        std::printf ("[autom] THROW: finales de frase detectados %d de 4 | energia en los silencios: sin throw %.1f dB, con throw %.1f dB\n", e1, 10 * std::log10 (off + 1e-12), 10 * std::log10 (thr + 1e-12));
+        std::printf ("[autom] SWELL: cola de reverb en los silencios %.1f dB sin swell, %.1f dB con swell (+%.1f dB)\n", 10 * std::log10 (revOnly), 10 * std::log10 (sw), 10 * std::log10 (sw / revOnly));
+        (void) swOff; (void) e0; (void) e2; (void) e3;
+
+        // Pitch: seno de 440 Hz con capa a -12 st -> aparece 220 Hz
+        {
+            ChainIvoProcessor p; p.prepareToPlay (sr, 512); neutral (p);
+            setP (p, pid::intensity, 100); setP (p, pid::eqOn, 0); setP (p, pid::compOn, 0); setP (p, pid::vocOn, 0); setP (p, pid::spaceOn, 0);
+            setP (p, pid::creaOn, 1); setP (p, pid::creaType, 3); setP (p, pid::creaPitch, -12); setP (p, pid::creaAmount, 100);
+            const int n = 1 << 16; std::vector<float> s ((size_t) n + 8192); for (size_t i = 0; i < s.size(); ++i) s[i] = 0.3f * std::sin (2.0f * kPi * 440.0f * (float) i / (float) sr);
+            auto out = run (p, s, s);
+            juce::dsp::FFT fft (16); std::vector<float> w ((size_t) n * 2, 0.0f);
+            for (int i = 0; i < n; ++i) w[(size_t) i] = out.getSample (0, i + 8192) * (0.5f - 0.5f * std::cos (2 * kPi * i / n));
+            fft.performFrequencyOnlyForwardTransform (w.data());
+            auto bandDb = [&] (double f) { double m = 0; for (int k = (int) ((f - 8) * n / sr); k <= (int) ((f + 8) * n / sr); ++k) m = std::max (m, (double) w[(size_t) k]); return 20 * std::log10 (m + 1e-12); };
+            std::printf ("[pitch] capa -12 st sobre 440 Hz: 220 Hz a %.1f dB respecto a 440 Hz (la voz original sigue en 440)\n", bandDb (220) - bandDb (440));
+        }
+        // Granular: produce una nube estable
+        {
+            ChainIvoProcessor p; p.prepareToPlay (sr, 512); neutral (p);
+            setP (p, pid::intensity, 100); setP (p, pid::creaOn, 1); setP (p, pid::creaType, 4); setP (p, pid::creaAmount, 100); setP (p, pid::spaceOn, 0);
+            auto out = run (p, voice, voice);
+            int bad = 0; double e = 0; for (int i = 0; i < N; ++i) { const float v = out.getSample (0, i); if (! std::isfinite (v)) ++bad; e += v * v; }
+            std::printf ("[granular] %d valores no validos | nivel %.1f dB frente a la voz %.1f dB\n", bad, db (std::sqrt (e / N)), db (rms (voice.data(), N)));
+        }
+    }
+
+
+    // 15. Reverb IR: la cola sigue a la respuesta de impulso cargada
+    if (doAll || only == "ir")
+    {
+        const juce::File f ("/tmp/claude-0/-home-claude/a71dc4c6-2070-51ff-85e0-7f07bc2eb995/scratchpad/ctest/ir.wav");
+        { // IR sintética de 0.8 s: ruido con caída exponencial (T60 ~0.8 s)
+            const int n = (int) (0.8 * sr); juce::AudioBuffer<float> b (2, n); juce::Random rnd (9);
+            for (int i = 0; i < n; ++i) { const float e = std::pow (10.0f, -3.0f * (float) i / (float) n); b.setSample (0, i, e * (rnd.nextFloat() * 2 - 1)); b.setSample (1, i, e * (rnd.nextFloat() * 2 - 1)); }
+            f.deleteFile(); juce::WavAudioFormat w; auto os = f.createOutputStream();
+            std::unique_ptr<juce::AudioFormatWriter> wr (w.createWriterFor (os.get(), sr, 2, 24, {}, 0)); os.release(); wr->writeFromAudioSampleBuffer (b, 0, n);
+        }
+        ChainIvoProcessor p; p.prepareToPlay (sr, 512); neutral (p);
+        setP (p, pid::intensity, 100); setP (p, pid::eqOn, 0); setP (p, pid::compOn, 0); setP (p, pid::vocOn, 0);
+        setP (p, pid::spaceOn, 1); setP (p, pid::revMix, 50); setP (p, pid::revPredelay, 0); setP (p, pid::revTone, 100); setP (p, pid::dlyMix, 0); setP (p, pid::duck, 0); setP (p, pid::doubler, 0);
+        p.loadIR (f);
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (600);
+        std::vector<float> warm ((size_t) (0.5 * sr), 0.0f); run (p, warm, warm);   // deja que la IR se instale
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (300);
+        const int n = (int) (2.0 * sr); std::vector<float> imp ((size_t) n, 0.0f); for (int i = 0; i < 480; ++i) imp[(size_t) i] = 0.5f * std::sin (2 * kPi * 1000.0f * i / (float) sr);
+        auto out = run (p, imp, imp);
+        double e1 = 0, e2 = 0, e3 = 0;
+        for (int i = (int) (0.05 * sr); i < (int) (0.3 * sr); ++i) e1 += out.getSample (0, i) * out.getSample (0, i);
+        for (int i = (int) (0.55 * sr); i < (int) (0.8 * sr); ++i) e2 += out.getSample (0, i) * out.getSample (0, i);
+        for (int i = (int) (1.2 * sr); i < (int) (1.45 * sr); ++i) e3 += out.getSample (0, i) * out.getSample (0, i);
+        std::printf ("[ir] tipo %s, IR '%s' | cola: 50-300 ms %.1f dB, 550-800 ms %.1f dB, 1.2-1.45 s %.1f dB (la IR dura 0.8 s)\n",
+                     p.apvts.getParameter (pid::revType)->getCurrentValueAsText().toRawUTF8(), p.getIRName().toRawUTF8(), 10 * std::log10 (e1 + 1e-20), 10 * std::log10 (e2 + 1e-20), 10 * std::log10 (e3 + 1e-20));
+    }
+
+
+    // 16. Grupo: dos instancias se ven y separan su presencia y pre-delay
+    if (doAll || only == "group")
+    {
+        ChainIvoProcessor a, b; a.prepareToPlay (sr, 512); b.prepareToPlay (sr, 512);
+        std::vector<float> loop; for (int k = 0; k < 2; ++k) loop.insert (loop.end(), voice.begin(), voice.end());
+        run (a, loop, loop, nullptr, 512, true);
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (900);
+        run (b, loop, loop, nullptr, 512, true);
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (900);
+        b.autoPropose();
+        const auto an = b.getAnalysis();
+        std::printf ("[group] la segunda instancia ve %d capa(s), posicion %d | pre-delay A %.0f ms, B %.0f ms | por que EQ (B): %s\n",
+                     an.groupCount, an.groupIndex, a.apvts.getRawParameterValue (pid::revPredelay)->load(), b.apvts.getRawParameterValue (pid::revPredelay)->load(), b.getExplanations()[0].toRawUTF8());
+    }
+
     // 11. Interfaz
     if (doAll || only == "ui")
     {
@@ -374,6 +472,7 @@ int main (int argc, char** argv)
             if (pro == 2) chainivo::ui::saveDarkSkin (true);
             p.setPro (pro >= 1);
             std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
+            if (pro == 1) { setP (p, pid::creaOn, 1); setP (p, pid::creaType, 3); }
             ed->setSize (ChainIvoEditor::kW, ChainIvoEditor::kH);
             juce::MessageManager::getInstance()->runDispatchLoopUntil (400);
             auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);

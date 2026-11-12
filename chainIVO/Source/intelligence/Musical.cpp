@@ -62,7 +62,11 @@ int genreIndex (const juce::String& name)
 // --------------------------------------------------- Recetas base por tipo de voz
 Recipe defaultRecipe (VoiceType t)
 {
-    Recipe r; r.type = t; r.name = voiceTypeName (t); r.intention = T ("Propuesta autom\xc3\xa1tica");
+    Recipe r; r.type = t; r.name = voiceTypeName (t);
+    if (t == VoiceType::adlib) r.throwAmt = 0.3f;
+    if (t == VoiceType::respuesta) r.throwAmt = 0.4f;
+    if (t == VoiceType::coro || t == VoiceType::armonia) r.swell = 0.2f;
+    if (t == VoiceType::introOutro) r.swell = 0.5f; r.intention = T ("Propuesta autom\xc3\xa1tica");
     switch (t)
     {
         case VoiceType::adlib:      r.hpfMul = 1.3f; r.presence = 2.0f; r.air = 2.0f; r.comp = CompType::fet; r.grTarget = 6; r.harmOn = true; r.drive = 0.25f;
@@ -166,7 +170,7 @@ namespace
 {
 juce::String hz (float f) { return f >= 1000.0f ? juce::String (f / 1000.0f, 1) + " kHz" : juce::String (juce::roundToInt (f)) + " Hz"; }
 juce::String db (float v) { return (v > 0 ? "+" : "") + juce::String (v, 1) + " dB"; }
-const char* revName (RevType t) { static const char* n[] = { "plate", "hall", "room", "chamber", "ambience" }; return n[(int) t]; }
+const char* revName (RevType t) { static const char* n[] = { "plate", "hall", "room", "chamber", "ambience", "IR" }; return n[(int) t]; }
 const char* compName (CompType t) { static const char* n[] = { "FET", "Opto", "VCA", "Vari-Mu", "Clean" }; return n[(int) t]; }
 const char* harmName (HarmType t) { static const char* n[] = { "v\xc3\xa1lvula", "cinta", "transformador", "excitador" }; return n[(int) t]; }
 } // namespace
@@ -196,13 +200,24 @@ BuildResult buildChain (const Recipe& r, const AnalysisResult& a, int genreIdx)
         presDyn = 85.0f;
         why = "Choca con la voz principal en " + hz (presF) + ": baja " + juce::String (-presG, 1) + T(" dB ah\xc3\xad s\xc3\xb3lo cuando canta la principal");
     }
-    else if (a.hasInstrumental && presG > -0.5f)
+    else if ((a.hasInstrumental || a.groupHasSpectrum) && presG > -0.5f)
     {
-        // Sin choque con la principal: la presencia va donde el instrumental deja hueco (2-6 kHz)
-        float mean = 0; for (auto v : a.instrumentalSpectrum) mean += v; mean /= (float) kBands;
-        int best = -1; float bestV = 100.0f;
-        for (int b = 0; b < kBands; ++b) { const float f = Analyzer::bandCentre (b); if (f >= 2000.0f && f <= 6000.0f && a.instrumentalSpectrum[(size_t) b] - mean < bestV) { bestV = a.instrumentalSpectrum[(size_t) b] - mean; best = b; } }
-        if (best >= 0) { presF = Analyzer::bandCentre (best); presG = std::max (presG, 0.0f) + 1.0f; why += T (", presencia ") + db (presG) + T (" en ") + hz (presF) + T (", donde el instrumental deja hueco"); }
+        // Sin choque con la principal: la presencia va donde el beat y las otras capas vocales dejan hueco (2-6 kHz)
+        auto norm = [] (const std::array<float, kBands>& v, int b) { float m = 0; for (auto x : v) m += x; return v[(size_t) b] - m / (float) kBands; };
+        int best = -1; float bestV = 1.0e9f;
+        for (int b = 0; b < kBands; ++b)
+        {
+            const float f = Analyzer::bandCentre (b);
+            if (f < 2000.0f || f > 6000.0f) continue;
+            const float crowd = (a.hasInstrumental ? norm (a.instrumentalSpectrum, b) : 0.0f) + (a.groupHasSpectrum ? norm (a.groupSpectrum, b) : 0.0f);
+            if (crowd < bestV) { bestV = crowd; best = b; }
+        }
+        if (best >= 0)
+        {
+            presF = Analyzer::bandCentre (best); presG = std::max (presG, 0.0f) + 1.0f;
+            why += T (", presencia ") + db (presG) + T (" en ") + hz (presF) + T (a.hasInstrumental && a.groupHasSpectrum ? ", donde el beat y las otras capas dejan hueco"
+                                                                                 : a.hasInstrumental ? ", donde el instrumental deja hueco" : ", donde las otras capas vocales no se acumulan");
+        }
     }
     else if (std::abs (presG) > 0.2f) why += ", presencia " + db (presG) + " en " + hz (presF);
     if (a.hasInstrumental)
@@ -254,16 +269,22 @@ BuildResult buildChain (const Recipe& r, const AnalysisResult& a, int genreIdx)
     float width = r.width + (haveGenre ? g.width * 0.2f : 0.0f);
     if (measured && a.sideRatio > 0.2f) width = std::min (width, 1.2f);   // ya viene abierta: no exagerar
     set (pid::spaceOn, 1); set (pid::revType, (float) (int) rt); set (pid::revMix, revMix * 100.0f); set (pid::revDecay, decay);
-    set (pid::revPredelay, r.predelay); set (pid::revTone, r.revTone * 100.0f);
+    // Grupo: cada capa con un pre-delay distinto para que las colas no se fundan en una sola
+    const float predelay = std::min (200.0f, r.predelay + 8.0f * (float) a.groupIndex);
+    set (pid::revPredelay, predelay); set (pid::revTone, r.revTone * 100.0f);
     set (pid::dlyType, (float) (int) r.dly); set (pid::dlyNote, (float) r.dlyNote); set (pid::dlyFeedback, r.dlyFb * 100.0f);
     set (pid::dlyMix, dlyMix * 100.0f); set (pid::duck, r.duck * 100.0f); set (pid::width, juce::jlimit (0.0f, 2.0f, width) * 100.0f);
     set (pid::doubler, r.doubler * 100.0f);
+    set (pid::dlyThrow, r.throwAmt * 100.0f); set (pid::revSwell, r.swell * 100.0f);
     out.why[4] = "Reverb " + juce::String (revName (rt)) + " de " + juce::String (decay, 1) + " s"
                + (dlyMix > 0.01f ? ", delay " + chainivo::noteNames()[r.dlyNote] : juce::String())
-               + (r.duck > 0.3f ? ", con ducking para que no tape la voz" : "");
+               + (r.duck > 0.3f ? ", con ducking para que no tape la voz" : "")
+               + (r.throwAmt > 0.01f ? T (", eco de remate al final de cada frase") : juce::String())
+               + (r.swell > 0.01f ? T (", la cola crece al acabar cada frase") : juce::String())
+               + (a.groupCount > 0 ? T (", pre-delay ") + juce::String (juce::roundToInt (predelay)) + T (" ms para separarla de las otras ") + juce::String (a.groupCount) + T (" capas") : juce::String());
 
     // ---------------- CREATIVE (sólo si la receta lo pide)
-    set (pid::creaOn, r.creaOn ? 1.0f : 0.0f); set (pid::creaType, (float) (int) r.crea); set (pid::creaNote, (float) r.creaNote); set (pid::creaAmount, r.creaAmount * 100.0f);
+    set (pid::creaOn, r.creaOn ? 1.0f : 0.0f); set (pid::creaType, (float) (int) r.crea); set (pid::creaNote, (float) r.creaNote); set (pid::creaAmount, r.creaAmount * 100.0f); set (pid::creaPitch, r.creaPitch);
     out.why[5] = r.creaOn ? T("Efecto r\xc3\xadtmico elegido por el preset") : "Apagado: nunca se activa solo";
 
     out.enginesOn = 4 + (harmOn ? 1 : 0) + (r.creaOn ? 1 : 0);
