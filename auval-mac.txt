@@ -1,0 +1,830 @@
+== auval
+
+    AU Validation Tool
+    Version: 1.10.0 
+    Copyright 2003-2019, Apple Inc. All Rights Reserved.
+    Specify -h (-help) for command options
+
+--------------------------------------------------
+VALIDATING AUDIO UNIT: 'aufx' - 'Civo' - 'Ivob'
+--------------------------------------------------
+Manufacturer String: IVO Beatz
+AudioUnit Name: chainIVO
+Component Version: 0.1.0 (0x100)
+
+* * PASS
+--------------------------------------------------
+TESTING OPEN TIMES:
+COLD:
+Time to open AudioUnit:         36.606 ms
+WARM:
+Time to open AudioUnit:         11.273  ms
+This AudioUnit is a version 2 implementation.
+FIRST TIME:
+Time for initialization:        24.436 ms
+
+* * PASS
+--------------------------------------------------
+VERIFYING DEFAULT SCOPE FORMATS:
+Input Scope Bus Configuration:
+ Default Bus Count:2
+    Bus Name: Input
+    Format Bus 0: AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+    Bus Name: Voz principal
+    Format Bus 1: AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+    Bus 0, Has Channel Layouts: 0x640001 0x650002 0x660002 0x670002 0x6A0002 
+    Default Layout (bus 0):
+	Tag=0x650002, Num Chan Descs=0
+    Bus 1, Has Channel Layouts: 0x640001 0x650002 0x660002 0x670002 0x6A0002 0x930000 
+    Default Layout (bus 1):
+	Tag=0x650002, Num Chan Descs=0
+
+Output Scope Bus Configuration:
+ Default Bus Count:1
+    Bus Name: Output
+    Default Format: AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+    Has Channel Layouts: 0x640001 0x650002 0x660002 0x670002 0x6A0002 
+    Default Layout:
+	Tag=0x650002, Num Chan Descs=0
+
+* * PASS
+--------------------------------------------------
+VERIFYING REQUIRED PROPERTIES:
+
+* * PASS
+--------------------------------------------------
+VERIFYING RECOMMENDED PROPERTIES:
+  VERIFYING PROPERTY: Latency
+    PASS
+  VERIFYING PROPERTY: Tail Time
+    PASS
+  VERIFYING PROPERTY: Bypass Effect
+    PASS
+
+* * PASS
+--------------------------------------------------
+VERIFYING OPTIONAL PROPERTIES:
+
+* * PASS
+--------------------------------------------------
+VERIFYING SPECIAL PROPERTIES:
+
+VERIFYING CUSTOM UI
+Cocoa Views Available: 1
+  JUCE_AUCocoaViewClass_f620350717f17a99
+    PASS
+
+HAS FACTORY PRESETS
+    ID:   0    Name: Untitled
+
+VERIFYING CLASS INFO
+    PASS
+
+TESTING HOST CALLBACKS
+    PASS
+
+* * PASS
+--------------------------------------------------
+PUBLISHED PARAMETER INFO:
+
+# # # 63 Global Scope Parameters:
+Parameter ID:103518
+Name: EQ High-pass
+Parameter Type: Generic
+Values: Minimum = 20 Hz, Default = 90 Hz, Maximum = 500 Hz
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:108124
+Name: Dry/Wet
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 100 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:3094713
+Name: Ducking
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 50 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:3120043
+Name: EQ On
+Parameter Type: Boolean
+Values: Minimum = Off, Default = On, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:3351305
+Name: EQ Mid Q
+Parameter Type: Generic
+Values: Minimum = Q 0.30, Default = Q 1.20, Maximum = Q 8.00
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:95461732
+Name: De-ess
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 30 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:99049134
+Name: Harshness
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 0 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:100358090
+Name: Input
+Parameter Type: Generic
+Values: Minimum = -24.0 dB, Default = 0.0 dB, Maximum = +24.0 dB
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:106931233
+Name: EQ Presence Q
+Parameter Type: Generic
+Values: Minimum = Q 0.30, Default = Q 1.20, Maximum = Q 8.00
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:112379977
+Name: Vocal On
+Parameter Type: Boolean
+Values: Minimum = Off, Default = On, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:113126854
+Name: Width
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 100 %, Maximum = 200 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:124191878
+Name: Harmonics Tone
+Parameter Type: Generic
+Values: Minimum = -100 %, Default = 0 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:124201550
+Name: Harmonics Type
+Parameter Type: Indexed
+Values: Minimum = Tube, Default = Tube, Maximum = Exciter
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 4
+Value: 0,  String: Tube
+Value: 1,  String: Tape
+Value: 2,  String: Transformer
+Value: 3,  String: Exciter
+  -parameter PASS
+
+Parameter ID:135319941
+Name: Space On
+Parameter Type: Boolean
+Values: Minimum = Off, Default = On, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:184998893
+Name: EQ High-pass Slope
+Parameter Type: Indexed
+Values: Minimum = 12 dB/oct, Default = 24 dB/oct, Maximum = 24 dB/oct
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 2
+Value: 0,  String: 12 dB/oct
+Value: 1,  String: 24 dB/oct
+  -parameter PASS
+
+Parameter ID:270195196
+Name: De-ess Freq
+Parameter Type: Generic
+Values: Minimum = 3.00 kHz, Default = 6.50 kHz, Maximum = 12.00 kHz
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:356082668
+Name: EQ Low Freq
+Parameter Type: Generic
+Values: Minimum = 60 Hz, Default = 220 Hz, Maximum = 500 Hz
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:356096243
+Name: EQ Low Gain
+Parameter Type: Generic
+Values: Minimum = -12.0 dB, Default = 0.0 dB, Maximum = +12.0 dB
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:389071415
+Name: Comp Attack
+Parameter Type: Generic
+Values: Minimum = 0.10 ms, Default = 5.00 ms, Maximum = 100 ms
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:499324979
+Name: Intensity
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 70 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:696735944
+Name: Harmonics Mix
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 100 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:714810616
+Name: Comp Makeup
+Parameter Type: Generic
+Values: Minimum = -12.0 dB, Default = 0.0 dB, Maximum = +24.0 dB
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:720421436
+Name: Comp Ratio
+Parameter Type: Generic
+Values: Minimum = 1.0:1, Default = 3.0:1, Maximum = 20.0:1
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:766560352
+Name: Breath
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 0 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:773352680
+Name: Bypass
+Parameter Type: Boolean
+Values: Minimum = Off, Default = Off, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:792670542
+Name: Comp On
+Parameter Type: Boolean
+Values: Minimum = Off, Default = On, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:795188362
+Name: Creative On
+Parameter Type: Boolean
+Values: Minimum = Off, Default = Off, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:818853803
+Name: Delay Mix
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 0 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:869897416
+Name: EQ Presence Freq
+Parameter Type: Generic
+Values: Minimum = 1.00 kHz, Default = 3.20 kHz, Maximum = 9.00 kHz
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:869910991
+Name: EQ Presence Gain
+Parameter Type: Generic
+Values: Minimum = -12.0 dB, Default = 0.0 dB, Maximum = +12.0 dB
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:917745405
+Name: Clip Safe
+Parameter Type: Boolean
+Values: Minimum = Off, Default = On, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:921887787
+Name: Comp Threshold
+Parameter Type: Generic
+Values: Minimum = -60.0 dB, Default = -18.0 dB, Maximum = 0.0 dB
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:923033075
+Name: Harmonics On
+Parameter Type: Boolean
+Values: Minimum = Off, Default = Off, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:942264824
+Name: Comp Release
+Parameter Type: Generic
+Values: Minimum = 10 ms, Default = 120 ms, Maximum = 1000 ms
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:950464717
+Name: Comp Mix
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 100 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1028324995
+Name: Reverb Pre-delay
+Parameter Type: Generic
+Values: Minimum = 0.00 ms, Default = 20 ms, Maximum = 200 ms
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1054264544
+Name: EQ Mid Freq
+Parameter Type: Generic
+Values: Minimum = 200 Hz, Default = 1000 Hz, Maximum = 5.00 kHz
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1054278119
+Name: EQ Mid Gain
+Parameter Type: Generic
+Values: Minimum = -12.0 dB, Default = 0.0 dB, Maximum = +12.0 dB
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1099336885
+Name: Reverb Tone
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 60 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1099346557
+Name: Reverb Type
+Parameter Type: Indexed
+Values: Minimum = Plate, Default = Plate, Maximum = IR
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 6
+Value: 0,  String: Plate
+Value: 1,  String: Hall
+Value: 2,  String: Room
+Value: 3,  String: Chamber
+Value: 4,  String: Ambience
+Value: 5,  String: IR
+  -parameter PASS
+
+Parameter ID:1141971201
+Name: Output
+Parameter Type: Generic
+Values: Minimum = -24.0 dB, Default = 0.0 dB, Maximum = +24.0 dB
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1154567906
+Name: EQ Air Freq
+Parameter Type: Generic
+Values: Minimum = 5.00 kHz, Default = 10.00 kHz, Maximum = 18.00 kHz
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1154581481
+Name: EQ Air Gain
+Parameter Type: Generic
+Values: Minimum = -12.0 dB, Default = 0.0 dB, Maximum = +12.0 dB
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1159353238
+Name: Delay Feedback
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 30 %, Maximum = 95 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1213107897
+Name: Reverb Mix
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 15 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1547342569
+Name: Comp Type
+Parameter Type: Indexed
+Values: Minimum = FET, Default = VCA, Maximum = Clean
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 5
+Value: 0,  String: FET
+Value: 1,  String: Opto
+Value: 2,  String: VCA
+Value: 3,  String: Vari-Mu
+Value: 4,  String: Clean
+  -parameter PASS
+
+Parameter ID:1687773430
+Name: Harmonics Drive
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 25 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1762183299
+Name: Delay Time
+Parameter Type: Indexed
+Values: Minimum = 1/32, Default = 1/8D, Maximum = 1 bar
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 11
+Value: 0,  String: 1/32
+Value: 1,  String: 1/16T
+Value: 2,  String: 1/16
+Value: 3,  String: 1/8T
+Value: 4,  String: 1/8
+Value: 5,  String: 1/8D
+Value: 6,  String: 1/4T
+Value: 7,  String: 1/4
+Value: 8,  String: 1/4D
+Value: 9,  String: 1/2
+Value: 10,  String: 1 bar
+  -parameter PASS
+
+Parameter ID:1762371531
+Name: Delay Type
+Parameter Type: Indexed
+Values: Minimum = Digital, Default = Digital, Maximum = Ping-Pong
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 4
+Value: 0,  String: Digital
+Value: 1,  String: Analog
+Value: 2,  String: Tape
+Value: 3,  String: Ping-Pong
+  -parameter PASS
+
+Parameter ID:1819295709
+Name: Creative Rate
+Parameter Type: Indexed
+Values: Minimum = 1/32, Default = 1/8, Maximum = 1 bar
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 11
+Value: 0,  String: 1/32
+Value: 1,  String: 1/16T
+Value: 2,  String: 1/16
+Value: 3,  String: 1/8T
+Value: 4,  String: 1/8
+Value: 5,  String: 1/8D
+Value: 6,  String: 1/4T
+Value: 7,  String: 1/4
+Value: 8,  String: 1/4D
+Value: 9,  String: 1/2
+Value: 10,  String: 1 bar
+  -parameter PASS
+
+Parameter ID:1819483941
+Name: Creative Type
+Parameter Type: Indexed
+Values: Minimum = Stutter, Default = Stutter, Maximum = Granular
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 5
+Value: 0,  String: Stutter
+Value: 1,  String: Gate
+Value: 2,  String: Reverse
+Value: 3,  String: Pitch
+Value: 4,  String: Granular
+  -parameter PASS
+
+Parameter ID:1829174825
+Name: EQ Presence Dynamic
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 0 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1844969153
+Name: Doubler
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 0 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1852103895
+Name: Reverb Decay
+Parameter Type: Generic
+Values: Minimum = 0.20 s, Default = 1.60 s, Maximum = 8.00 s
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1986590086
+Name: Gain Match
+Parameter Type: Boolean
+Values: Minimum = Off, Default = On, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:2064814467
+Name: Creative Amount
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 50 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:565260469
+Name: Creative Pitch
+Parameter Type: Generic
+Values: Minimum = -24 st, Default = -12 st, Maximum = +24 st
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:945922165
+Name: Phrase-end Throw
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 0 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:958665730
+Name: Word FX Amount
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 60 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1365390716
+Name: Word FX Effect
+Parameter Type: Indexed
+Values: Minimum = Eco, Default = Eco, Maximum = Pitch
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 5
+Value: 0,  String: Eco
+Value: 1,  String: Stutter
+Value: 2,  String: Filtro
+Value: 3,  String: Distorsión
+Value: 4,  String: Pitch
+  -parameter PASS
+
+Parameter ID:1365390985
+Name: Word FX On
+Parameter Type: Boolean
+Values: Minimum = Off, Default = Off, Maximum = On
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+  -parameter PASS
+
+Parameter ID:1491612987
+Name: Word FX Target
+Parameter Type: Indexed
+Values: Minimum = Todas, Default = 1 de 4, Maximum = Fin 8c
+Flags: Values Have Strings, High Resolution, Readable, Writable 
+Parameter has Value Strings
+Num Strings = 7
+Value: 0,  String: Todas
+Value: 1,  String: 1 de 2
+Value: 2,  String: 1 de 4
+Value: 3,  String: Fuertes
+Value: 4,  String: 1ª frase
+Value: 5,  String: Fin 4c
+Value: 6,  String: Fin 8c
+  -parameter PASS
+
+Parameter ID:1866495198
+Name: Phrase-end Swell
+Parameter Type: Generic
+Values: Minimum = 0 %, Default = 0 %, Maximum = 100 %
+Flags: Values Have Strings, High Resolution, Can Ramp, Readable, Writable 
+  -parameter PASS
+
+Testing that parameters retain value across reset and initialization
+  PASS
+
+* * PASS
+--------------------------------------------------
+FORMAT TESTS:
+
+Reported Channel Capabilities (explicit):
+      [1, 1]  [2, 2]  
+
+Input/Output Channel Handling:
+1-1   1-2   1-4   1-5   1-6   1-7   1-8   2-2   2-4   2-5   2-6   2-7   2-8   4-4   4-5   5-5   6-6   7-7   8-8
+X                                         X                                                                       
+
+# # AudioChannelLayouts (5), Input Scope:
+ChannelLayout is Writable: T
+The Unit publishes the following Channel Layouts:
+  0x640001, 0x650002, 0x660002, 0x670002, 0x6A0002, 
+
+Is Audio Channel Layout Available:
+Mono    Stereo  Binau.  AU_4    Ambi.   AU_5    AU_5_0  AU_6    AU_6_0  AU_7_0  AU_7_0F AU_8    AU_5_1  AU_6_1  AU_7_1  AU_7_1F 
+X       X       X                                                                                                               
+
+Current Format:AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+Current Format Tag = 0x650002, New Format Tag = 0x640001, Success - did not reset format with mis-matched layout
+
+Current Format:AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+Current Format Tag = 0x650002, New Format Tag = 0x650002, Successsful
+
+Current Format:AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+Current Format Tag = 0x650002, New Format Tag = 0x6A0002, Successsful
+
+# # AudioChannelLayouts (5), Output Scope:
+ChannelLayout is Writable: T
+The Unit publishes the following Channel Layouts:
+  0x640001, 0x650002, 0x660002, 0x670002, 0x6A0002, 
+
+Is Audio Channel Layout Available:
+Mono    Stereo  Binau.  AU_4    Ambi.   AU_5    AU_5_0  AU_6    AU_6_0  AU_7_0  AU_7_0F AU_8    AU_5_1  AU_6_1  AU_7_1  AU_7_1F 
+X       X       X                                                                                                               
+
+Current Format:AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+Current Format Tag = 0x650002, New Format Tag = 0x640001, Success - did not reset format with mis-matched layout
+
+Current Format:AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+Current Format Tag = 0x650002, New Format Tag = 0x650002, Successsful
+
+Current Format:AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+Current Format Tag = 0x650002, New Format Tag = 0x6A0002, Successsful
+
+* * PASS
+--------------------------------------------------
+RENDER TESTS:
+
+Input Format: AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+Output Format: AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+Render Test at 512 frames
+Slicing Render Test at 64 frames
+  PASS
+
+
+Render Test at 64 frames, sample rate: 22050 Hz
+Render Test at 137 frames, sample rate: 96000 Hz
+Render Test at 4096 frames, sample rate: 48000 Hz
+Render Test at 4096 frames, sample rate: 192000 Hz
+Render Test at 4096 frames, sample rate: 11025 Hz
+Render Test at 512 frames, sample rate: 44100 Hz
+  PASS
+
+1 Channel Test:
+Render Test at 512 frames
+  PASS
+
+Checking connection semantics:
+Connection format:
+AudioStreamBasicDescription:  2 ch,  44100 Hz, Float32, deinterleaved
+  PASS
+
+Bad Max Frames - Render should fail
+  PASS
+
+Checking parameter setting
+Using AudioUnitSetParameter
+Using AudioUnitScheduleParameter
+  PASS
+
+Checking ramped parameter scheduling
+  PASS
+
+Test MIDI
+  PASS
+
+* * PASS
+--------------------------------------------------
+AU VALIDATION SUCCEEDED.
+--------------------------------------------------
+EXIT 0
+== pluginval AU
+Started validating: /Users/runner/Library/Audio/Plug-Ins/Components/chainIVO.component
+Random seed: 0x333f2ca
+Validation started
+Strictness level: 5
+-----------------------------------------------------------------
+Starting tests in: pluginval / Scan for plugins located in: /Users/runner/Library/Audio/Plug-Ins/Components/chainIVO.component...
+Num plugins found: 1
+
+Testing plugin: AudioUnit-chainIVO-e3518774-6b6a7f75
+IVO Beatz: chainIVO v0.1.0
+Completed tests in pluginval / Scan for plugins located in: /Users/runner/Library/Audio/Plug-Ins/Components/chainIVO.component
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (cold)...
+Completed tests in pluginval / Open plugin (cold)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open plugin (warm)...
+Running tests 1 times
+Completed tests in pluginval / Open plugin (warm)
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin info...
+
+Plugin name: chainIVO
+Alternative names: chainIVO
+SupportsDoublePrecision: no
+Reported latency: 0
+Reported taillength: 8
+Completed tests in pluginval / Plugin info
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin programs...
+Num programs: 1
+All program names checked
+
+Changing program
+!!! WARNING: Current program is -1... Is this correct?
+Completed tests in pluginval / Plugin programs
+-----------------------------------------------------------------
+Starting tests in: pluginval / Editor...
+Completed tests in pluginval / Editor
+-----------------------------------------------------------------
+Starting tests in: pluginval / Open editor whilst processing...
+Completed tests in pluginval / Open editor whilst processing
+-----------------------------------------------------------------
+Starting tests in: pluginval / Audio processing...
+Testing with sample rate [44100] and block size [64]
+Testing with sample rate [44100] and block size [128]
+Testing with sample rate [44100] and block size [256]
+Testing with sample rate [44100] and block size [512]
+Testing with sample rate [44100] and block size [1024]
+Testing with sample rate [48000] and block size [64]
+Testing with sample rate [48000] and block size [128]
+Testing with sample rate [48000] and block size [256]
+Testing with sample rate [48000] and block size [512]
+Testing with sample rate [48000] and block size [1024]
+Testing with sample rate [96000] and block size [64]
+Testing with sample rate [96000] and block size [128]
+Testing with sample rate [96000] and block size [256]
+Testing with sample rate [96000] and block size [512]
+Testing with sample rate [96000] and block size [1024]
+Completed tests in pluginval / Audio processing
+-----------------------------------------------------------------
+Starting tests in: pluginval / Plugin state...
+Completed tests in pluginval / Plugin state
+-----------------------------------------------------------------
+Starting tests in: pluginval / Automation...
+Testing with sample rate [44100] and block size [64] and sub-block size [32]
+Testing with sample rate [44100] and block size [128] and sub-block size [32]
+Testing with sample rate [44100] and block size [256] and sub-block size [32]
+Testing with sample rate [44100] and block size [512] and sub-block size [32]
+Testing with sample rate [44100] and block size [1024] and sub-block size [32]
+Testing with sample rate [48000] and block size [64] and sub-block size [32]
+Testing with sample rate [48000] and block size [128] and sub-block size [32]
+Testing with sample rate [48000] and block size [256] and sub-block size [32]
+Testing with sample rate [48000] and block size [512] and sub-block size [32]
+Testing with sample rate [48000] and block size [1024] and sub-block size [32]
+Testing with sample rate [96000] and block size [64] and sub-block size [32]
+Testing with sample rate [96000] and block size [128] and sub-block size [32]
+Testing with sample rate [96000] and block size [256] and sub-block size [32]
+Testing with sample rate [96000] and block size [512] and sub-block size [32]
+Testing with sample rate [96000] and block size [1024] and sub-block size [32]
+Completed tests in pluginval / Automation
+-----------------------------------------------------------------
+Starting tests in: pluginval / Editor Automation...
+Completed tests in pluginval / Editor Automation
+-----------------------------------------------------------------
+Starting tests in: pluginval / Automatable Parameters...
+Completed tests in pluginval / Automatable Parameters
+-----------------------------------------------------------------
+Starting tests in: pluginval / auval...
+auval exited with code: 0
+Completed tests in pluginval / auval
+-----------------------------------------------------------------
+Starting tests in: pluginval / vst3 validator...
+Completed tests in pluginval / vst3 validator
+-----------------------------------------------------------------
+Starting tests in: pluginval / Basic bus...
+Completed tests in pluginval / Basic bus
+-----------------------------------------------------------------
+Starting tests in: pluginval / Listing available buses...
+Inputs:
+	Named layouts: Mono, Stereo, Mono, Stereo
+	Discrete layouts: None
+Outputs:
+	Named layouts: Mono, Stereo
+	Discrete layouts: None
+Main bus num input channels: 2
+Main bus num output channels: 2
+Completed tests in pluginval / Listing available buses
+-----------------------------------------------------------------
+Starting tests in: pluginval / Enabling all buses...
+Completed tests in pluginval / Enabling all buses
+-----------------------------------------------------------------
+Starting tests in: pluginval / Disabling non-main busses...
+!!! WARNING: Disabling non-main buses failed
+Completed tests in pluginval / Disabling non-main busses
+-----------------------------------------------------------------
+Starting tests in: pluginval / Restoring default layout...
+Main bus num input channels: 2
+Main bus num output channels: 2
+Completed tests in pluginval / Restoring default layout
+SUCCESS
+EXIT 0
