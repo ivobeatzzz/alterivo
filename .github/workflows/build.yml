@@ -5,11 +5,9 @@
 # Al crear una release con etiqueta tipo v1.0.0 se publican en "Releases".
 name: Build alterIVO
 
+# Sólo se compila a mano (pestaña Actions → Run workflow): así no se gastan minutos en cada cambio.
+# Ojo: en repositorios privados cada minuto de Mac cuenta como 10 del plan gratuito.
 on:
-  push:
-    branches: [ main ]
-    tags: [ "v*" ]
-    paths-ignore: [ "chainIVO/**", ".github/workflows/chainivo.yml" ]
   workflow_dispatch:
 
 permissions:
