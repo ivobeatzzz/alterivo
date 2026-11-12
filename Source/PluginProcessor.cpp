@@ -151,7 +151,10 @@ void AlterIvoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
     // Nivel igualado: la salida procesada suena tan fuerte como la entrada
     levelCoef = (float) (1.0 - std::exp (-1.0 / (0.4 * sampleRate)));
+    levelCoefFast = (float) (1.0 - std::exp (-1.0 / (0.06 * sampleRate)));
+    levelFastSamples = (int) (0.3 * sampleRate);
     levelIn = levelOut = 0.0f;
+    engineRunning = engineWasRunning = false;
     levelGain.reset (sampleRate, 0.05);
     levelGain.setCurrentAndTargetValue (1.0f);
     sr = sampleRate;
@@ -312,7 +315,8 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     outputGain.setTargetValue (juce::Decibels::decibelsToGain (pOutput->load()));
     engineGain.setTargetValue (engineNeeded ? 1.0f : 0.0f);
     // Sin efecto audible el motor sólo analiza (pantalla y tonalidad): ahorra CPU
-    engine.setActive (engineNeeded || engineGain.isSmoothing() || engineGain.getCurrentValue() > 0.0f);
+    engineRunning = engineNeeded || engineGain.isSmoothing() || engineGain.getCurrentValue() > 0.0f;
+    engine.setActive (engineRunning);
 
     const int total = buffer.getNumSamples();
     const int numMeter = juce::jmin (numIn, buffer.getNumChannels());
@@ -410,14 +414,30 @@ void AlterIvoProcessor::processChunk (juce::AudioBuffer<float>& buffer, int star
             eOut += processed[ch] * processed[ch];
         }
 
-        // Nivel igualado (lento, sólo cuando hay señal)
-        levelIn  += levelCoef * (eIn - levelIn);
-        levelOut += levelCoef * (eOut - levelOut);
-        if ((i & 63) == 0)
+        // Nivel igualado (lento, sólo cuando hay señal y sólo mientras el motor sintetiza).
+        // Con el motor parado su salida es silencio: si se midiera, levelOut caería a casi 0
+        // y al volver a activarlo (p. ej. el primer punto de automatización de Formant)
+        // la ganancia arrancaría en el máximo (+6 dB) y tardaría ~1 s en bajar.
+        if (engineRunning)
         {
-            if (levelIn > 1.0e-7f && levelOut > 1.0e-9f)
+            if (! engineWasRunning)
+            {
+                // Arranque: se siembra la medida para que la ganancia parta del último valor bueno
+                const float cur = levelGain.getCurrentValue();
+                levelIn  = juce::jmax (levelIn, eIn);
+                levelOut = levelIn > 0.0f ? levelIn / (cur * cur) : 0.0f;
+                levelGain.setCurrentAndTargetValue (cur);
+                engineWasRunning = true;
+                levelFastLeft = levelFastSamples;   // los primeros 300 ms se iguala rápido
+            }
+            const float k = levelFastLeft > 0 ? levelCoefFast : levelCoef;
+            if (levelFastLeft > 0) --levelFastLeft;
+            levelIn  += k * (eIn - levelIn);
+            levelOut += k * (eOut - levelOut);
+            if ((i & 63) == 0 && levelIn > 1.0e-7f && levelOut > 1.0e-9f)
                 levelGain.setTargetValue (juce::jlimit (0.5f, 2.0f, std::sqrt (levelIn / levelOut)));
         }
+        else engineWasRunning = false;
         const float lg = levelGain.getNextValue();
         const float g = engineGain.getNextValue();
 

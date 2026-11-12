@@ -142,6 +142,10 @@ private:
     // Nivel igualado
     float levelCoef = 0.0f, levelIn = 0.0f, levelOut = 0.0f;
     juce::SmoothedValue<float> levelGain;
+    // El igualador sólo mide mientras el motor sintetiza; al arrancar parte del último valor bueno
+    bool engineRunning = false, engineWasRunning = false;
+    float levelCoefFast = 0.0f;
+    int levelFastSamples = 0, levelFastLeft = 0;
     double sr = 48000.0;
 
     // Detección de tonalidad: el audio escribe, la interfaz lee (sin bloqueos)
