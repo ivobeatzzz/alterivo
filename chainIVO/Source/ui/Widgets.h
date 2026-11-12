@@ -16,6 +16,8 @@ enum class F { soraLight, soraSemi, soraBold, man, manX };
 juce::Font font (F face, float size, float tracking = 0.0f);
 float textWidth (const juce::Font&, const juce::String&);
 juce::String u8 (const char*);
+bool loadDarkSkin();
+void saveDarkSkin (bool);
 
 // Superficies
 void raised (juce::Graphics&, juce::Rectangle<float>, float radius, float lift = 1.0f);

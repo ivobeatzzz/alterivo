@@ -141,5 +141,5 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | 3 Calidad de procesamiento | en gran parte (medidas arriba); faltan escuchas comparativas |
 | 4 Inteligencia musical | parcial: tipos de voz, voz principal, recetas; faltan grupos, secciones y automatizaciones |
 | 5 Presets y motor creativo | 120 presets hechos y diferenciados (falta escucharlos); 3 efectos creativos |
-| 6 Producto completo | pendiente (export, licencias, manual, skins) |
+| 6 Producto completo | parcial: exportar WAV, skin clara/oscura, ayuda en cada control; faltan licencias y manual |
 | 7 QA y lanzamiento | pendiente (pruebas en cada DAW con el usuario) |

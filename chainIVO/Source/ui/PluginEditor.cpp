@@ -24,7 +24,7 @@ void Chip::paint (juce::Graphics& g)
 {
     auto r = getLocalBounds().toFloat().reduced (1.0f, 2.0f);
     if (selected) limeFill (g, r, r.getHeight() * 0.5f); else raised (g, r, r.getHeight() * 0.5f, 0.35f);
-    g.setColour (selected ? ink : body); g.setFont (font (F::man, 12.5f));
+    g.setColour (selected ? onLime : body); g.setFont (font (F::man, 12.5f));
     g.drawText (text, r, juce::Justification::centred, false);
 }
 
@@ -268,7 +268,7 @@ void EngineView::paint (juce::Graphics& g)
     const auto why = proc.getExplanations()[(size_t) engine];
     const auto chipR = juce::Rectangle<float> (18, 200, 84, 24);
     limeFill (g, chipR, 12.0f);
-    g.setColour (ink); g.setFont (font (F::manX, 10.0f, 0.18f)); g.drawText (u8 ("POR QU\xc3\x89"), chipR, juce::Justification::centred, false);
+    g.setColour (onLime); g.setFont (font (F::manX, 10.0f, 0.18f)); g.drawText (u8 ("POR QU\xc3\x89"), chipR, juce::Justification::centred, false);
     g.setColour (body); g.setFont (font (F::man, 13.0f));
     const auto text = why.isNotEmpty() ? why : u8 ("AUTO explicar\xc3\xa1 aqu\xc3\xad cada decisi\xc3\xb3n cuando haya analizado la pista (pon la pista a sonar).");
     g.drawFittedText (text, juce::Rectangle<int> (114, 196, (int) b.getWidth() - 132, 32), juce::Justification::centredLeft, 2, 0.85f);
@@ -357,7 +357,7 @@ void EngineView::paintEq (juce::Graphics& g, juce::Rectangle<float> r)
         g.setColour (ink); g.drawEllipse (x - 6, y - 6, 12, 12, 2.0f);
         g.setColour (juce::Colour (0xff8dcb34)); g.fillEllipse (x - 2.5f, y - 2.5f, 5, 5);
         const auto pill = juce::Rectangle<float> (x + 10, y + 6, 62, 20);
-        g.setColour (ink); g.fillRoundedRectangle (pill, 10.0f);
+        g.setColour (juce::Colour (0xff15240f)); g.fillRoundedRectangle (pill, 10.0f);
         g.setColour (juce::Colour (0xffd9f59a)); g.setFont (font (F::manX, 10.5f));
         g.drawText (dbs (es.presDyn > 0.001f ? presNow : es.presGain), pill, juce::Justification::centred, false);
     }
@@ -475,7 +475,7 @@ void EngineView::paintCreative (juce::Graphics& g, juce::Rectangle<float> r)
         else if (type == 0) { t = i < 2 ? "voz" : "repite 2"; active = true; }
         else { t = u8 ("al rev\xc3\xa9s"); }
         if (active) limeFill (g, c, 10.0f); else well (g, c, 10.0f);
-        g.setColour (ink); g.setFont (font (F::manX, 11.0f, 0.1f)); g.drawText (t.toUpperCase(), c, juce::Justification::centred, false);
+        g.setColour (active ? onLime : ink); g.setFont (font (F::manX, 11.0f, 0.1f)); g.drawText (t.toUpperCase(), c, juce::Justification::centred, false);
     }
     g.setColour (body); g.setFont (font (F::man, 12.0f));
     g.drawText (u8 ("Grupo de 4 divisiones de ") + choiceText (proc, pid::creaNote) + u8 (" \xc2\xb7 sincronizado al tempo del proyecto"), r.withTrimmedTop (r.getHeight() - 18), juce::Justification::centred, false);
@@ -593,12 +593,20 @@ void TrackCard::showTools()
     m.addSectionHeader (u8 ("EXPORTAR CON ESTA CADENA (el original no se toca)"));
     m.addItem (3, u8 ("Procesar un archivo \xe2\x86\x92 WAV 24 bits\xe2\x80\xa6"), ! proc.isExporting());
     m.addItem (4, u8 ("Procesar un archivo \xe2\x86\x92 WAV 32 bits float\xe2\x80\xa6"), ! proc.isExporting());
+    m.addSectionHeader ("VISTA");
+    m.addItem (5, u8 ("Tema oscuro"), true, theme::dark);
     m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (localAreaToGlobal (toolsBox.toNearestInt())),
                      [safe = juce::Component::SafePointer<TrackCard> (this)] (int r)
     {
         if (safe == nullptr || r == 0) return;
         auto& pr = safe->proc;
         if (r == 2) { pr.clearInstrumental(); return; }
+        if (r == 5)
+        {
+            theme::applySkin (! theme::dark); saveDarkSkin (theme::dark);
+            if (auto* top = safe->getTopLevelComponent()) top->repaint();
+            return;
+        }
         if (r == 1)
         {
             safe->chooser = std::make_unique<juce::FileChooser> ("Instrumental de referencia", juce::File(), "*.wav;*.aif;*.aiff;*.flac;*.mp3");
@@ -750,7 +758,7 @@ void PresetBrowser::update()
 
 void PresetBrowser::paint (juce::Graphics& g)
 {
-    g.fillAll (ink.withAlpha (0.28f));
+    g.fillAll (juce::Colours::black.withAlpha (dark ? 0.5f : 0.22f));
     raised (g, card.toFloat(), 24.0f, 1.4f);
     g.setColour (ink); g.setFont (font (F::soraBold, 22.0f));
     g.drawText ("Presets", card.getX() + 28, card.getY() + 20, 200, 30, juce::Justification::centredLeft);
@@ -958,7 +966,7 @@ void MainView::timerCallback()
 }
 
 // =================================================================== Editor
-ChainIvoEditor::ChainIvoEditor (ChainIvoProcessor& p) : AudioProcessorEditor (&p), proc (p), view (p)
+ChainIvoEditor::ChainIvoEditor (ChainIvoProcessor& p) : AudioProcessorEditor (&p), proc (p), view ((theme::applySkin (loadDarkSkin()), p))
 {
     const float s = juce::jlimit (0.75f, 2.0f, proc.uiScale.load());
     addAndMakeVisible (view);

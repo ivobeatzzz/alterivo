@@ -369,17 +369,19 @@ int main (int argc, char** argv)
         std::vector<float> loop; for (int k = 0; k < 2; ++k) loop.insert (loop.end(), voice.begin(), voice.end());
         run (p, loop, loop, nullptr, 512, true);
         juce::MessageManager::getInstance()->runDispatchLoopUntil (900);
-        for (int pro = 0; pro < 2; ++pro)
+        for (int pro = 0; pro < 3; ++pro)
         {
-            p.setPro (pro == 1);
+            if (pro == 2) chainivo::ui::saveDarkSkin (true);
+            p.setPro (pro >= 1);
             std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
             ed->setSize (ChainIvoEditor::kW, ChainIvoEditor::kH);
             juce::MessageManager::getInstance()->runDispatchLoopUntil (400);
             auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);
-            juce::File f (juce::String ("/tmp/claude-0/-home-claude/a71dc4c6-2070-51ff-85e0-7f07bc2eb995/scratchpad/ctest/ui_") + (pro ? "pro" : "auto") + ".png");
+            juce::File f (juce::String ("/tmp/claude-0/-home-claude/a71dc4c6-2070-51ff-85e0-7f07bc2eb995/scratchpad/ctest/ui_") + (pro == 2 ? "dark" : (pro ? "pro" : "auto")) + ".png");
             f.deleteFile(); juce::FileOutputStream os (f); juce::PNGImageFormat().writeImageToStream (img, os);
             std::printf ("[ui] %s guardada\n", f.getFileName().toRawUTF8());
         }
+        chainivo::ui::saveDarkSkin (false);
     }
     return 0;
 }

@@ -1,5 +1,6 @@
 #include "Widgets.h"
 #include "BinaryData.h"
+#include "../core/Params.h"
 
 namespace chainivo::ui
 {
@@ -30,6 +31,13 @@ juce::Font font (F face, float size, float tracking)
     auto o = tf != nullptr ? juce::FontOptions (tf) : juce::FontOptions (size, juce::Font::bold);
     return juce::Font (o.withPointHeight (size).withKerningFactor (tracking));
 }
+static juce::PropertiesFile::Options uiOptions()
+{
+    juce::PropertiesFile::Options o; o.applicationName = "chainIVO"; o.folderName = "IVO Beatz"; o.filenameSuffix = ".settings"; o.osxLibrarySubFolder = "Application Support";
+    return o;
+}
+bool loadDarkSkin() { juce::PropertiesFile f (uiOptions()); return f.getBoolValue ("darkSkin", false); }
+void saveDarkSkin (bool d) { juce::PropertiesFile f (uiOptions()); f.setValue ("darkSkin", d); f.saveIfNeeded(); }
 float textWidth (const juce::Font& f, const juce::String& s) { return juce::GlyphArrangement::getStringWidth (f, s); }
 juce::String u8 (const char* s) { return juce::String::fromUTF8 (s); }
 
@@ -45,7 +53,7 @@ void raised (juce::Graphics& g, juce::Rectangle<float> r, float rad, float lift)
     g.setColour (shadow.withAlpha (0.05f));
     g.strokePath (p, juce::PathStrokeType (1.0f));
     // brillo en el borde superior
-    g.setColour (juce::Colours::white.withAlpha (0.9f));
+    g.setColour (highlight);
     juce::Path top; top.addRoundedRectangle (r.reduced (1.0f).withHeight (rad * 2), rad - 1.0f);
     g.saveState(); g.reduceClipRegion (r.withHeight (rad).toNearestInt()); g.strokePath (top, juce::PathStrokeType (1.0f)); g.restoreState();
 }
@@ -63,7 +71,7 @@ void well (juce::Graphics& g, juce::Rectangle<float> r, float rad)
     g.setGradientFill (juce::ColourGradient (wellTop, 0, r.getY(), wellBot, 0, r.getBottom(), false));
     g.fillPath (rr (r, rad));
     innerShadow (g, r, rad, 0.22f, 7, 3);
-    g.setColour (juce::Colours::white.withAlpha (0.85f));
+    g.setColour (highlight);
     g.drawLine (r.getX() + rad, r.getBottom() + 0.5f, r.getRight() - rad, r.getBottom() + 0.5f, 1.0f);
 }
 
@@ -91,13 +99,13 @@ void logoDot (juce::Graphics& g, juce::Point<float> c, float r, bool on)
     if (on)
     {
         g.setColour (limeDot.withAlpha (0.45f)); g.fillEllipse (c.x - r * 2, c.y - r * 2, r * 4, r * 4);
-        g.setColour (ink); g.fillEllipse (c.x - r - 2, c.y - r - 2, (r + 2) * 2, (r + 2) * 2);
+        g.setColour (onLime); g.fillEllipse (c.x - r - 2, c.y - r - 2, (r + 2) * 2, (r + 2) * 2);
         g.setGradientFill (juce::ColourGradient (juce::Colour (0xffd6f58c), c.x - r * 0.4f, c.y - r * 0.4f, juce::Colour (0xff8dcb34), c.x + r, c.y + r, true));
         g.fillEllipse (c.x - r, c.y - r, r * 2, r * 2);
     }
     else
     {
-        g.setColour (juce::Colour (0xffd3d9cd)); g.fillEllipse (c.x - r, c.y - r, r * 2, r * 2);
+        g.setColour (track); g.fillEllipse (c.x - r, c.y - r, r * 2, r * 2);
         g.setColour (shadow.withAlpha (0.18f)); g.drawEllipse (c.x - r, c.y - r, r * 2, r * 2, 1.0f);
     }
 }
@@ -165,7 +173,7 @@ void LookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int w, int 
     }
     juce::Path trackP; trackP.addCentredArc (c.x, c.y, ring, ring, 0, a0, a1, true);
     g.setColour (track); g.strokePath (trackP, PST (rw + 2.0f, PST::curved, PST::rounded));
-    g.setColour (juce::Colour (0xffe1e6db)); g.strokePath (trackP, PST (rw - 1.0f, PST::curved, PST::rounded));
+    g.setColour (track.interpolatedWith (surface, 0.45f)); g.strokePath (trackP, PST (rw - 1.0f, PST::curved, PST::rounded));
     const bool bipolar = s.getMinimum() < 0.0 && s.getMaximum() > 0.0;
     const float from = bipolar ? (a0 + a1) * 0.5f : a0;
     if (std::abs (ang - from) > 0.02f)
@@ -177,16 +185,16 @@ void LookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int w, int 
     // cuerpo con volumen
     juce::Path body; body.addEllipse (c.x - R, c.y - R, R * 2, R * 2);
     juce::DropShadow (shadow.withAlpha (0.28f), (int) (R * 0.5f + 4), { 0, (int) (R * 0.16f + 1) }).drawForPath (g, body);
-    g.setGradientFill (juce::ColourGradient (juce::Colours::white, c.x - R * 0.16f, c.y - R * 0.4f, juce::Colour (0xffe1e7da), c.x + R * 0.5f, c.y + R, true));
+    g.setGradientFill (juce::ColourGradient (knobTop, c.x - R * 0.16f, c.y - R * 0.4f, knobBot, c.x + R * 0.5f, c.y + R, true));
     g.fillPath (body);
     g.setColour (shadow.withAlpha (0.07f)); g.strokePath (body, PST (1.0f));
     juce::Path hi; hi.addCentredArc (c.x, c.y, R - 1.5f, R - 1.5f, 0, -1.1f, 1.1f, true);
-    g.setColour (juce::Colours::white); g.strokePath (hi, PST (1.5f));
+    g.setColour (highlight); g.strokePath (hi, PST (1.5f));
     // indicador: punto del logo
     const auto ip = c.getPointOnCircumference (R * 0.64f, ang);
     const float ir = std::max (3.0f, R * 0.15f);
     g.setColour (limeDot.withAlpha (0.5f)); g.fillEllipse (ip.x - ir - 3, ip.y - ir - 3, (ir + 3) * 2, (ir + 3) * 2);
-    g.setColour (ink); g.fillEllipse (ip.x - ir, ip.y - ir, ir * 2, ir * 2);
+    g.setColour (onLime); g.fillEllipse (ip.x - ir, ip.y - ir, ir * 2, ir * 2);
     g.setColour (limeDot); g.fillEllipse (ip.x - ir * 0.55f, ip.y - ir * 0.55f, ir * 1.1f, ir * 1.1f);
 }
 
@@ -262,6 +270,7 @@ ParamToggle::ParamToggle (juce::String n, juce::AudioProcessorValueTreeState& s,
     : Toggle (std::move (n)), prm (s.getParameter (id))
 {
     setOn (prm->getValue() > 0.5f);
+    setTooltip (chainivo::pid::helpFor (id));
     onChange = [this] (bool v) { prm->beginChangeGesture(); prm->setValueNotifyingHost (v ? 1.0f : 0.0f); prm->endChangeGesture(); };
     startTimerHz (10);
 }
@@ -279,6 +288,7 @@ Knob::Knob (juce::String n, juce::AudioProcessorValueTreeState& s, const juce::S
     slider.onValueChange = [this] { repaint(); };
     addAndMakeVisible (slider);
     att = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (s, id, slider);
+    slider.setTooltip (chainivo::pid::helpFor (id));
     slider.setDoubleClickReturnValue (true, (double) s.getParameterRange (id).convertFrom0to1 (s.getParameter (id)->getDefaultValue()));
 }
 void Knob::resized()
@@ -309,6 +319,7 @@ ParamChoice::ParamChoice (juce::AudioProcessorValueTreeState& s, const juce::Str
         prm->beginChangeGesture(); prm->setValueNotifyingHost (prm->convertTo0to1 ((float) i)); prm->endChangeGesture();
     };
     timerCallback();
+    setTooltip (chainivo::pid::helpFor (id));
     startTimerHz (10);
 }
 void ParamChoice::timerCallback() { setSelected ((int) std::lround (prm->convertFrom0to1 (prm->getValue()))); }
@@ -348,11 +359,11 @@ void PillButton::paint (juce::Graphics& g)
     {
         juce::Path p; p.addRoundedRectangle (r, rad);
         juce::DropShadow (juce::Colour (0xff142810).withAlpha (0.6f), 14, { 0, 5 }).drawForPath (g, p);
-        g.setGradientFill (juce::ColourGradient (juce::Colour (0xff2a3b22), 0, r.getY(), ink, 0, r.getBottom(), false));
+        g.setGradientFill (juce::ColourGradient (juce::Colour (0xff2a3b22), 0, r.getY(), juce::Colour (0xff15240f), 0, r.getBottom(), false));
         g.fillPath (p);
     }
     else raised (g, r, rad, 0.5f);
-    g.setColour (style == dark ? juce::Colour (0xffe8f7c8) : ink);
+    g.setColour (style == dark ? juce::Colour (0xffe8f7c8) : (style == lime ? onLime : ink));
     g.setFont (font (F::manX, 10.5f, 0.2f));
     g.drawText (text, r, juce::Justification::centred, false);
 }

@@ -43,4 +43,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 const juce::StringArray& engineParamIds();
 // Motor al que pertenece cada parámetro (0..5) o -1 si es global
 int engineOf (const juce::String& id);
+// Ayuda contextual (en español) de cada parámetro: se ve al dejar el ratón encima
+juce::String helpFor (const juce::String& id);
 } // namespace chainivo::pid

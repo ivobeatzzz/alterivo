@@ -1,5 +1,6 @@
 #include "Params.h"
 #include "../dsp/DspCore.h"
+#include <map>
 
 namespace chainivo::pid
 {
@@ -134,5 +135,62 @@ int engineOf (const juce::String& id)
     if (i < 32) return 3;
     if (i < 45) return 4;
     return 5;
+}
+juce::String helpFor (const juce::String& id)
+{
+    static const std::map<juce::String, juce::String> h {
+        { "input", juce::String::fromUTF8 ("Nivel que entra en la cadena. Útil si la toma llega muy floja o muy fuerte.") },
+        { "output", juce::String::fromUTF8 ("Nivel final, después de todo (y del Gain Match).") },
+        { "mix", juce::String::fromUTF8 ("Mezcla entre la voz original y la procesada (alineadas, sin desfase).") },
+        { "intensity", juce::String::fromUTF8 ("Cuánto tratamiento: 0 % = la voz tal cual, 100 % = la cadena completa. Afecta a todos los motores.") },
+        { "hpf", juce::String::fromUTF8 ("Paso alto: quita graves que sobran en una voz secundaria (ruido, golpes, bola).") },
+        { "hpfSlope", juce::String::fromUTF8 ("Pendiente del paso alto: 12 dB/oct más suave, 24 dB/oct más limpio.") },
+        { "lowGain", juce::String::fromUTF8 ("Estante de graves: quita o da cuerpo.") },
+        { "lowFreq", juce::String::fromUTF8 ("Frecuencia del estante de graves.") },
+        { "midGain", juce::String::fromUTF8 ("Campana media: quita nasalidad o \"caja\" (o realza).") },
+        { "midFreq", juce::String::fromUTF8 ("Frecuencia de la campana media.") },
+        { "midQ", juce::String::fromUTF8 ("Anchura de la campana media (más Q = más estrecha).") },
+        { "presGain", juce::String::fromUTF8 ("Presencia: acerca o aleja la voz (2-6 kHz).") },
+        { "presFreq", juce::String::fromUTF8 ("Frecuencia de la presencia.") },
+        { "presQ", juce::String::fromUTF8 ("Anchura de la presencia.") },
+        { "presDyn", juce::String::fromUTF8 ("Cuánto de la presencia es dinámico: con voz principal por sidechain, sólo actúa cuando ella canta.") },
+        { "airGain", juce::String::fromUTF8 ("Aire: brillo arriba del todo, sin dureza.") },
+        { "airFreq", juce::String::fromUTF8 ("Dónde empieza el aire.") },
+        { "compType", juce::String::fromUTF8 ("Tipo de compresor: FET rápido y con mordida · Opto suave y musical · VCA firme · Vari-Mu redondo · Clean transparente.") },
+        { "compThresh", juce::String::fromUTF8 ("A partir de qué nivel comprime.") },
+        { "compRatio", juce::String::fromUTF8 ("Cuánto comprime lo que pasa del umbral.") },
+        { "compAttack", juce::String::fromUTF8 ("Lo rápido que empieza a comprimir (más lento deja pasar el golpe de las consonantes).") },
+        { "compRelease", juce::String::fromUTF8 ("Lo rápido que suelta.") },
+        { "compMakeup", juce::String::fromUTF8 ("Ganancia para recuperar el nivel comprimido.") },
+        { "compMix", juce::String::fromUTF8 ("Compresión en paralelo: mezcla con la señal sin comprimir.") },
+        { "harmType", juce::String::fromUTF8 ("Tipo de saturación: Tube (pares, cálida) · Tape (cinta) · Transformer (cuerpo en graves) · Exciter (brillo).") },
+        { "harmDrive", juce::String::fromUTF8 ("Cuánto satura.") },
+        { "harmTone", juce::String::fromUTF8 ("Inclinación del tono después de saturar (en Exciter: dónde empieza el brillo).") },
+        { "harmMix", juce::String::fromUTF8 ("Mezcla de la saturación con la señal limpia (en fase).") },
+        { "deess", juce::String::fromUTF8 ("De-esser: cuánto baja las eses. Sólo actúa en las eses, no en las vocales.") },
+        { "deessFreq", juce::String::fromUTF8 ("Dónde están las eses de esta voz (AUTO lo mide).") },
+        { "harsh", juce::String::fromUTF8 ("Dureza: baja de forma dinámica la zona de 2.5-5 kHz cuando molesta.") },
+        { "breath", juce::String::fromUTF8 ("Baja las respiraciones (tramos flojos y ruidosos de más de 80 ms).") },
+        { "revType", juce::String::fromUTF8 ("Tipo de reverb: Plate densa y brillante · Hall grande · Room corta · Chamber media · Ambience casi sin cola.") },
+        { "revMix", juce::String::fromUTF8 ("Cantidad de reverb.") },
+        { "revDecay", juce::String::fromUTF8 ("Duración de la cola.") },
+        { "revPredelay", juce::String::fromUTF8 ("Separación entre la voz y la reverb (más = la voz queda delante).") },
+        { "revTone", juce::String::fromUTF8 ("Brillo de la cola.") },
+        { "dlyType", juce::String::fromUTF8 ("Tipo de delay: Digital limpio · Analog oscuro · Tape con vaivén · Ping-Pong de lado a lado.") },
+        { "dlyNote", juce::String::fromUTF8 ("Tiempo del eco, sincronizado al tempo del proyecto.") },
+        { "dlyFeedback", juce::String::fromUTF8 ("Cuántas repeticiones.") },
+        { "dlyMix", juce::String::fromUTF8 ("Cantidad de delay.") },
+        { "duck", juce::String::fromUTF8 ("Ducking: la reverb y el delay bajan mientras la voz suena y vuelven en los huecos.") },
+        { "width", juce::String::fromUTF8 ("Anchura estéreo (sólo abre los lados: en mono la voz no se pierde).") },
+        { "doubler", juce::String::fromUTF8 ("Doblador: dos copias con micro-afinación a los lados.") },
+        { "creaType", juce::String::fromUTF8 ("Efecto rítmico: Stutter repite · Gate corta · Reverse eco al revés. Nunca se activa solo.") },
+        { "creaNote", juce::String::fromUTF8 ("Tamaño de cada división, al tempo.") },
+        { "creaAmount", juce::String::fromUTF8 ("Cantidad del efecto.") },
+        { "gainMatch", juce::String::fromUTF8 ("Iguala el volumen al de la voz original para comparar de forma justa.") },
+        { "clipSafe", juce::String::fromUTF8 ("Protección suave por encima de -1 dBFS (no tapa errores).") },
+        { "bypass", juce::String::fromUTF8 ("Escuchar la voz original (con la misma latencia).") },
+    };
+    auto it = h.find (id);
+    return it != h.end() ? it->second : juce::String();
 }
 } // namespace chainivo::pid
