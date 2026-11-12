@@ -116,7 +116,7 @@ private:
     ChainIvoProcessor& proc;
     juce::TextEditor search;
     Segmented cats;
-    Toggle favs { u8 ("S\xc3\xb3lo favoritos") };
+    Toggle favs { u8 ("S\xc3\x93LO FAVORITOS") };
     juce::ListBox list { "presets", this };
     PillButton saveB { u8 ("GUARDAR COMO\xe2\x80\xa6") }, importB { "IMPORTAR" }, exportB { "EXPORTAR" }, closeB { "CERRAR", PillButton::dark };
     std::vector<PresetInfo> items;

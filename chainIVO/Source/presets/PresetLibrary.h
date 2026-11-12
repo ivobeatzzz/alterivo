@@ -34,6 +34,7 @@ public:
     void toggleFavourite (const juce::String& name);
 
     static juce::StringArray categories();
+    static juce::String categoryFor (VoiceType);
 
 private:
     std::vector<Recipe> factory;

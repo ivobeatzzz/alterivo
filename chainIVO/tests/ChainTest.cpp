@@ -587,6 +587,19 @@ int main (int argc, char** argv)
             juce::File f (juce::String ("/tmp/claude-0/-home-claude/a71dc4c6-2070-51ff-85e0-7f07bc2eb995/scratchpad/ctest/ui_") + (pro == 2 ? "dark" : (pro ? "pro" : "auto")) + ".png");
             f.deleteFile(); juce::FileOutputStream os (f); juce::PNGImageFormat().writeImageToStream (img, os);
             std::printf ("[ui] %s guardada\n", f.getFileName().toRawUTF8());
+            if (pro == 0)
+            {
+                std::function<chainivo::ui::PresetBrowser* (juce::Component*)> findB = [&] (juce::Component* c) -> chainivo::ui::PresetBrowser*
+                { if (auto* b = dynamic_cast<chainivo::ui::PresetBrowser*> (c)) return b; for (auto* k : c->getChildren()) if (auto* r = findB (k)) return r; return nullptr; };
+                if (auto* b = findB (ed.get()))
+                {
+                    b->open(); juce::MessageManager::getInstance()->runDispatchLoopUntil (300);
+                    auto im3 = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);
+                    juce::File f3 ("/tmp/claude-0/-home-claude/a71dc4c6-2070-51ff-85e0-7f07bc2eb995/scratchpad/ctest/ui_presets.png");
+                    f3.deleteFile(); juce::FileOutputStream os3 (f3); juce::PNGImageFormat().writeImageToStream (im3, os3);
+                    b->setVisible (false);
+                }
+            }
             if (pro == 1)
                 for (int e : { 4, 5 })
                 {

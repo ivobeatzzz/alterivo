@@ -317,7 +317,7 @@ juce::StringArray PresetLibrary::categories()
     return { "Ad-libs", "Coros", "Dobles y segundas", T ("Armon\xc3\xad" "as"), "Efectos", "Usuario" };
 }
 
-static juce::String categoryOf (VoiceType t)
+juce::String PresetLibrary::categoryFor (VoiceType t)
 {
     switch (t)
     {
@@ -335,7 +335,7 @@ std::vector<PresetInfo> PresetLibrary::all() const
     for (int i = 0; i < (int) factory.size(); ++i)
     {
         const auto& r = factory[(size_t) i];
-        PresetInfo p; p.name = r.name; p.category = categoryOf (r.type); p.intention = r.intention; p.tags = r.tags;
+        PresetInfo p; p.name = r.name; p.category = categoryFor (r.type); p.intention = r.intention; p.tags = r.tags;
         p.genreName = r.genre >= 0 ? T (genre (r.genre).name) : juce::String(); p.recipeIndex = i;
         v.push_back (p);
     }

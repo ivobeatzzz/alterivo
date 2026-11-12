@@ -797,7 +797,7 @@ void PresetPill::mouseDown (const juce::MouseEvent& e)
 
 // =================================================================== PresetBrowser
 PresetBrowser::PresetBrowser (ChainIvoProcessor& p)
-    : proc (p), cats ({ "TODOS", "AD-LIBS", "COROS", "DOBLES", u8 ("ARMON\xc3\x8d" "AS"), "EFECTOS", "USUARIO" }, false, 9.5f)
+    : proc (p), cats ({ "PARA TI", "TODOS", "AD-LIBS", "COROS", "DOBLES", u8 ("ARMON\xc3\x8d" "AS"), "EFECTOS", "USUARIO" }, false, 9.5f)
 {
     search.setFont (font (F::man, 15.0f));
     search.setTextToShowWhenEmpty (u8 ("Buscar: nombre, estilo, car\xc3\xa1" "cter (ej. oscuro, rage, delay)\xe2\x80\xa6"), dim);
@@ -835,12 +835,40 @@ PresetBrowser::PresetBrowser (ChainIvoProcessor& p)
     };
 }
 
-void PresetBrowser::open() { update(); setVisible (true); toFront (true); search.grabKeyboardFocus(); }
+void PresetBrowser::open()
+{
+    // Si chainIVO ya sabe qué es la pista, se abre en sus sugerencias; el usuario puede elegir cualquier otro
+    cats.setSelected (proc.getAnalysis().ready || ! proc.isVoiceTypeAuto() ? 0 : 1);
+    update(); setVisible (true); toFront (true); search.grabKeyboardFocus();
+}
 
 void PresetBrowser::update()
 {
-    static const char* map[] = { "", "Ad-libs", "Coros", "Dobles y segundas", "Armon\xc3\xad" "as", "Efectos", "Usuario" };
-    items = proc.presets.search (search.getText(), u8 (map[cats.getSelected()]), favs.isOn());
+    static const char* map[] = { "", "", "Ad-libs", "Coros", "Dobles y segundas", "Armon\xc3\xad" "as", "Efectos", "Usuario" };
+    if (cats.getSelected() == 0)
+    {
+        // Sugeridos: los de la categoría de su tipo de voz, con su estilo primero; después, los efectos
+        const auto type = (VoiceType) juce::jlimit (0, (int) VoiceType::count - 1, proc.getVoiceType());
+        const int g = proc.getGenre();
+        auto mine = proc.presets.search (search.getText(), PresetLibrary::categoryFor (type), favs.isOn());
+        std::stable_sort (mine.begin(), mine.end(), [&] (const PresetInfo& a, const PresetInfo& b)
+        {
+            auto score = [&] (const PresetInfo& p)
+            {
+                if (p.factory && p.recipeIndex >= 0)
+                {
+                    const auto& r = proc.presets.recipes()[(size_t) p.recipeIndex];
+                    return (r.type == type ? 2 : 0) + (g >= 0 && r.genre == g ? 1 : 0);
+                }
+                return 0;
+            };
+            return score (a) > score (b);
+        });
+        items = mine;
+        if (PresetLibrary::categoryFor (type) != "Efectos")
+            for (auto& p : proc.presets.search (search.getText(), "Efectos", favs.isOn())) items.push_back (p);
+    }
+    else items = proc.presets.search (search.getText(), u8 (map[cats.getSelected()]), favs.isOn());
     list.updateContent(); list.repaint();
 }
 
@@ -851,7 +879,12 @@ void PresetBrowser::paint (juce::Graphics& g)
     g.setColour (ink); g.setFont (font (F::soraBold, 22.0f));
     g.drawText ("Presets", card.getX() + 28, card.getY() + 20, 200, 30, juce::Justification::centredLeft);
     g.setColour (dim2); g.setFont (font (F::man, 12.0f));
-    g.drawText (u8 ("Los presets IVO se adaptan a tu grabaci\xc3\xb3n al cargarlos"), card.getX() + 130, card.getY() + 24, 400, 24, juce::Justification::centredLeft);
+    {
+        const auto an = proc.getAnalysis();
+        const juce::String det = an.ready ? u8 ("Tu pista suena a ") + voiceTypeName ((VoiceType) proc.getVoiceType()).toLowerCase() + u8 (" \xc2\xb7 ")
+                                          : juce::String();
+        g.drawText (det + u8 ("Elige el que quieras: el preset manda y se adapta a tu grabaci\xc3\xb3n"), card.getX() + 130, card.getY() + 24, card.getWidth() - 158, 24, juce::Justification::centredLeft);
+    }
     well (g, search.getBounds().toFloat().expanded (6, 0), 20.0f);
     screen (g, list.getBounds().toFloat().expanded (6, 6), 14.0f);
 }
