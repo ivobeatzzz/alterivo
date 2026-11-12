@@ -21,6 +21,7 @@ void saveDarkSkin (bool);
 
 // Superficies
 void raised (juce::Graphics&, juce::Rectangle<float>, float radius, float lift = 1.0f);
+void shadowOnly (juce::Graphics&, juce::Rectangle<float>, float radius, float lift);
 void well (juce::Graphics&, juce::Rectangle<float>, float radius);
 void screen (juce::Graphics&, juce::Rectangle<float>, float radius);
 void limeFill (juce::Graphics&, juce::Rectangle<float>, float radius);

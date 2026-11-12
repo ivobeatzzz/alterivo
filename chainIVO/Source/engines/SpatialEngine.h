@@ -188,8 +188,10 @@ public:
             const float duckDb = duckAmt * 15.0f * juce::jlimit (0.0f, 1.0f, (env + 42.0f) / 24.0f);
             const float dg = dbToGain (-duckDb);
             const float sw = 1.0f + 2.0f * s.swell * swellEnv;   // hasta +9.5 dB de cola justo al acabar la frase
-            float ol = xl + dg * (rl * rm * 1.4f * sw + dl);
-            float orr = xr + dg * (rr * rm * 1.4f * sw + dr);
+            const float wl = dg * (rl * rm * 1.4f * sw + dl), wr = dg * (rr * rm * 1.4f * sw + dr);
+            wetPeak = std::max (wetPeak, std::max (std::abs (wl), std::abs (wr)));
+            float ol = xl + wl;
+            float orr = xr + wr;
 
             // ---- Doblador (micro-pitch: dos retardos cortos modulados, uno a cada lado)
             const float db = dblS.next();
@@ -218,6 +220,7 @@ public:
             if (flutter > 1.0e4) flutter -= 2.0 * juce::MathConstants<double>::pi * 1000.0;
         }
         duckShown.store (dbToGain (0.0f));
+        wetShown.store (std::max (wetPeak, wetShown.load() * 0.8f)); wetPeak = 0.0f;
     }
 
     int lineCount() const { return lines; }
@@ -230,6 +233,7 @@ public:
     void clearIR() { irLoaded = false; }
     bool hasIR() const { return irLoaded.load(); }
     int phraseEndCount() const { return phraseEnds.load(); }
+    float wetLevel() { return wetShown.exchange (0.0f); }   // pico de reverb+delay desde la última lectura (real)
 
 private:
     struct Allpass
@@ -341,5 +345,7 @@ private:
     int activeFor = 0, quietFor = 0;
     float swellEnv = 0.0f, swellFall = 0.9999f, peak = -40.0f;
     std::atomic<int> phraseEnds { 0 };
+    float wetPeak = 0.0f;
+    std::atomic<float> wetShown { 0.0f };
 };
 } // namespace chainivo

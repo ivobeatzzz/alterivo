@@ -107,6 +107,7 @@ public:
     float harshGr() const { return vocal.harshReduction(); }
     float breathGr() const { return vocal.breathReduction(); }
     int phraseEnds() const { return space.phraseEndCount(); }
+    float spaceWet() { return space.wetLevel(); }
     bool wordActive() const { return creative.wordActive(); }
     bool wordTargeted() const { return creative.wordTargeted(); }
     int wordsDetected() const { return creative.wordsDetected(); }

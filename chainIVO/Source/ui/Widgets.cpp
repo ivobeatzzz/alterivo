@@ -43,11 +43,18 @@ juce::String u8 (const char* s) { return juce::String::fromUTF8 (s); }
 
 static juce::Path rr (juce::Rectangle<float> r, float rad) { juce::Path p; p.addRoundedRectangle (r, rad); return p; }
 
-void raised (juce::Graphics& g, juce::Rectangle<float> r, float rad, float lift)
+void shadowOnly (juce::Graphics& g, juce::Rectangle<float> r, float rad, float lift)
 {
     const auto p = rr (r, rad);
     juce::DropShadow (shadow.withAlpha (0.20f * lift), (int) (26 * lift), { 0, (int) (12 * lift) }).drawForPath (g, p);
     juce::DropShadow (shadow.withAlpha (0.09f), 6, { 0, 2 }).drawForPath (g, p);
+}
+
+// lift > 0: dibuja también su sombra; lift = 0: sólo la superficie (la sombra la pinta el contenedor, sin recortes)
+void raised (juce::Graphics& g, juce::Rectangle<float> r, float rad, float lift)
+{
+    const auto p = rr (r, rad);
+    if (lift > 0.0f) shadowOnly (g, r, rad, lift);
     g.setGradientFill (juce::ColourGradient (surface, 0, r.getY(), surfaceLo, 0, r.getBottom(), false));
     g.fillPath (p);
     g.setColour (shadow.withAlpha (0.05f));

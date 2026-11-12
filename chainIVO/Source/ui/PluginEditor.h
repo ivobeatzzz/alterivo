@@ -28,6 +28,7 @@ public:
     std::function<void()> onSelect;
     std::function<void (int)> onMove;
     void refresh();
+    bool lit() const { return on; }
     void paint (juce::Graphics&) override;
     void mouseDown (const juce::MouseEvent&) override;
     void mouseEnter (const juce::MouseEvent&) override { hovering = true; repaint(); }
@@ -65,7 +66,7 @@ private:
     std::vector<juce::Rectangle<int>> layout;
     Toggle lockToggle { "LOCK" }, soloToggle { "SOLO" };
     PillButton autoButton { "AUTO", PillButton::lime };
-    std::vector<float> histComp, histDeess, histHarsh, histBreath, histWord;
+    std::vector<float> histComp, histDeess, histHarsh, histBreath, histWord, histWet;
 };
 
 class TrackCard : public juce::Component

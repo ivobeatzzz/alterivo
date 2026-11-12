@@ -68,12 +68,12 @@ void ChainTile::refresh()
             a = (int) pv (proc, pid::revType) == 5 ? (proc.hasIR() ? proc.getIRName() : u8 ("sin IR: plate")) : juce::String (pv (proc, pid::revDecay), 1) + " s";
             b = pv (proc, pid::dlyMix) > 0.5f ? "delay " + choiceText (proc, pid::dlyNote) : "sin delay"; break;
         case 5:
-            h = on ? choiceText (proc, pid::creaType) : "Off"; a = on ? choiceText (proc, pid::creaNote) : "pulsa el punto"; b = on ? juce::String (juce::roundToInt (pv (proc, pid::creaAmount))) + " %" : "para activar";
+            h = on ? choiceText (proc, pid::creaType) : "Off"; a = on ? choiceText (proc, pid::creaNote) : juce::String(); b = on ? juce::String (juce::roundToInt (pv (proc, pid::creaAmount))) + " %" : juce::String();
             if (pv (proc, pid::wordOn) > 0.5f) { if (! on) h = choiceText (proc, pid::wordFx); a = u8 ("palabras: ") + choiceText (proc, pid::wordTarget); b = choiceText (proc, pid::wordFx) + " " + juce::String (juce::roundToInt (pv (proc, pid::wordAmount))) + " %"; }
             break;
         default: break;
     }
-    if (! on && engine != 5) { h = "Off"; a = "pulsa el punto"; b = "para activar"; }
+    if (! on && engine != 5) { h = "Off"; a = {}; b = {}; }
     if (h != headline || a != line1 || b != line2) { headline = h; line1 = a; line2 = b; }
     repaint();
 }
@@ -83,7 +83,7 @@ void ChainTile::paint (juce::Graphics& g)
     auto r = getLocalBounds().toFloat().reduced (2.0f);
     if (on)
     {
-        raised (g, r, 18.0f, selected ? 1.1f : 0.8f);
+        raised (g, r, 18.0f, 0.0f);
         if (selected) { g.setColour (juce::Colour (0xffa9e04b)); g.drawRoundedRectangle (r.reduced (1.25f), 17.0f, 2.5f); }
     }
     else
@@ -100,6 +100,7 @@ void ChainTile::paint (juce::Graphics& g)
     g.drawFittedText (headline, juce::Rectangle<int> (8, 45, (int) r.getWidth() - 12, 26), juce::Justification::centred, 1, 0.75f);
     g.setColour (on ? dim2 : faint); g.setFont (font (F::man, 11.0f));
     g.drawFittedText (line1, juce::Rectangle<int> (6, 74, (int) r.getWidth() - 8, 15), juce::Justification::centred, 1, 0.8f);
+    g.setColour (faint);
     g.drawFittedText (line2, juce::Rectangle<int> (6, 90, (int) r.getWidth() - 8, 15), juce::Justification::centred, 1, 0.8f);
     if (pro && hovering)
     {
@@ -133,7 +134,7 @@ void ChainTile::mouseDown (const juce::MouseEvent& e)
 // =================================================================== EngineView
 EngineView::EngineView (ChainIvoProcessor& p) : proc (p)
 {
-    histComp.assign (180, 0.0f); histDeess.assign (180, 0.0f); histHarsh.assign (180, 0.0f); histBreath.assign (180, 0.0f); histWord.assign (180, 0.0f);
+    histComp.assign (180, 0.0f); histDeess.assign (180, 0.0f); histHarsh.assign (180, 0.0f); histBreath.assign (180, 0.0f); histWord.assign (180, 0.0f); histWet.assign (180, -90.0f);
     addChildComponent (lockToggle); addChildComponent (autoButton); addChildComponent (soloToggle);
     soloToggle.setTooltip (u8 ("Escucha por m\xc3\xb3" "dulo: s\xc3\xb3lo suena este motor (los dem\xc3\xa1s se saltan)"));
     soloToggle.onChange = [this] (bool v) { proc.soloEngine = v ? engine : -1; };
@@ -228,14 +229,16 @@ void EngineView::resized()
 void EngineView::tick()
 {
     push (histWord, proc.wordTargeted() ? 2.0f : (proc.wordActive() ? 1.0f : 0.0f));
+    push (histWet, gainToDb (proc.spaceWet()));
     push (histComp, proc.compGr()); push (histDeess, proc.deessGr()); push (histHarsh, proc.harshGr()); push (histBreath, proc.breathGr());
     repaint (pro ? juce::Rectangle<int> (280, 44, 390, 190) : juce::Rectangle<int> (18, 44, 638, 150));
+    if (engine == 4 && ! pro) repaint (juce::Rectangle<int> (18, 44, 638, 150));
 }
 
 void EngineView::paint (juce::Graphics& g)
 {
     const auto b = getLocalBounds().toFloat();
-    raised (g, b, 22.0f, 1.0f);
+    raised (g, b, 22.0f, 0.0f);
     static const char* titles[6] = { "EQ", "COMP \xc2\xb7 reducci\xc3\xb3n de ganancia", "HARMONICS \xc2\xb7 curva de saturaci\xc3\xb3n",
                                      "VOCAL \xc2\xb7 de-ess, dureza y respiraciones", "SPACE \xc2\xb7 cola y ecos", "CREATIVE \xc2\xb7 patr\xc3\xb3n r\xc3\xadtmico" };
     const auto an = proc.getAnalysis();
@@ -336,6 +339,7 @@ void EngineView::paintEq (juce::Graphics& g, juce::Rectangle<float> r)
             const float x = fx (Analyzer::bandCentre (b)), y = sy (s[(size_t) b] - mx);
             if (! started) { pth.startNewSubPath (x, y); started = true; } else pth.lineTo (x, y);
         }
+        pth = pth.createPathWithRoundedCorners (14.0f);
         if (fill)
         {
             juce::Path f (pth); f.lineTo (fx (Analyzer::bandCentre (kBands - 1)), specBot); f.lineTo (fx (Analyzer::bandCentre (0)), specBot); f.closeSubPath();
@@ -368,7 +372,6 @@ void EngineView::paintEq (juce::Graphics& g, juce::Rectangle<float> r)
     juce::Path dashed; const float dl[] = { 5.0f, 4.0f };
     juce::PathStrokeType (1.8f).createDashedStroke (dashed, curve, dl, 2);
     g.setColour (ink); g.fillPath (dashed);
-    label (g, "EQ", { r.getX() + 2, r.getY(), 40, 12 }, juce::Justification::centredLeft, ink, 9.0f);
     if (std::abs (es.presGain) > 0.1f)
     {
         const float x = fx (es.presFreq), y = ey (EqEngine::responseDb (es, sr, es.presFreq, es.presDyn > 0.001f ? presNow : es.presGain));
@@ -452,6 +455,17 @@ void EngineView::paintSpace (juce::Graphics& g, juce::Rectangle<float> r)
         g.setColour (ink.withAlpha (0.05f)); g.drawVerticalLine ((int) tx ((float) s), r.getY(), r.getBottom() - 12);
         g.setColour (faint); g.setFont (font (F::man, 9.0f)); g.drawText (juce::String (s) + " s", juce::Rectangle<float> (tx ((float) s) + 3, r.getBottom() - 12, 30, 12), juce::Justification::centredLeft, false);
     }
+    // Lo que suena ahora de verdad: nivel de reverb + delay en los últimos segundos (línea oscura, de derecha a izquierda)
+    {
+        juce::Path wet; const int n = (int) histWet.size();
+        for (int i = 0; i < n; ++i)
+        {
+            const float x = r.getX() + r.getWidth() * (float) i / (float) (n - 1);
+            const float y = ay (juce::jlimit (-60.0f, 0.0f, histWet[(size_t) i] + 6.0f));
+            if (i == 0) wet.startNewSubPath (x, y); else wet.lineTo (x, y);
+        }
+        g.setColour (ink.withAlpha (0.55f)); g.strokePath (wet, juce::PathStrokeType (1.4f));
+    }
     // voz (seca)
     g.setColour (ink.withAlpha (0.8f)); g.fillRect (juce::Rectangle<float> (tx (0), ay (0), 3, r.getBottom() - 14 - ay (0)));
     if (revMix > 0.001f)
@@ -472,6 +486,8 @@ void EngineView::paintSpace (juce::Graphics& g, juce::Rectangle<float> r)
     g.setColour (body); g.setFont (font (F::man, 12.0f));
     g.drawFittedText (choiceText (proc, pid::revType) + " " + juce::String (decay, 1) + u8 (" s \xc2\xb7 ") + (dlyMix > 0.001f ? "delay " + choiceText (proc, pid::dlyNote) + " " + choiceText (proc, pid::dlyType) : juce::String ("sin delay"))
                 + u8 (" \xc2\xb7 ducking ") + juce::String (juce::roundToInt (pv (proc, pid::duck))) + " %", r.withHeight (16).toNearestInt(), juce::Justification::centredRight, 1, 0.6f);
+    g.setColour (dim2); g.setFont (font (F::man, 10.0f));
+    g.drawText (u8 ("verde: ajustes \xc2\xb7 l\xc3\xadnea: lo que suena ahora"), r.withTrimmedTop (r.getHeight() - 28).withHeight (14), juce::Justification::centredRight, false);
     if (pv (proc, pid::dlyThrow) > 0.5f || pv (proc, pid::revSwell) > 0.5f)
         g.drawText (u8 ("Automatizaciones: ") + juce::String (proc.phraseEnds()) + u8 (" finales de frase detectados"), r.withTrimmedTop (18).withHeight (16), juce::Justification::centredRight, false);
 }
@@ -587,7 +603,7 @@ void TrackCard::resized()
 void TrackCard::paint (juce::Graphics& g)
 {
     const float W = (float) getWidth();
-    raised (g, getLocalBounds().toFloat(), 22.0f, 1.0f);
+    raised (g, getLocalBounds().toFloat(), 22.0f, 0.0f);
     label (g, "Tu pista", { 0, 18, W, 14 }, juce::Justification::centred);
     const auto an = proc.getAnalysis();
     const auto cl = proc.getClassification();
@@ -1005,6 +1021,7 @@ void MainView::selectEngine (int e)
 {
     selected = e;
     for (auto* t : tiles) { t->selected = t == tiles[e]; t->repaint(); }
+    repaint (juce::Rectangle<int> (300, 120, 720, 150));
     engineView.setEngine (e, proc.isPro());
 }
 
@@ -1051,6 +1068,11 @@ void MainView::paint (juce::Graphics& g)
         juce::ColourGradient lg (lime.withAlpha (0.10f), 600, 390, lime.withAlpha (0.0f), 600 + 360, 390, true);
         g.setGradientFill (lg); g.fillRect (getLocalBounds());
     }
+    shadowOnly (g, trackCard.getBounds().toFloat(), 22.0f, 1.0f);
+    shadowOnly (g, engineView.getBounds().toFloat(), 22.0f, 1.0f);
+    for (auto* tl : tiles)
+        if (tl->lit()) shadowOnly (g, tl->getBounds().toFloat().reduced (2.0f), 18.0f, tl->selected ? 1.0f : 0.7f);
+
     juce::AttributedString t;
     t.append ("chain", font (F::soraLight, 34.0f, -0.01f), ink);
     t.append ("IVO", font (F::soraBold, 34.0f, -0.01f), deep);
@@ -1058,10 +1080,11 @@ void MainView::paint (juce::Graphics& g)
     label (g, u8 ("Secondary \xc2\xb7 Vocal \xc2\xb7 Chain"), { 42, 70, 300, 14 }, juce::Justification::centredLeft);
     label (g, "La cadena", { 328, 110, 200, 14 }, juce::Justification::centredLeft);
     g.setColour (shadow.withAlpha (0.07f)); g.fillRect (juce::Rectangle<float> (40, 526, 960, 1));   // separa la zona de trabajo de los globales
-    g.setColour (dim2); g.setFont (font (F::man, 12.0f));
-    const juce::String hint = proc.isPro() ? u8 ("PRO: orden real de la cadena \xc2\xb7 \xe2\x80\xb9 \xe2\x80\xba para moverlas \xc2\xb7 el punto enciende o apaga")
-                                           : u8 ("AUTO ha montado ") + juce::String (std::max (proc.getEnginesBuilt(), 0)) + u8 (" de 6 m\xc3\xb3" "dulos \xc2\xb7 pulsa uno para verlo");
-    g.drawText (hint, juce::Rectangle<float> (500, 106, 500, 18), juce::Justification::centredRight, false);
+    {
+        int active = 0; for (auto* tl : tiles) active += tl->lit() ? 1 : 0;
+        const juce::String hint = proc.isPro() ? u8 ("\xe2\x80\xb9 \xe2\x80\xba  cambia el orden") : juce::String (active) + u8 (" de 6 activos");
+        label (g, hint, { 600, 110, 400, 14 }, juce::Justification::centredRight, dim, 10.0f);
+    }
     label (g, "Quality", { 640, 536, 360, 14 }, juce::Justification::centred);
     g.setColour (dim2); g.setFont (font (F::man, 12.0f));
     const float latMs = (float) proc.getLatencySamples() * 1000.0f / (float) proc.getSampleRateSafe();
@@ -1084,7 +1107,7 @@ void MainView::timerCallback()
         abSwitch.setSelected (proc.getAbSlot());
         quality.setSelected (proc.getQuality());
         if (proc.isPro() != lastPro) { lastPro = proc.isPro(); selectEngine (selected); layoutTiles(); }
-        repaint (juce::Rectangle<int> (500, 100, 520, 30));
+        repaint (juce::Rectangle<int> (300, 100, 720, 170));   // pista de LA CADENA y sombras de las fichas
         repaint (juce::Rectangle<int> (640, 686, 300, 26));
         if (! proc.isPro()) engineView.repaint();
     }
