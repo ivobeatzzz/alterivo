@@ -7,7 +7,7 @@ namespace { inline juce::String T (const char* s) { return juce::String::fromUTF
 const juce::StringArray& voiceTypeNames()
 {
     static const juce::StringArray n = juce::StringArray::fromTokens (juce::String (juce::CharPointer_UTF8 (
-        "Ad-lib|Coro|Doble|Segunda voz|Armon\xc3\xad" "a|Respuesta|Intro / outro|Chop|Susurro|Grito|Hablada|Textura|Ambiente|Efecto")), "|", "");
+        "Ad-lib|Coro|Doble|Segunda voz|Armon\xc3\xad" "a|Respuesta|Intro / outro|Chop|Susurro|Grito|Hablada|Textura|Ambiente|Efecto|Voz principal")), "|", "");
     return n;
 }
 juce::String voiceTypeName (VoiceType t) { return voiceTypeNames()[(int) t]; }
@@ -48,6 +48,28 @@ const GenreProfile kGenres[] = {
     { "Pop",                          "Otros",         2.5f, 0.15f, HarmType::exciter,     RevType::plate,    1.0f, 1.0f, 0.9f, 0.5f, 2.5f },
     { "Comercial",                    "Otros",         2.5f, 0.15f, HarmType::exciter,     RevType::plate,    0.9f, 0.9f, 0.8f, 0.5f, 3.0f },
     { "Experimental",                 "Otros",         0.0f, 0.6f,  HarmType::transformer, RevType::hall,     1.8f, 1.4f, 1.4f, 0.9f, 1.5f },
+    // ---- Ampliación (siempre al final: el índice se guarda en los proyectos)
+    //  nombre                         familia        bright grit  armónico                 reverb             size  rev   delay width press
+    { "Tech house",                   "House / club",  2.0f, 0.25f, HarmType::tape,        RevType::plate,    0.9f, 0.9f, 1.2f, 0.6f, 2.5f },
+    { "Tech house underground",       "House / club",  1.0f, 0.35f, HarmType::tape,        RevType::room,     0.8f, 0.8f, 1.3f, 0.5f, 3.0f },
+    { "House",                        "House / club",  2.0f, 0.15f, HarmType::tube,        RevType::hall,     1.1f, 1.1f, 1.0f, 0.7f, 2.0f },
+    { "Deep house",                   "House / club",  0.5f, 0.15f, HarmType::tape,        RevType::hall,     1.3f, 1.2f, 1.2f, 0.8f, 1.5f },
+    { "Afro house",                   "House / club",  1.5f, 0.2f,  HarmType::tube,        RevType::plate,    1.1f, 1.0f, 1.3f, 0.7f, 2.0f },
+    { "Minimal / rominimal",          "House / club",  0.5f, 0.2f,  HarmType::tape,        RevType::room,     0.8f, 0.7f, 1.4f, 0.5f, 2.0f },
+    { "UK garage",                    "House / club",  2.5f, 0.2f,  HarmType::exciter,     RevType::plate,    0.9f, 0.9f, 1.1f, 0.6f, 2.5f },
+    { "Jersey club",                  "House / club",  3.0f, 0.35f, HarmType::transformer, RevType::room,     0.7f, 0.8f, 0.9f, 0.6f, 3.0f },
+    { "Techno",                       "House / club",  1.0f, 0.45f, HarmType::transformer, RevType::hall,     1.4f, 1.1f, 1.3f, 0.7f, 3.0f },
+    { "Club cantado",                 "House / club",  2.5f, 0.15f, HarmType::exciter,     RevType::plate,    1.0f, 1.0f, 1.1f, 0.6f, 2.5f },
+    { "Guaracha / aleteo",            "House / club",  2.5f, 0.3f,  HarmType::exciter,     RevType::plate,    0.8f, 0.9f, 1.0f, 0.6f, 3.0f },
+    { "Neoperreo",                    "Reggaet\xc3\xb3n", 2.0f, 0.45f, HarmType::transformer, RevType::plate, 1.0f, 1.0f, 1.1f, 0.7f, 3.0f },
+    { "Dembow",                       "Reggaet\xc3\xb3n", 2.0f, 0.3f, HarmType::tube,       RevType::room,     0.7f, 0.8f, 0.9f, 0.5f, 3.0f },
+    { "Trap underground espa\xc3\xb1ol", "Trap",        1.5f, 0.4f,  HarmType::tape,        RevType::plate,    1.0f, 0.9f, 1.1f, 0.6f, 2.5f },
+    { "Jerk",                         "Trap",          3.0f, 0.45f, HarmType::transformer, RevType::plate,    0.9f, 0.9f, 1.0f, 0.6f, 3.0f },
+    { "Hyperpop / digicore",          "Trap",          4.0f, 0.6f,  HarmType::exciter,     RevType::plate,    1.0f, 1.0f, 1.1f, 0.9f, 3.0f },
+    { "Emo rap",                      "Trap",          1.0f, 0.2f,  HarmType::tape,        RevType::hall,     1.5f, 1.3f, 1.3f, 0.8f, 2.0f },
+    { "Drill",                        "Rap",           1.5f, 0.35f, HarmType::transformer, RevType::room,     0.7f, 0.7f, 1.0f, 0.4f, 3.5f },
+    { "Phonk",                        "Rap",          -1.0f, 0.6f,  HarmType::tape,        RevType::room,     0.9f, 1.0f, 1.0f, 0.6f, 3.0f },
+    { "Afrobeats",                    "Otros",         2.0f, 0.2f,  HarmType::tube,        RevType::plate,    1.0f, 1.0f, 1.1f, 0.6f, 2.5f },
 };
 } // namespace
 
@@ -96,17 +118,67 @@ Recipe defaultRecipe (VoiceType t)
                                     r.rev = RevType::hall; r.revMix = 0.55f; r.decay = 5.0f; r.revTone = 0.4f; r.width = 1.9f; r.duck = 0.1f; break;
         case VoiceType::efecto:     r.hpfMul = 1.3f; r.presence = 1.0f; r.air = 1.0f; r.comp = CompType::fet; r.grTarget = 6; r.harmOn = true; r.harm = HarmType::transformer; r.drive = 0.5f;
                                     r.rev = RevType::plate; r.revMix = 0.2f; r.dlyMix = 0.25f; r.dly = DlyType::pingpong; r.width = 1.4f; break;
+        case VoiceType::principal:  // la voz que manda: al centro, clara, controlada y con espacio discreto que no la aleje
+                                    r.hpfMul = 1.0f; r.presence = 2.0f; r.air = 2.5f; r.body = 0.5f; r.comp = CompType::vca; r.grTarget = 6; r.ratio = 4; r.attack = 8; r.release = 90;
+                                    r.harmOn = true; r.harm = HarmType::tape; r.drive = 0.15f; r.harmMix = 0.6f; r.deessScale = 1.1f; r.harsh = 0.35f; r.breath = 0.25f;
+                                    r.rev = RevType::plate; r.revMix = 0.1f; r.decay = 1.3f; r.predelay = 45; r.dlyMix = 0.08f; r.dlyNote = 7; r.dlyFb = 0.25f; r.duck = 0.85f;
+                                    r.width = 1.0f; r.doubler = 0.0f; r.throwAmt = 0.2f; break;
         case VoiceType::count: break;
     }
     return r;
 }
 
+// ------------------------------------------------------------- Nombre de la pista
+int voiceTypeFromName (const juce::String& trackName)
+{
+    // Se quitan tildes y se parte en palabras: "COROS rec" -> {coros, rec}; "VOX 1 PRINCIPAL" -> {vox, 1, principal}
+    auto s = trackName.toLowerCase();
+    const char* from[] = { "\xc3\xa1", "\xc3\xa9", "\xc3\xad", "\xc3\xb3", "\xc3\xba", "\xc3\xb1" };
+    const char* to[]   = { "a", "e", "i", "o", "u", "n" };
+    for (int i = 0; i < 6; ++i) s = s.replace (juce::String::fromUTF8 (from[i]), to[i]);
+    juce::StringArray w;
+    {
+        juce::String cur;
+        for (auto c : s) { if (juce::CharacterFunctions::isLetterOrDigit (c)) cur += c; else { if (cur.isNotEmpty()) w.add (cur); cur.clear(); } }
+        if (cur.isNotEmpty()) w.add (cur);
+    }
+    const juce::String joined = w.joinIntoString (" ");
+    auto has = [&] (std::initializer_list<const char*> words) { for (auto* x : words) if (w.contains (x)) return true; return false; };
+    auto hasStart = [&] (std::initializer_list<const char*> pre) { for (auto& t : w) for (auto* x : pre) if (t.startsWith (x)) return true; return false; };
+    // Del más concreto al más general
+    if (joined.contains ("ad lib") || hasStart ({ "adlib", "adl" }) || has ({ "ads" })) return (int) VoiceType::adlib;
+    if (hasStart ({ "coro", "choir", "chorus" }) || has ({ "bv", "bvs", "bgv", "bgvs", "backing", "backs", "backvocal", "backvocals" })) return (int) VoiceType::coro;
+    if (hasStart ({ "armon", "harmon", "harmo" }) || has ({ "harm", "harms", "arm" })) return (int) VoiceType::armonia;
+    if (hasStart ({ "doble", "double", "dobl" }) || has ({ "dbl", "dbls", "dt" })) return (int) VoiceType::doble;
+    if (hasStart ({ "segunda" }) || joined.contains ("2da voz") || joined.contains ("second voice")) return (int) VoiceType::segunda;
+    if (hasStart ({ "respuesta", "response", "replica" }) || has ({ "call" })) return (int) VoiceType::respuesta;
+    if (hasStart ({ "chop" })) return (int) VoiceType::chop;
+    if (hasStart ({ "susurr", "whisper" })) return (int) VoiceType::susurro;
+    if (hasStart ({ "grito", "scream", "shout" })) return (int) VoiceType::grito;
+    if (hasStart ({ "intro", "outro" })) return (int) VoiceType::introOutro;
+    if (hasStart ({ "hablad", "spoken", "talk", "habla" })) return (int) VoiceType::hablada;
+    if (hasStart ({ "textur", "pad" })) return (int) VoiceType::textura;
+    if (hasStart ({ "ambient", "atmos" })) return (int) VoiceType::ambiente;
+    if (hasStart ({ "principal", "lead", "main" }) || has ({ "lv", "ld", "leadvox", "mainvox" }) || joined.contains ("voz principal")) return (int) VoiceType::principal;
+    if (hasStart ({ "efect", "vocalfx" }) || has ({ "fx", "sfx" })) return (int) VoiceType::efecto;
+    return -1;
+}
+
 // ------------------------------------------------------------- Clasificación
 // Reglas sobre medidas reales (no un modelo entrenado). Se muestra la confianza y el motivo, y el usuario
 // puede cambiar el tipo con un clic.
-Classification classify (const AnalysisResult& a)
+Classification classify (const AnalysisResult& a, const juce::String& trackName)
 {
     Classification c;
+    // El nombre de la pista manda: quien pone "COROS" en la pista sabe lo que hay
+    const int byName = voiceTypeFromName (trackName);
+    if (byName >= 0)
+    {
+        c.type = (VoiceType) byName; c.fromName = true;
+        c.confidence = a.activeSeconds >= 2.0f ? 0.95f : 0.9f;
+        c.reason = T ("Por el nombre de la pista (\xe2\x80\x9c") + trackName.trim() + T ("\xe2\x80\x9d)");
+        return c;
+    }
     if (a.activeSeconds < 2.0f) { c.reason = "Analizando..."; return c; }
     std::array<float, (int) VoiceType::count> s {};
     auto clamp01 = [] (float v) { return juce::jlimit (0.0f, 1.0f, v); };
@@ -186,11 +258,12 @@ BuildResult buildChain (const Recipe& r, const AnalysisResult& a, int genreIdx)
     const bool measured = a.activeSeconds >= 2.0f;
 
     // ---------------- EQ
-    static const float baseHpf[] = { 150, 200, 170, 170, 190, 140, 120, 160, 160, 140, 100, 250, 300, 180 };
+    static const float baseHpf[] = { 150, 200, 170, 170, 190, 140, 120, 160, 160, 140, 100, 250, 300, 180, 90 };
+    static_assert (sizeof (baseHpf) / sizeof (baseHpf[0]) == (size_t) VoiceType::count, "un paso alto por tipo de voz");
     float hpf = baseHpf[(int) r.type] * r.hpfMul / 1.2f;
     juce::String why = "Paso alto en " + hz (hpf);
     float lowGain = r.body;
-    if (measured && a.mud > -10.0f) { lowGain += -juce::jlimit (0.0f, 4.0f, (a.mud + 10.0f) * 0.6f); hpf *= 1.15f; why += ", graves cargados: " + db (lowGain) + " en 250 Hz"; }
+    if (measured && a.mud > -10.0f) { lowGain += -juce::jlimit (0.0f, 4.0f, (a.mud + 10.0f) * 0.6f); hpf *= 1.15f; why += ", graves cargados: " + db (lowGain) + " en la zona de cuerpo"; }
     float midGain = 0.0f;
     if (measured && a.nasal > -9.0f) { midGain = -juce::jlimit (0.0f, 4.0f, (a.nasal + 9.0f) * 0.7f); why += ", algo nasal: " + db (midGain) + " en 1 kHz"; }
     float presF = 3500.0f, presG = r.presence + g.bright * 0.5f, presDyn = 0.0f;
@@ -231,8 +304,19 @@ BuildResult buildChain (const Recipe& r, const AnalysisResult& a, int genreIdx)
     float airG = r.air + g.bright * 0.5f;
     if (measured) airG += juce::jlimit (-2.0f, 2.0f, (-26.0f - a.air) * 0.25f);
     airG = juce::jlimit (-3.0f, 6.0f, airG);
+    // Registro de la voz: el paso alto no se come la nota más grave de las voces que deben tener cuerpo,
+    // y la banda de "cuerpo" se pone donde está el cuerpo de ESTA voz (grave o aguda)
+    float lowFreq = 250.0f;
+    if (measured && a.f0Low > 0.0f)
+    {
+        const bool keepBody = r.type == VoiceType::principal || r.type == VoiceType::segunda || r.type == VoiceType::respuesta
+                           || r.type == VoiceType::hablada || r.type == VoiceType::grito || r.type == VoiceType::susurro || r.type == VoiceType::adlib;
+        if (keepBody && hpf > 0.85f * a.f0Low) { hpf = 0.85f * a.f0Low; why += T (" (sin tocar la nota m\xc3\xa1s grave de tu voz, ") + hz (a.f0Low) + ")"; }
+        hpf = std::max (hpf, std::min (0.5f * a.f0Low, 110.0f));
+        if (a.f0Median > 0.0f) lowFreq = juce::jlimit (160.0f, 350.0f, 1.7f * a.f0Median);
+    }
     hpf = juce::jlimit (40.0f, 400.0f, hpf);
-    set (pid::eqOn, 1); set (pid::hpf, hpf); set (pid::hpfSlope, 1); set (pid::lowFreq, 250); set (pid::lowGain, lowGain);
+    set (pid::eqOn, 1); set (pid::hpf, hpf); set (pid::hpfSlope, 1); set (pid::lowFreq, lowFreq); set (pid::lowGain, lowGain);
     set (pid::midFreq, 1000); set (pid::midGain, midGain); set (pid::midQ, 1.4f);
     set (pid::presFreq, presF); set (pid::presGain, presG); set (pid::presQ, presDyn > 0 ? 1.6f : 1.0f); set (pid::presDyn, presDyn);
     set (pid::airFreq, 11000); set (pid::airGain, airG);
@@ -241,7 +325,9 @@ BuildResult buildChain (const Recipe& r, const AnalysisResult& a, int genreIdx)
     // ---------------- COMP: umbral relativo a cómo canta (p90), para conseguir la reducción buscada
     const float gr = r.grTarget + (haveGenre ? g.press * 0.5f : 0.0f);
     const float thr = measured ? juce::jlimit (-50.0f, -3.0f, a.levelP90 - gr * 1.4f) : -20.0f;
-    set (pid::compOn, 1); set (pid::compType, (float) (int) r.comp); set (pid::compThresh, thr); set (pid::compRatio, r.ratio);
+    // Tomas con mucha diferencia entre partes flojas y fuertes: algo más de ratio; tomas ya planas: menos
+    const float ratio = juce::jlimit (1.5f, 20.0f, r.ratio + (measured ? juce::jlimit (-1.0f, 1.5f, (a.dynamicSpread - 12.0f) / 6.0f) : 0.0f));
+    set (pid::compOn, 1); set (pid::compType, (float) (int) r.comp); set (pid::compThresh, thr); set (pid::compRatio, ratio);
     set (pid::compAttack, r.attack); set (pid::compRelease, r.release); set (pid::compMakeup, gr * 0.5f); set (pid::compMix, r.compMix * 100.0f);
     out.why[1] = juce::String (compName (r.comp)) + " para unos " + juce::String (juce::roundToInt (gr)) + " dB de control"
                + (measured && a.dynamicSpread > 14.0f ? ": la toma tiene mucha diferencia entre partes flojas y fuertes" : "");
@@ -270,9 +356,22 @@ BuildResult buildChain (const Recipe& r, const AnalysisResult& a, int genreIdx)
     const float dlyMix = juce::jlimit (0.0f, 0.6f, r.dlyMix * (haveGenre ? g.delayAmt : 1.0f));
     float width = r.width + (haveGenre ? g.width * 0.2f : 0.0f);
     if (measured && a.sideRatio > 0.2f) width = std::min (width, 1.2f);   // ya viene abierta: no exagerar
+    if (r.type == VoiceType::principal) width = std::min (width, 1.05f);  // la principal va al centro
     set (pid::spaceOn, 1); set (pid::revType, (float) (int) rt); set (pid::revMix, revMix * 100.0f); set (pid::revDecay, decay);
     // Grupo: cada capa con un pre-delay distinto para que las colas no se fundan en una sola
-    const float predelay = std::min (200.0f, r.predelay + 8.0f * (float) a.groupIndex);
+    float predelay = std::min (200.0f, r.predelay);
+    juce::String preWhy;
+    if (a.bpm > 30.0)
+    {
+        // Pre-delay a tempo (1/64, 1/32 o 1/16 de nota, la más cercana a la intención): la cola entra en el groove
+        const float beatMs = (float) (60000.0 / a.bpm);
+        const float cand[] = { beatMs / 16.0f, beatMs / 8.0f, beatMs / 4.0f };
+        const char* names[] = { "1/64", "1/32", "1/16" };
+        int best = 0; for (int k = 1; k < 3; ++k) if (std::abs (cand[k] - predelay) < std::abs (cand[best] - predelay)) best = k;
+        if (cand[best] <= 200.0f) { predelay = cand[best]; preWhy = T (", pre-delay a tempo (") + names[best] + ")"; }
+    }
+    // Grupo: cada capa con un pre-delay distinto para que las colas no se fundan (la principal no se mueve)
+    if (r.type != VoiceType::principal) predelay = std::min (200.0f, predelay + 8.0f * (float) a.groupIndex);
     set (pid::revPredelay, predelay); set (pid::revTone, r.revTone * 100.0f);
     set (pid::dlyType, (float) (int) r.dly); set (pid::dlyNote, (float) r.dlyNote); set (pid::dlyFeedback, r.dlyFb * 100.0f);
     set (pid::dlyMix, dlyMix * 100.0f); set (pid::duck, r.duck * 100.0f); set (pid::width, juce::jlimit (0.0f, 2.0f, width) * 100.0f);
@@ -282,7 +381,7 @@ BuildResult buildChain (const Recipe& r, const AnalysisResult& a, int genreIdx)
                + (dlyMix > 0.01f ? ", delay " + chainivo::noteNames()[r.dlyNote] : juce::String())
                + (r.duck > 0.3f ? ", con ducking para que no tape la voz" : "")
                + (r.throwAmt > 0.01f ? T (", eco de remate al final de cada frase") : juce::String())
-               + (r.swell > 0.01f ? T (", la cola crece al acabar cada frase") : juce::String())
+               + (r.swell > 0.01f ? T (", la cola crece al acabar cada frase") : juce::String()) + preWhy
                + (a.groupCount > 0 ? T (", pre-delay ") + juce::String (juce::roundToInt (predelay)) + T (" ms para separarla de las otras ") + juce::String (a.groupCount) + T (" capas") : juce::String());
 
     // ---------------- CREATIVE (sólo si la receta lo pide)

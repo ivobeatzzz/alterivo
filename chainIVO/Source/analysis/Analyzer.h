@@ -28,6 +28,10 @@ struct AnalysisResult
     float activity = 0.5f;           // fracción del tiempo con voz
     float phraseMedian = 1.5f, phraseShortRatio = 0.0f;   // s; fracción de eventos de menos de 0.25 s
     float stereoCorrelation = 1.0f, sideRatio = 0.0f;     // 1 = mono; sideRatio en dB-ish lineal 0..1
+    // Registro de la voz (tramos con tono claro): nota más grave habitual y nota central, en Hz. 0 = sin medir
+    float f0Low = 0.0f, f0Median = 0.0f;
+    // Tempo del proyecto (lo rellena el procesador al construir la cadena; 0 = desconocido)
+    double bpm = 0.0;
     std::array<float, kBands> spectrum {};                // dB, media de los tramos con voz
 
     // Voz principal (sólo si hay sidechain con señal)
@@ -101,6 +105,15 @@ private:
         void clear() { bins.fill (0); count = 0; }
     };
     Hist allHist, activeHist;
+    // Tono en semitonos (MIDI) de los tramos con tono claro, para el registro de la voz
+    std::array<int, 128> f0Hist {}; int f0Count = 0;
+    float f0Pct (float p) const
+    {
+        if (f0Count < 20) return 0.0f;
+        int acc = 0; const int target = (int) (p * (float) f0Count);
+        for (int b = 0; b < 128; ++b) { acc += f0Hist[(size_t) b]; if (acc > target) return 440.0f * std::pow (2.0f, ((float) b - 69.0f) / 12.0f); }
+        return 0.0f;
+    }
     int frames = 0, activeFrames = 0, voicedFrames = 0, lastActiveFrame = -1;
     std::array<double, kBands> ltas {}, leadLtas {};
     int leadActiveFrames = 0;

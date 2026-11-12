@@ -1,50 +1,85 @@
-[null] INTENSITY 0 %: latencia 38 muestras, diferencia con la entrada -300.0 dB
-[alias] ECO    latencia  31 | aliasing frente a armonicos: -35.6 dB
-[alias] NORMAL latencia  38 | aliasing frente a armonicos: -55.8 dB
-[alias] HIGH   latencia  61 | aliasing frente a armonicos: -55.7 dB
-[alias] ULTRA  latencia  65 | aliasing frente a armonicos: -55.7 dB
-[comp] FET      rango dinamico 15.7 dB (original 26.5) | nivel medio -43.2 dB
-[comp] Opto     rango dinamico 21.8 dB (original 26.5) | nivel medio -37.2 dB
-[comp] VCA      rango dinamico 18.4 dB (original 26.5) | nivel medio -40.7 dB
-[comp] Vari-Mu  rango dinamico 22.2 dB (original 26.5) | nivel medio -36.7 dB
-[comp] Clean    rango dinamico 17.6 dB (original 26.5) | nivel medio -41.0 dB
+Voz de prueba: 20.0 s
+[null] INTENSITY 0 %: latencia 110 muestras, diferencia con la entrada -300.0 dB
+[alias] ECO    latencia 103 | aliasing frente a armonicos: -35.6 dB
+[alias] NORMAL latencia 110 | aliasing frente a armonicos: -55.8 dB
+[alias] HIGH   latencia 133 | aliasing frente a armonicos: -55.8 dB
+[alias] ULTRA  latencia 137 | aliasing frente a armonicos: -55.8 dB
+[comp] FET      rango dinamico 6.9 dB (original 14.3) | nivel medio -42.3 dB
+[comp] Opto     rango dinamico 12.0 dB (original 14.3) | nivel medio -33.4 dB
+[comp] VCA      rango dinamico 10.3 dB (original 14.3) | nivel medio -39.7 dB
+[comp] Vari-Mu  rango dinamico 12.6 dB (original 14.3) | nivel medio -33.0 dB
+[comp] Clean    rango dinamico 10.0 dB (original 14.3) | nivel medio -40.0 dB
 [comp] diferencia entre topologias (dB, normalizada al nivel):
-   FET-Opto -12.0   FET-VCA -15.6   FET-Vari-Mu -10.6   FET-Clean -16.8   Opto-VCA -14.1   Opto-Vari-Mu -21.1   Opto-Clean -14.3   VCA-Vari-Mu -12.8   VCA-Clean -26.9   Vari-Mu-Clean -13.0
+   FET-Opto -13.8   FET-VCA -15.6   FET-Vari-Mu -12.3   FET-Clean -17.0   Opto-VCA -17.0   Opto-Vari-Mu -21.5   Opto-Clean -16.5   VCA-Vari-Mu -15.6   VCA-Clean -28.2   Vari-Mu-Clean -15.2
 [reverb] Plate    (8 lineas) decay ajustado 2.0 s -> medido T60 1.98 s
 [reverb] Hall     (8 lineas) decay ajustado 2.0 s -> medido T60 2.03 s
 [reverb] Room     (8 lineas) decay ajustado 2.0 s -> medido T60 1.38 s
 [reverb] Chamber  (8 lineas) decay ajustado 2.0 s -> medido T60 1.96 s
 [reverb] Ambience (8 lineas) decay ajustado 2.0 s -> medido T60 0.60 s
-[mono] anchura 200 % + doblador 60 %: suma mono frente a estereo -1.8 dB, correlacion L/R 0.31
-[deess] tramos de 's' (79): agudos -5.8 dB | tramos de vocal (899): nivel -0.02 dB
-[cpu] ECO    2.5 % de un nucleo (latencia 31 muestras = 0.65 ms)
-[cpu] NORMAL 3.8 % de un nucleo (latencia 38 muestras = 0.79 ms)
-[cpu] HIGH   4.3 % de un nucleo (latencia 61 muestras = 1.27 ms)
-[cpu] ULTRA  7.1 % de un nucleo (latencia 65 muestras = 1.35 ms)
-[stress] 158 s con automatizacion aleatoria: 0 valores no validos, pico 1.78 (5.0 dBFS)
-[auto] sin principal: 33.7 s de voz, tipo Segunda voz (58 %): Suena casi todo el tiempo
-       medidas: actividad 0.64, frase mediana 0.73 s, tono claro 0.85, sibilancia -25.7 dB en 5080 Hz, graves -6.9, nasal -18.7, p90 -26.5 dB
-       preset: Propuesta automática | por que EQ: Paso alto en 198 Hz, graves cargados: -2.9 dB en 250 Hz.
-[auto] doble con principal: tipo Doble (66 %) | corr. envolvente 0.76, solape 0.76, mismo tono 0.49, choque banda 17 (3200 Hz) 0.77
-       por que EQ: Choca con la voz principal en 4.0 kHz: baja 3.3 dB ahí sólo cuando canta la principal.
-[auto] respuesta: tipo Respuesta (100 %) | suena con principal 0.00, sin principal 0.84
+[mono] anchura 200 % + doblador 60 %: suma mono frente a estereo -1.5 dB, correlacion L/R 0.41
+[deess] tramos de 's' (6): agudos -2.0 dB | tramos de vocal (505): nivel -0.01 dB
+[cpu] ECO    3.0 % de un nucleo (latencia 103 muestras = 2.15 ms)
+[cpu] NORMAL 5.6 % de un nucleo (latencia 110 muestras = 2.29 ms)
+[cpu] HIGH   5.9 % de un nucleo (latencia 133 muestras = 2.77 ms)
+[cpu] ULTRA  8.3 % de un nucleo (latencia 137 muestras = 2.85 ms)
+[stress] 120 s con automatizacion aleatoria: 0 valores no validos, pico 0.99 (-0.1 dBFS)
+[auto] sin principal: 20.1 s de voz, tipo Segunda voz (58 %): Suena casi todo el tiempo
+       medidas: actividad 0.50, frase mediana 1.88 s, tono claro 0.93, sibilancia -29.8 dB en 8064 Hz, graves -7.0, nasal -10.4, p90 -18.5 dB
+       preset: Propuesta automática | por que EQ: Paso alto en 198 Hz, graves cargados: -2.8 dB en la zona de cuerpo (sin tocar la nota más grave de tu voz, 185 Hz).
+[auto] doble con principal: tipo Doble (95 %) | corr. envolvente 0.68, solape 0.97, mismo tono 0.68, choque banda 14 (1600 Hz) 1.00
+       por que EQ: Choca con la voz principal en 1.6 kHz: baja 4.0 dB ahí sólo cuando canta la principal.
+[auto] respuesta: tipo Respuesta (69 %) | suena con principal 0.02, sin principal 0.30
 [state] parametros distintos 0 | orden igual | PRO 1 | lock COMP 1 | preset 'Ad-lib Dark Echo' | B recuperado reverb 33 %
-[presets] 124 presets IVO: Ad-libs 31 · Armonías 20 · Coros 30 · Dobles y segundas 20 · Efectos 23 · estilos sin reconocer 0
-[presets] pareja mas parecida: Coro Old School / Armonía Old School (diferencia -19.6 dB a igual volumen) | parejas por debajo de -20 dB: 0
-[export] Exportado: voz (chainIVO).wav | canales 1, 48000 Hz, 32 bits | duracion 30.00 s (original 26.40 s + cola) | INTENSITY 0: diferencia con el original -300.0 dB | original intacto: si
+[presets] 219 presets IVO: Ad-libs 54 · Armonías 29 · Coros 46 · Dobles y segundas 29 · Efectos 33 · Voz principal 28 · estilos sin reconocer 0
+   parecidos: Ad-lib Plugg Air / Ad-lib PluggnB Silk -26.3 dB
+   parecidos: Ad-lib Street / Ad-lib Drill -21.2 dB
+   parecidos: Coro Stack Pop / Armonía Stack -22.3 dB
+   parecidos: Coro Stack Pop / Armonía Tech House -21.1 dB
+   parecidos: Coro Stack Pop / Coro Garage -23.3 dB
+   parecidos: Coro Stack Pop / Coro Club Pop -22.4 dB
+   parecidos: Doble Tight / Doble Tech House -21.3 dB
+   parecidos: Doble Tight / Doble Club Pop -21.5 dB
+   parecidos: Doble 2000s / Doble Drill -20.3 dB
+   parecidos: Ad-lib Bendición / Respuesta Afro Call -20.6 dB
+   parecidos: Respuesta Call / Ad-lib Drill -20.4 dB
+   parecidos: Coro Rage Anthem / Coro Neoperreo -21.4 dB
+   parecidos: Coro Rage Anthem / Armonía Hyperpop -20.8 dB
+   parecidos: Coro Melodic Hook / Armonía Melodic -20.3 dB
+   parecidos: Coro Old School / Armonía Old School -20.6 dB
+   parecidos: Coro Factory Shine / Coro Guaracha -21.6 dB
+   parecidos: Coro Reggaetón Trap / Armonía Rage Air -23.0 dB
+   parecidos: Coro Melodic Rap / Armonía Pop Air -23.8 dB
+   parecidos: Coro Hybrid Rock / Armonía Hybrid -21.6 dB
+   parecidos: Armonía Reggaetón / Coro Garage -21.9 dB
+   parecidos: Lead Club Underground / Lead Trap Underground ES -20.4 dB
+   parecidos: Lead Tech House / Lead Club Pop -22.4 dB
+   parecidos: Lead Afro Air / Lead Afrobeats -21.9 dB
+   parecidos: Lead Garage Bright / Lead Jerk -20.3 dB
+   parecidos: Lead Jersey Bounce / Lead Neoperreo -20.1 dB
+   parecidos: Lead Club Pop / Lead Melodic Trap -23.2 dB
+   parecidos: Doble Club Underground / Doble Tech House -21.3 dB
+   parecidos: Coro Tech House / Coro Underground ES -22.2 dB
+   parecidos: Doble Tech House / Doble Underground ES -20.7 dB
+   parecidos: Coro Neoperreo / Armonía Hyperpop -20.0 dB
+   parecidos: Doble Neoperreo / Doble Jerk -22.7 dB
+   parecidos: Ad-lib Dembow / Respuesta Dembow -20.7 dB
+[presets] pareja mas parecida: Ad-lib Plugg Air / Ad-lib PluggnB Silk (diferencia -26.3 dB a igual volumen) | parejas por debajo de -20 dB: 32
+[export] Exportado: voz (chainIVO).wav | canales 1, 48000 Hz, 32 bits | duracion 23.60 s (original 20.00 s + cola) | INTENSITY 0: diferencia con el original -300.0 dB | original intacto: si
 [beat] cargado 'beat' | por que EQ: Paso alto en 162 Hz, presencia +3.0 dB en 4.0 kHz, donde el instrumental deja hueco, el beat tiene graves fuertes: paso alto más arriba.
-[autom] THROW: finales de frase detectados 4 de 4 | energia en los silencios: sin throw -120.0 dB, con throw 20.6 dB
-[autom] SWELL: cola de reverb en los silencios 8.5 dB sin swell, 16.9 dB con swell (+8.4 dB)
+[autom] THROW: finales de frase detectados 3 de 4 | energia en los silencios: sin throw -120.0 dB, con throw 25.7 dB
+[autom] SWELL: cola de reverb en los silencios 13.1 dB sin swell, 21.4 dB con swell (+8.3 dB)
 [pitch] capa -12 st sobre 440 Hz: 220 Hz a -0.6 dB respecto a 440 Hz (la voz original sigue en 440)
-[granular] 0 valores no validos | nivel -30.0 dB frente a la voz -31.5 dB
-[ir] tipo IR, IR 'ir' | cola: 50-300 ms -8.3 dB, 550-800 ms -46.3 dB, 1.2-1.45 s -200.0 dB (la IR dura 0.8 s)
-[group] la segunda instancia ve 1 capa(s), posicion 1 | pre-delay A 20 ms, B 28 ms | por que EQ (B): Paso alto en 198 Hz, graves cargados: -2.8 dB en 250 Hz, presencia +1.0 dB en 2.0 kHz, donde las otras capas vocales no se acumulan.
+[granular] 0 valores no validos | nivel -23.3 dB frente a la voz -24.6 dB
+[ir] tipo IR, IR 'ir' | cola: 50-300 ms -8.1 dB, 550-800 ms -46.3 dB, 1.2-1.45 s -200.0 dB (la IR dura 0.8 s)
+[group] la segunda instancia ve 1 capa(s), posicion 1 | pre-delay A 31 ms, B 31 ms | por que EQ (B): Paso alto en 198 Hz, graves cargados: -2.8 dB en la zona de cuerpo, presencia +1.0 dB en 5.1 kHz, donde las otras capas vocales no se acumulan (sin tocar la nota más grave de tu voz, 185 Hz).
 [profile] AUTO puso reverb 20 %, el usuario la subio a 40 %; siguiente propuesta: 27 % | Ad-lib:  revMix +7.0
 [guard] NaN en la entrada: bloques recuperados 0, muestras no validas en la salida despues 0 (durante: 0)
-[word] 16 palabras, detectadas 16 | filtro en '1 de 4': ...X...X...X...X (X = palabra con efecto)
+[word] 16 palabras, detectadas 16 | filtro en '1 de 4': X..X...X...X...X (X = palabra con efecto)
 [word] distorsion en '1a de frase': X.......X.......
-[word] eco en todas: diferencia media por palabra 10.0 dB
+[word] eco en todas: diferencia media por palabra 15.5 dB
 [seccion] distorsion en 'ultimo compas de cada 4', compases 1-8: ...X...X
+[short] 1.3 s de voz: listo 0, frase suelta 0 | tipo Ad-lib (0 %) |  | cadena montada: no
+[short] despues, con 21.9 s de voz: tipo Segunda voz | por que EQ: Paso alto en 162 Hz, graves cargados: -1.5 dB en la zona de cuerpo, presencia +2.0 dB en 3.5 kHz (sin tocar la nota más grave de tu voz, 185 Hz).
 [ui] ui_auto.png guardada
 [ui] ui_pro.png guardada
 [ui] ui_dark.png guardada

@@ -98,7 +98,7 @@ void Analyzer::run()
     {
         if (restartRequested.exchange (false))
         {
-            allHist.clear(); activeHist.clear();
+            allHist.clear(); activeHist.clear(); f0Hist.fill (0); f0Count = 0;
             frames = activeFrames = voicedFrames = leadActiveFrames = 0; lastActiveFrame = -1;
             ltas.fill (0); leadLtas.fill (0); sibBandSum.fill (0);
             sibSum = harshSum = mudSum = nasalSum = airSum = centroidSum = 0;
@@ -209,7 +209,11 @@ void Analyzer::analyseFrame()
         airSum += powToDb ((float) (air / total)); centroidSum += cent / total;
         if (sib / total > 0.25) for (int b = 0; b < kBands; ++b) if (bandCentre (b) >= 4000.0f && bandCentre (b) <= 11000.0f) sibBandSum[(size_t) b] += band[(size_t) b];
         auto [per, f0] = periodicity (work.data(), work2, fft, kFft, sr);
-        if (per > 0.55f) { ++voicedFrames; pitchTrack = f0; }
+        if (per > 0.55f)
+        {
+            ++voicedFrames; pitchTrack = f0;
+            if (f0 >= 60.0f && f0 <= 1000.0f) { ++f0Hist[(size_t) juce::jlimit (0, 127, (int) std::lround (69.0f + 12.0f * std::log2 (f0 / 440.0f)))]; ++f0Count; }
+        }
         corrLR += slr; eL += sl; eR += sr2;
         eM += (sl + sr2 + 2 * slr) * 0.25; eS += (sl + sr2 - 2 * slr) * 0.25;
         ++runFrames; gapFrames = 0;
@@ -275,6 +279,7 @@ void Analyzer::publish()
         r.sibilance = (float) (sibSum / n); r.harsh = (float) (harshSum / n); r.mud = (float) (mudSum / n);
         r.nasal = (float) (nasalSum / n); r.air = (float) (airSum / n); r.centroid = (float) (centroidSum / n);
         r.voicedRatio = (float) (voicedFrames / n);
+        r.f0Low = f0Pct (0.1f); r.f0Median = f0Pct (0.5f);
         r.activity = frames > 0 ? (float) activeFrames / (float) frames : 0.0f;
         for (int b = 0; b < kBands; ++b) r.spectrum[(size_t) b] = powToDb ((float) (ltas[(size_t) b] / n));
         int best = -1; double bv = 0;

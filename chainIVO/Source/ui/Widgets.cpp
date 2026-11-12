@@ -1,6 +1,7 @@
 #include "Widgets.h"
 #include "BinaryData.h"
 #include "../core/Params.h"
+#include <unordered_map>
 
 namespace chainivo::ui
 {
@@ -43,11 +44,82 @@ juce::String u8 (const char* s) { return juce::String::fromUTF8 (s); }
 
 static juce::Path rr (juce::Rectangle<float> r, float rad) { juce::Path p; p.addRoundedRectangle (r, rad); return p; }
 
+// ------------------------------------------------------------------ Sombras con caché
+// juce::DropShadow difumina la forma en cada repintado. Los medidores y gráficos se refrescan
+// 30 veces por segundo y arrastran el repintado de las tarjetas que tienen debajo: en Windows
+// (dibujo por software) eso disparaba el consumo. Aquí cada sombra se difumina una sola vez
+// (forma + tamaño + desenfoque) y después se copia como imagen.
+namespace
+{
+struct ShadowCache : juce::DeletedAtShutdown
+{
+    struct Entry { juce::Image img; juce::uint32 lastUse = 0; };
+    std::unordered_map<juce::uint64, Entry> map;
+    juce::uint32 clock = 0;
+    size_t pixels = 0;
+};
+ShadowCache& shadowCache()
+{
+    static ShadowCache* c = new ShadowCache();
+    return *c;
+}
+juce::uint64 shapeKey (const juce::Path& p, juce::Point<float> origin, int radius)
+{
+    juce::uint64 h = 1469598103934665603ull;
+    auto mix = [&h] (juce::int64 v) { h ^= (juce::uint64) v; h *= 1099511628211ull; };
+    mix (radius);
+    for (juce::Path::Iterator it (p); it.next();)
+    {
+        mix ((juce::int64) it.elementType);
+        for (float v : { it.x1 - origin.x, it.y1 - origin.y, it.x2 - origin.x, it.y2 - origin.y, it.x3 - origin.x, it.y3 - origin.y })
+            mix ((juce::int64) std::lround (v * 8.0f));
+    }
+    return h;
+}
+} // namespace
+
+void cachedShadow (juce::Graphics& g, const juce::Path& path, juce::Colour colour, int radius, juce::Point<int> offset)
+{
+    if (radius <= 0 || path.isEmpty()) return;
+   #if CHAINIVO_NO_SHADOW_CACHE   // sólo para medir en las pruebas la diferencia con el dibujo sin caché
+    juce::DropShadow (colour, radius, offset).drawForPath (g, path); return;
+   #endif
+    const auto area = (path.getBounds().getSmallestIntegerContainer() + offset).expanded (radius + 1);
+    if (area.getWidth() <= 2 || area.getHeight() <= 2) return;
+    if (! g.getClipBounds().intersects (area)) return;
+    auto& c = shadowCache();
+    const auto key = shapeKey (path, area.getPosition().toFloat() - offset.toFloat(), radius);
+    auto it = c.map.find (key);
+    if (it == c.map.end())
+    {
+        juce::Image img (juce::Image::SingleChannel, area.getWidth(), area.getHeight(), true, juce::SoftwareImageType());
+        {
+            juce::Graphics g2 (img);
+            g2.setColour (juce::Colours::white);
+            g2.fillPath (path, juce::AffineTransform::translation ((float) (offset.x - area.getX()), (float) (offset.y - area.getY())));
+        }
+        img.getPixelData()->applySingleChannelBoxBlurEffect (radius);
+        // límite de memoria: se tiran las menos usadas
+        c.pixels += (size_t) area.getWidth() * (size_t) area.getHeight();
+        while (c.pixels > 6'000'000 && ! c.map.empty())
+        {
+            auto oldest = c.map.begin();
+            for (auto e = c.map.begin(); e != c.map.end(); ++e) if (e->second.lastUse < oldest->second.lastUse) oldest = e;
+            c.pixels -= (size_t) oldest->second.img.getWidth() * (size_t) oldest->second.img.getHeight();
+            c.map.erase (oldest);
+        }
+        it = c.map.emplace (key, ShadowCache::Entry { img, 0 }).first;
+    }
+    it->second.lastUse = ++c.clock;
+    g.setColour (colour);
+    g.drawImageAt (it->second.img, area.getX(), area.getY(), true);
+}
+
 void shadowOnly (juce::Graphics& g, juce::Rectangle<float> r, float rad, float lift)
 {
     const auto p = rr (r, rad);
-    juce::DropShadow (shadow.withAlpha (0.20f * lift), (int) (26 * lift), { 0, (int) (12 * lift) }).drawForPath (g, p);
-    juce::DropShadow (shadow.withAlpha (0.09f), 6, { 0, 2 }).drawForPath (g, p);
+    cachedShadow (g, p, shadow.withAlpha (0.20f * lift), (int) (26 * lift), { 0, (int) (12 * lift) });
+    cachedShadow (g, p, shadow.withAlpha (0.09f), 6, { 0, 2 });
 }
 
 // lift > 0: dibuja también su sombra; lift = 0: sólo la superficie (la sombra la pinta el contenedor, sin recortes)
@@ -69,7 +141,7 @@ static void innerShadow (juce::Graphics& g, juce::Rectangle<float> r, float rad,
 {
     juce::Path frame; frame.addRectangle (r.expanded (40.0f)); frame.addRoundedRectangle (r, rad); frame.setUsingNonZeroWinding (false);
     g.saveState(); g.reduceClipRegion (rr (r, rad));
-    juce::DropShadow (shadow.withAlpha (alpha), blur, { 0, dy }).drawForPath (g, frame);
+    cachedShadow (g, frame, shadow.withAlpha (alpha), blur, { 0, dy });
     g.restoreState();
 }
 
@@ -94,7 +166,7 @@ void screen (juce::Graphics& g, juce::Rectangle<float> r, float rad)
 void limeFill (juce::Graphics& g, juce::Rectangle<float> r, float rad)
 {
     const auto p = rr (r, rad);
-    juce::DropShadow (juce::Colour (0xff6eaa28).withAlpha (0.5f), 10, { 0, 4 }).drawForPath (g, p);
+    cachedShadow (g, p, juce::Colour (0xff6eaa28).withAlpha (0.5f), 10, { 0, 4 });
     g.setGradientFill (juce::ColourGradient (limeLight, 0, r.getY(), limeDark, 0, r.getBottom(), false));
     g.fillPath (p);
     g.setColour (juce::Colours::white.withAlpha (0.6f));
@@ -191,7 +263,7 @@ void LookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int w, int 
     }
     // cuerpo con volumen
     juce::Path body; body.addEllipse (c.x - R, c.y - R, R * 2, R * 2);
-    juce::DropShadow (shadow.withAlpha (0.28f), (int) (R * 0.5f + 4), { 0, (int) (R * 0.16f + 1) }).drawForPath (g, body);
+    cachedShadow (g, body, shadow.withAlpha (0.28f), (int) (R * 0.5f + 4), { 0, (int) (R * 0.16f + 1) });
     g.setGradientFill (juce::ColourGradient (knobTop, c.x - R * 0.16f, c.y - R * 0.4f, knobBot, c.x + R * 0.5f, c.y + R, true));
     g.fillPath (body);
     g.setColour (shadow.withAlpha (0.07f)); g.strokePath (body, PST (1.0f));
@@ -227,18 +299,16 @@ void Segmented::paint (juce::Graphics& g)
     auto r = getLocalBounds().toFloat();
     const float rad = r.getHeight() * 0.5f;
     well (g, r, rad);
-    const auto inner = r.reduced (4.0f);
-    const float w = inner.getWidth() / (float) std::max (1, names.size());
     for (int i = 0; i < names.size(); ++i)
     {
-        auto seg = juce::Rectangle<float> (inner.getX() + w * (float) i, inner.getY(), w, inner.getHeight());
+        auto seg = segmentBounds (i);
         const bool on = i == selected;
         if (on)
         {
             // pastilla elevada dentro del carril: sombra corta para que no toque el borde
             const auto pr = seg.reduced (1.0f, 0.0f);
             juce::Path pp; pp.addRoundedRectangle (pr, pr.getHeight() * 0.5f);
-            juce::DropShadow (shadow.withAlpha (0.22f), 5, { 0, 2 }).drawForPath (g, pp);
+            cachedShadow (g, pp, shadow.withAlpha (0.22f), 5, { 0, 2 });
             raised (g, pr, pr.getHeight() * 0.5f, 0.0f);
         }
         // si el texto no cabe en su hueco, se aprieta el espaciado y luego el tamaño (nunca se corta)
@@ -257,10 +327,38 @@ void Segmented::paint (juce::Graphics& g)
         g.drawText (names[i], juce::Rectangle<float> (start + (withDot ? 15.0f : 0.0f), seg.getY(), tw + 10.0f, seg.getHeight()), juce::Justification::centredLeft, false);
     }
 }
-void Segmented::mouseDown (const juce::MouseEvent& e)
+juce::Rectangle<float> Segmented::segmentBounds (int idx) const
 {
     const auto inner = getLocalBounds().toFloat().reduced (4.0f);
-    const int i = juce::jlimit (0, names.size() - 1, (int) ((e.position.x - inner.getX()) / (inner.getWidth() / (float) names.size())));
+    const int n = std::max (1, names.size());
+    const float equal = inner.getWidth() / (float) n;
+    const auto f = font (F::manX, fs, 0.2f);
+    std::vector<float> nat ((size_t) n);
+    bool fits = true; float total = 0.0f;
+    for (int i = 0; i < n; ++i)
+    {
+        nat[(size_t) i] = textWidth (f, names[i]) + 18.0f;
+        fits &= nat[(size_t) i] <= equal;
+        total += nat[(size_t) i];
+    }
+    float x = inner.getX();
+    for (int i = 0; i < n; ++i)
+    {
+        float w = equal;
+        if (! fits)
+            w = total <= inner.getWidth() ? nat[(size_t) i] + (inner.getWidth() - total) / (float) n
+                                          : nat[(size_t) i] * inner.getWidth() / total;
+        if (i == idx) return { x, inner.getY(), w, inner.getHeight() };
+        x += w;
+    }
+    return {};
+}
+
+void Segmented::mouseDown (const juce::MouseEvent& e)
+{
+    int i = 0;
+    for (int k = 0; k < names.size(); ++k) if (segmentBounds (k).getHorizontalRange().contains (e.position.x)) i = k;
+    if (e.position.x >= segmentBounds (names.size() - 1).getRight()) i = names.size() - 1;
     if (i != selected) { selected = i; repaint(); if (onChange) onChange (i); }
 }
 
@@ -277,7 +375,7 @@ void Toggle::paint (juce::Graphics& g)
     else well (g, t, 11.0f);
     const auto k = juce::Rectangle<float> (on ? t.getRight() - 20.0f : t.getX() + 2.0f, t.getY() + 2.0f, 18.0f, 18.0f);
     juce::Path kp; kp.addEllipse (k);
-    juce::DropShadow (shadow.withAlpha (0.35f), 4, { 0, 2 }).drawForPath (g, kp);
+    cachedShadow (g, kp, shadow.withAlpha (0.35f), 4, { 0, 2 });
     g.setGradientFill (juce::ColourGradient (juce::Colours::white, 0, k.getY(), juce::Colour (0xffeef2ea), 0, k.getBottom(), false));
     g.fillPath (kp);
     if (text.isNotEmpty())
@@ -379,7 +477,7 @@ void PillButton::paint (juce::Graphics& g)
     else if (style == dark)
     {
         juce::Path p; p.addRoundedRectangle (r, rad);
-        juce::DropShadow (juce::Colour (0xff142810).withAlpha (0.5f), 10, { 0, 4 }).drawForPath (g, p);
+        cachedShadow (g, p, juce::Colour (0xff142810).withAlpha (0.5f), 10, { 0, 4 });
         g.setGradientFill (juce::ColourGradient (juce::Colour (0xff2a3b22), 0, r.getY(), juce::Colour (0xff15240f), 0, r.getBottom(), false));
         g.fillPath (p);
     }
@@ -395,6 +493,9 @@ void Meter::setLevel (float lin)
     const float d = 20.0f * std::log10 (std::max (lin, 1.0e-6f));
     db = d > db ? d : std::max (d, db - 1.5f);
     if (d >= hold) { hold = d; holdFrames = 40; } else if (--holdFrames < 0) hold = std::max (-100.0f, hold - 1.0f);
+    const float shown = std::max (-60.0f, db), shownHold = std::max (-60.0f, hold);
+    if (std::abs (shown - paintedDb) < 0.3f && std::abs (shownHold - paintedHold) < 0.3f) return;
+    paintedDb = shown; paintedHold = shownHold;
     repaint();
 }
 void Meter::paint (juce::Graphics& g)
@@ -407,11 +508,11 @@ void Meter::paint (juce::Graphics& g)
     const auto fill = bar.reduced (1.5f).withWidth ((bar.getWidth() - 3.0f) * frac (db));
     if (fill.getWidth() > 1.0f)
     {
-        g.setGradientFill (juce::ColourGradient (green, fill.getX(), 0, db > -1.0f ? warn : lime, fill.getRight(), 0, false));
+        g.setGradientFill (juce::ColourGradient (green, fill.getX(), 0, db > -0.3f ? warn : lime, fill.getRight(), 0, false));
         g.fillRoundedRectangle (fill, 3.0f);
     }
     const float hx = bar.getX() + 1.5f + (bar.getWidth() - 3.0f) * frac (hold);
-    g.setColour (hold > -1.0f ? red : ink.withAlpha (0.5f));
+    g.setColour (hold > -0.3f ? red : ink.withAlpha (0.5f));
     g.fillRect (juce::Rectangle<float> (hx - 1.0f, bar.getY() + 1.0f, 2.0f, bar.getHeight() - 2.0f));
 }
 } // namespace chainivo::ui

@@ -14,22 +14,22 @@ using NR = juce::NormalisableRange<float>;
 NR logRange (float lo, float hi) { NR r (lo, hi); r.setSkewForCentre (std::sqrt (lo * hi)); return r; }
 juce::AudioParameterFloatAttributes dbAttr()
 {
-    return juce::AudioParameterFloatAttributes().withLabel ("dB")
+    return juce::AudioParameterFloatAttributes()
         .withStringFromValueFunction ([] (float v, int) { return (v > 0 ? "+" : "") + juce::String (v, 1) + " dB"; });
 }
 juce::AudioParameterFloatAttributes pctAttr()
 {
-    return juce::AudioParameterFloatAttributes().withLabel ("%")
+    return juce::AudioParameterFloatAttributes()
         .withStringFromValueFunction ([] (float v, int) { return juce::String (juce::roundToInt (v)) + " %"; });
 }
 juce::AudioParameterFloatAttributes hzAttr()
 {
-    return juce::AudioParameterFloatAttributes().withLabel ("Hz")
+    return juce::AudioParameterFloatAttributes()
         .withStringFromValueFunction ([] (float v, int) { return v >= 1000 ? juce::String (v / 1000.0f, 2) + " kHz" : juce::String (juce::roundToInt (v)) + " Hz"; });
 }
 juce::AudioParameterFloatAttributes msAttr()
 {
-    return juce::AudioParameterFloatAttributes().withLabel ("ms")
+    return juce::AudioParameterFloatAttributes()
         .withStringFromValueFunction ([] (float v, int) { return v < 10 ? juce::String (v, 2) + " ms" : juce::String (juce::roundToInt (v)) + " ms"; });
 }
 juce::AudioParameterFloatAttributes qAttr()
@@ -208,7 +208,7 @@ juce::String helpFor (const juce::String& id)
         { "creaNote", juce::String::fromUTF8 ("Tamaño de cada división, al tempo.") },
         { "creaAmount", juce::String::fromUTF8 ("Cantidad del efecto.") },
         { "gainMatch", juce::String::fromUTF8 ("Iguala el volumen al de la voz original para comparar de forma justa.") },
-        { "clipSafe", juce::String::fromUTF8 ("Protección suave por encima de -1 dBFS (no tapa errores).") },
+        { "clipSafe", juce::String::fromUTF8 ("Limitador de salida: la voz nunca pasa de -1 dBFS, sin recortar ni distorsionar.") },
         { "bypass", juce::String::fromUTF8 ("Escuchar la voz original (con la misma latencia).") },
     };
     auto it = h.find (id);

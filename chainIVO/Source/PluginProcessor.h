@@ -95,6 +95,7 @@ public:
     chainivo::PeakMeter inMeter, outMeter;
     std::atomic<float> gainMatchDb { 0.0f }, cpuLoad { 0.0f };
     std::atomic<int> clipCount { 0 };
+    std::atomic<float> limiterGr { 0.0f };      // dB que está bajando el limitador de salida (0 = nada)
     std::atomic<bool> leadConnected { false };
     std::atomic<float> correlation { 1.0f };   // correlación L/R de la salida (1 = mono, 0 = muy abierto, <0 = problemas de fase)
     std::atomic<int> soloEngine { -1 };
@@ -142,6 +143,7 @@ private:
     std::vector<float> sideMono;
     juce::AudioBuffer<float> dryBuf;
     std::array<chainivo::DelayLine, 2> dryDelay;
+    chainivo::PeakLimiter limiter;   // protección de salida (Clip Safe): techo -1 dBFS sin recortar
     chainivo::Smooth inGainS, outGainS, mixS, matchS, bypassS;
     chainivo::EqBand kwDryHp, kwDryHs, kwWetHp, kwWetHs;
     double dryPow = 0.0, wetPow = 0.0;

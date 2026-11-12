@@ -9,7 +9,7 @@ Parte de una voz cruda y ya afinada. chainIVO **no reafina ni cambia formantes**
 de tono es "Pitch" del motor CREATIVE, que añade una capa aparte y sólo si tú lo enciendes.
 
 ## 0. Dónde se pone
-- **En la pista entera** de los ad-libs, de los coros, de los dobles... (lo normal). Procesa todo lo que suene
+- **En la pista entera** de la voz principal, de los ad-libs, de los coros, de los dobles... (lo normal). Procesa todo lo que suene
   en esa pista durante la canción; los silencios no cuentan para el análisis.
 - **En una pista con un momento suelto**: si una frase concreta la pasas a otra pista, pon ahí otro chainIVO
   con otro preset (por ejemplo un efecto) y sólo esa frase sonará distinta. Con una frase corta (1,5 s de voz o
@@ -18,10 +18,13 @@ de tono es "Pitch" del motor CREATIVE, que añade una capa aparte y sólo si tú
 - No es para el master ni para el beat.
 
 ## 1. Empezar en 30 segundos (AUTO)
-1. Inserta chainIVO en la pista de la voz secundaria.
+1. Inserta chainIVO en la pista de voz (principal o secundaria).
 2. Dale al play. "TU PISTA" muestra el análisis; con unos 8 s de voz decide qué tipo de voz es.
+   **Truco:** si la pista se llama COROS, ADLIBS, DOBLES, ARMONÍAS, PRINCIPAL / LEAD… lo sabe por el nombre
+   (al 95 %). Con nombres genéricos ("Audio 3") lo deduce del sonido; elige tú el tipo si no acierta.
 3. AUTO monta la cadena y explica cada decisión en **POR QUÉ** (pulsa cada ficha de LA CADENA).
-4. Si quieres, elige tú el **tipo de voz** (chips) y el **estilo** (Rage, Plugg, reggaetón, rap…).
+4. Si quieres, elige tú el **tipo de voz** (chips; **Principal** es para la voz que manda) y el **estilo**
+   (trap, reggaetón, rap, **house / club**, neoperreo, jerk, drill…).
 5. Ajusta **INTENSITY**: 0 % es la voz tal cual (nulo exacto), 100 % el tratamiento completo.
 
 AUTO sólo monta la cadena una vez. Al volver a abrir un proyecto nunca cambia tu mezcla.
@@ -30,9 +33,14 @@ AUTO sólo monta la cadena una vez. Al volver a abrir un proyecto nunca cambia t
 ## 2. Presets
 Pulsa el nombre del preset para abrir el buscador: texto libre (nombre, estilo, carácter: "oscuro",
 "delay", "rage"…), categorías, favoritos (estrella) y presets de usuario. Las flechas ‹ › pasan de uno
-en uno. Hay 124 presets IVO (31 ad-libs, 30 coros, 20 dobles/segundas, 20 armonías, 23 efectos).
-Un preset IVO es una intención: al cargarlo se adapta a tu grabación (graves, eses, nivel, choque
-con la principal…). "Guardar como…" guarda una copia exacta de tu cadena; los presets IVO nunca
+en uno. Hay 219 presets IVO (28 de voz principal, 54 ad-libs, 46 coros, 29 dobles/segundas, 29 armonías,
+33 efectos) y 50 estilos, entre ellos tech house, tech house underground, house, deep, afro, minimal,
+UK garage, jersey club, techno, club cantado, guaracha, neoperreo, dembow, trap underground español,
+jerk, hyperpop, emo rap, drill, phonk y afrobeats. El buscador también encuentra por artista de referencia
+(por ejemplo "noscope", "yyy891", "gloosito", "ladiferencia2006").
+Un preset IVO es una intención: al cargarlo se adapta a tu grabación: graves y eses, nivel y dinámica
+de la toma (umbral y ratio), registro de tu voz (el paso alto no se come tu nota más grave y la zona de
+cuerpo se pone donde está tu cuerpo), choque con la principal, hueco en el beat y pre-delay a tempo. "Guardar como…" guarda una copia exacta de tu cadena; los presets IVO nunca
 se modifican. Tus presets están en Documentos/IVO Beatz/chainIVO/Presets y se pueden importar y exportar.
 
 ## 3. PRO
@@ -94,6 +102,8 @@ IN/OUT · CPU, latencia, Gain Match y correlación estéreo (1 = mono, cerca de 
 negativo = problema de fase).
 
 ## 9. Protección
+**CLIP SAFE** es un limitador de salida con anticipación de 1,5 ms: la voz nunca pasa de -1 dBFS y no
+recorta ni distorsiona. Los medidores sólo se ponen en rojo cerca de 0 dBFS (antes saltaban a -1 dBFS).
 Si al plugin le llega audio roto (valores no válidos) lo limpia antes de procesar; si algún motor fallara,
 se reinicia solo y ese bloque sale sin procesar. Se anota en Documentos/IVO Beatz/chainIVO/diagnostico.txt
 y abajo verás "recuperado".

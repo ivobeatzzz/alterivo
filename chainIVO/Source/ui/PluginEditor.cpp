@@ -231,8 +231,9 @@ void EngineView::tick()
     push (histWord, proc.wordTargeted() ? 2.0f : (proc.wordActive() ? 1.0f : 0.0f));
     push (histWet, gainToDb (proc.spaceWet()));
     push (histComp, proc.compGr()); push (histDeess, proc.deessGr()); push (histHarsh, proc.harshGr()); push (histBreath, proc.breathGr());
+    // El gráfico se redibuja a 15 fps (los datos se siguen tomando a 30): mitad de trabajo para la interfaz
+    if ((++tickCount & 1) != 0) return;
     repaint (pro ? juce::Rectangle<int> (280, 44, 390, 190) : juce::Rectangle<int> (18, 44, 638, 150));
-    if (engine == 4 && ! pro) repaint (juce::Rectangle<int> (18, 44, 638, 150));
 }
 
 void EngineView::paint (juce::Graphics& g)
@@ -543,10 +544,10 @@ void EngineView::paintCreative (juce::Graphics& g, juce::Rectangle<float> r)
 // =================================================================== TrackCard
 TrackCard::TrackCard (ChainIvoProcessor& p) : proc (p)
 {
-    static const int mainTypes[] = { 0, 1, 2, 4, 5, 7 };
+    static const int mainTypes[] = { (int) VoiceType::principal, 0, 1, 2, 4, 5 };
     for (int t : mainTypes)
     {
-        auto* c = chips.add (new Chip (voiceTypeName ((VoiceType) t)));
+        auto* c = chips.add (new Chip (t == (int) VoiceType::principal ? juce::String ("Principal") : voiceTypeName ((VoiceType) t)));
         c->getProperties().set ("type", t);
         c->onClick = [this, t] { proc.setVoiceType (t); refresh(); };
         addAndMakeVisible (c);
@@ -636,7 +637,7 @@ void TrackCard::paint (juce::Graphics& g)
     }
     g.setColour (dim2); g.setFont (font (F::man, 11.0f));
     juce::String reason = an.activeSeconds >= 2.0f ? cl.reason : u8 ("Pon la pista a sonar unos segundos");
-    if (cl.needsLead && an.ready) reason += u8 (". Sin voz principal no distingo doble, armon\xc3\xad" "a o respuesta");
+    if (cl.needsLead && an.ready && ! cl.fromName) reason += u8 (". Pon nombre a la pista (COROS, ADLIBS\xe2\x80\xa6) o elige el tipo");
     if (an.groupCount > 0) reason = u8 ("Grupo: ") + juce::String (an.groupCount + 1) + u8 (" capas con chainIVO \xc2\xb7 ") + reason;
     g.drawFittedText (reason, juce::Rectangle<int> (20, 102, (int) W - 40, 30), juce::Justification::centredTop, 2, 0.9f);
 
@@ -752,15 +753,16 @@ void TrackCard::showGenres()
 {
     juce::PopupMenu m;
     m.addItem (1000, "Sin estilo", true, proc.getGenre() < 0);
-    juce::String fam; juce::PopupMenu sub;
-    auto flush = [&] { if (fam.isNotEmpty()) m.addSubMenu (fam, sub); sub = juce::PopupMenu(); };
-    for (int i = 0; i < genreCount(); ++i)
+    // Agrupados por familia (los estilos nuevos van al final de la lista, pero en el menú salen con los suyos)
+    juce::StringArray fams;
+    for (int i = 0; i < genreCount(); ++i) fams.addIfNotAlreadyThere (u8 (genre (i).family));
+    for (auto& f : fams)
     {
-        const auto f = u8 (genre (i).family);
-        if (f != fam) { flush(); fam = f; }
-        sub.addItem (i + 1, u8 (genre (i).name), true, proc.getGenre() == i);
+        juce::PopupMenu sub; bool any = false;
+        for (int i = 0; i < genreCount(); ++i)
+            if (u8 (genre (i).family) == f) { sub.addItem (i + 1, u8 (genre (i).name), true, proc.getGenre() == i); any |= proc.getGenre() == i; }
+        m.addSubMenu (f, sub, true, nullptr, any);
     }
-    flush();
     m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (localAreaToGlobal (genreBox.toNearestInt())),
                      [safe = juce::Component::SafePointer<TrackCard> (this)] (int r)
                      {
@@ -813,7 +815,7 @@ void PresetPill::mouseDown (const juce::MouseEvent& e)
 
 // =================================================================== PresetBrowser
 PresetBrowser::PresetBrowser (ChainIvoProcessor& p)
-    : proc (p), cats ({ "PARA TI", "TODOS", "AD-LIBS", "COROS", "DOBLES", u8 ("ARMON\xc3\x8d" "AS"), "EFECTOS", "USUARIO" }, false, 9.5f)
+    : proc (p), cats ({ "PARA TI", "TODOS", "PRINCIPAL", "AD-LIBS", "COROS", "DOBLES", u8 ("ARMON\xc3\x8d" "AS"), "EFECTOS", "USUARIO" }, false, 9.0f)
 {
     search.setFont (font (F::man, 15.0f));
     search.setTextToShowWhenEmpty (u8 ("Buscar: nombre, estilo, car\xc3\xa1" "cter (ej. oscuro, rage, delay)\xe2\x80\xa6"), dim);
@@ -860,7 +862,7 @@ void PresetBrowser::open()
 
 void PresetBrowser::update()
 {
-    static const char* map[] = { "", "", "Ad-libs", "Coros", "Dobles y segundas", "Armon\xc3\xad" "as", "Efectos", "Usuario" };
+    static const char* map[] = { "", "", "Voz principal", "Ad-libs", "Coros", "Dobles y segundas", "Armon\xc3\xad" "as", "Efectos", "Usuario" };
     if (cats.getSelected() == 0)
     {
         // Sugeridos: los de la categoría de su tipo de voz, con su estilo primero; después, los efectos

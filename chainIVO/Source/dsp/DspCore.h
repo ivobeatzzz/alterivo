@@ -199,6 +199,71 @@ inline double noteBeats (int idx)
     return b[juce::jlimit (0, 10, idx)];
 }
 
+// Limitador de picos con anticipación (salida de la cadena).
+// Ganancia necesaria por muestra -> mínimo en una ventana de la anticipación -> media de la misma
+// longitud (rampa suave) -> recuperación exponencial. Así la ganancia ya ha bajado cuando llega el pico:
+// la salida no pasa del techo y no hay distorsión de recorte. Estéreo enlazado. Sin memoria nueva en process.
+class PeakLimiter
+{
+public:
+    void prepare (double sampleRate, float lookMs = 1.5f, float releaseMs = 80.0f)
+    {
+        la = std::max (1, (int) std::lround (sampleRate * lookMs * 0.001));
+        cap = la + 2;
+        for (auto& d : delay) d.assign ((size_t) la, 0.0f);
+        dqIdx.assign ((size_t) cap, 0); dqVal.assign ((size_t) cap, 1.0f);
+        box.assign ((size_t) la, 1.0f);
+        rel = (float) (1.0 - std::exp (-1.0 / (releaseMs * 0.001 * sampleRate)));
+        reset();
+    }
+    void reset()
+    {
+        for (auto& d : delay) std::fill (d.begin(), d.end(), 0.0f);
+        std::fill (box.begin(), box.end(), 1.0f);
+        boxSum = (double) la; dp = 0; bp = 0; t = 0; head = tail = 0; gain = 1.0f;
+    }
+    int latency() const noexcept { return la; }
+
+    // Devuelve la ganancia mínima aplicada en el bloque (1 = no ha tocado nada)
+    float process (float* const* ch, int nch, int n, float ceiling, bool active) noexcept
+    {
+        float minGain = 1.0f;
+        for (int i = 0; i < n; ++i)
+        {
+            float pk = 0.0f;
+            for (int c = 0; c < nch; ++c) pk = std::max (pk, std::abs (ch[c][i]));
+            const float req = active && pk > ceiling ? ceiling / pk : 1.0f;
+            // mínimo deslizante de las últimas la+1 ganancias necesarias (cola monótona)
+            while (head != tail && dqVal[(size_t) ((tail + cap - 1) % cap)] >= req) tail = (tail + cap - 1) % cap;
+            dqIdx[(size_t) tail] = t; dqVal[(size_t) tail] = req; tail = (tail + 1) % cap;
+            while (dqIdx[(size_t) head] < t - la) head = (head + 1) % cap;
+            const float s = dqVal[(size_t) head];
+            // media de la anticipación: la ganancia baja en rampa y llega justo al pico
+            boxSum += (double) s - (double) box[(size_t) bp]; box[(size_t) bp] = s; if (++bp >= la) bp = 0;
+            const float b = (float) (boxSum / (double) la);
+            gain = b < gain ? b : gain + (b - gain) * rel;
+            minGain = std::min (minGain, gain);
+            for (int c = 0; c < nch; ++c)
+            {
+                const float x = ch[c][i];
+                ch[c][i] = delay[(size_t) c][(size_t) dp] * gain;
+                delay[(size_t) c][(size_t) dp] = x;
+            }
+            if (++dp >= la) dp = 0;
+            ++t;
+        }
+        return minGain;
+    }
+
+private:
+    int la = 64, cap = 66, dp = 0, bp = 0, head = 0, tail = 0;
+    juce::int64 t = 0;
+    std::array<std::vector<float>, 2> delay;
+    std::vector<juce::int64> dqIdx; std::vector<float> dqVal, box;
+    double boxSum = 0.0;
+    float rel = 0.001f, gain = 1.0f;
+};
+
 // Información de tempo que reciben los motores sincronizados
 struct TempoInfo
 {

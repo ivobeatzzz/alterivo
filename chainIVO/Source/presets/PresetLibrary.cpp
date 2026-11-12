@@ -304,6 +304,198 @@ std::vector<Recipe> makeFactory()
         .eq (1.3f, 1.5f, 2.5f).comp (C::vca, 6, 4, 3, 100).harm (H::tape, 0.2f).rev (RV::plate, 0.16f, 1.4f).words (2, 0, 0.7f).stereo (1.4f));
     p.push_back (R (V::efecto, "FX Section Fill", "Rage", "Stutter en el último compás de cada 8: remate de sección", "stutter,seccion,transicion")
         .eq (1.3f, 2.0f, 2.0f).comp (C::fet, 7, 6, 2, 80).harm (H::transformer, 0.35f).rev (RV::plate, 0.14f, 1.1f).words (6, 1, 0.9f).stereo (1.4f));
+    // ======================= AMPLIACION: voz principal y estilos de club / urbano nuevos (generado por genpresets.py)
+    p.push_back (R (V::principal, "Lead Club Underground", "Tech house underground", "Voz cantada de tech house underground: cerca, c\xc3\xa1lida y con eco con puntillo que respira con el groove", "principal,club,tech house,underground,cantada,noscope,yyy891")
+        .eq (1.0f, 2.0f, 2.0f, 0.5f).comp (C::vca, 6, 4, 10, 90).harm (H::tape, 0.2f, 0.6f).voc (1.1f, 0.4f, 0.3f).rev (RV::room, 0.1f, 0.9f, 30).dly (D::digital, 5, 0.1f, 0.3f, 0.85f).stereo (1.0f).autom (0.25f, 0.0f));
+    p.push_back (R (V::principal, "Lead Tech House", "Tech house", "Voz principal de tech house: brillante y al frente, con plate y eco a negras que se aparta cuando canta", "principal,tech house,club,brillante")
+        .eq (1.0f, 2.5f, 3.0f, 0.0f).comp (C::vca, 6, 4, 8, 90).harm (H::tape, 0.15f, 0.6f).rev (RV::plate, 0.12f, 1.2f, 40).dly (D::digital, 7, 0.1f, 0.3f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead House Diva", "House", "Voz de house con aire arriba, hall amplio y eco con puntillo", "principal,house,diva,aire")
+        .eq (1.0f, 2.5f, 2.5f, 0.0f).comp (C::vca, 7, 4, 6, 90).harm (H::tube, 0.25f, 0.7f).rev (RV::hall, 0.2f, 2.6f, 60).dly (D::digital, 9, 0.12f, 0.4f, 0.8f).stereo (1.0f).autom (0.3f, 0.4f));
+    p.push_back (R (V::principal, "Lead Deep Warm", "Deep house", "Voz c\xc3\xa1lida y suave para deep house, sin brillo agresivo", "principal,deep house,calida,suave")
+        .eq (1.0f, 1.0f, 1.5f, 1.0f).comp (C::opto, 5, 3, 15, 200).harm (H::tape, 0.2f, 0.7f, -0.3f).rev (RV::hall, 0.18f, 2.4f, 45, 0.45f).dly (D::tape, 5, 0.12f, 0.35f, 0.8f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Afro Air", "Afro house", "Voz de afro house: aire, plate y eco con puntillo", "principal,afro house,aire")
+        .eq (1.0f, 1.5f, 3.0f, 0.5f).comp (C::vca, 6, 4, 8, 100).harm (H::tube, 0.15f, 0.6f).rev (RV::plate, 0.14f, 1.6f, 40).dly (D::digital, 5, 0.14f, 0.35f, 0.8f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Garage Bright", "UK garage", "Voz de UK garage: brillante, r\xc3\xa1pida y con eco en tresillo", "principal,garage,brillante")
+        .eq (1.1f, 2.5f, 3.5f, 0.0f).comp (C::fet, 7, 5, 4, 80).harm (H::exciter, 0.2f, 0.6f).rev (RV::plate, 0.1f, 1.0f, 30).dly (D::digital, 3, 0.1f, 0.25f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Jersey Bounce", "Jersey club", "Voz de jersey club: dura, presente y casi seca", "principal,jersey,club,seco")
+        .eq (1.1f, 3.0f, 2.5f, 0.0f).comp (C::fet, 8, 6, 3, 70).harm (H::transformer, 0.25f, 0.7f).rev (RV::room, 0.08f, 0.7f).dly (D::digital, 4, 0.1f, 0.25f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Club Pop", "Club cantado", "Voz cantada de club con brillo pop, pulida pero viva", "principal,club,cantada,pop,yyy891")
+        .eq (1.0f, 2.5f, 3.5f, 0.0f).comp (C::vca, 7, 4, 6, 90).harm (H::exciter, 0.2f, 0.6f).voc (1.2f, 0.5f, 0.3f).rev (RV::plate, 0.14f, 1.5f, 40).dly (D::digital, 7, 0.1f, 0.3f, 0.85f).stereo (1.0f).autom (0.25f, 0.2f));
+    p.push_back (R (V::principal, "Lead Neoperreo", "Neoperreo", "Voz de neoperreo: sucia, delante y con plate corto", "principal,neoperreo,reggaeton,underground,ladiferencia2006,yung beef")
+        .eq (1.1f, 2.5f, 2.0f, 0.5f).comp (C::fet, 8, 6, 3, 80).harm (H::transformer, 0.35f, 0.8f).rev (RV::plate, 0.12f, 1.2f, 30).dly (D::digital, 4, 0.12f, 0.3f, 0.8f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Trap Underground ES", "Trap underground espa\xc3\xb1ol", "Voz de trap underground espa\xc3\xb1ol: cinta, cuerpo y eco con puntillo", "principal,trap,underground,espanol,gloosito,kaydy cain")
+        .eq (1.0f, 2.0f, 2.0f, 0.5f).comp (C::vca, 7, 5, 5, 90).harm (H::tape, 0.3f, 0.7f).rev (RV::plate, 0.12f, 1.3f, 35).dly (D::digital, 5, 0.12f, 0.3f, 0.8f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Jerk", "Jerk", "Voz de jerk: brillante, muy comprimida y saturada", "principal,jerk,brillante,saturada")
+        .eq (1.1f, 3.0f, 3.0f, 0.0f).comp (C::fet, 9, 8, 2, 70).harm (H::transformer, 0.4f, 0.8f).rev (RV::plate, 0.1f, 1.0f).dly (D::digital, 2, 0.1f, 0.25f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Drill", "Drill", "Voz de drill: seca, dura y con cuerpo", "principal,drill,seco,duro")
+        .eq (1.0f, 2.5f, 1.0f, 1.0f).comp (C::fet, 9, 8, 2, 70).harm (H::transformer, 0.3f, 0.8f).rev (RV::room, 0.06f, 0.6f).dly (D::digital, 4, 0.08f, 0.25f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Crank", "Crank", "Voz de crank: agresiva, saturada y al frente", "principal,crank,agresiva,saturada")
+        .eq (1.1f, 3.0f, 2.5f, 0.0f).comp (C::fet, 10, 10, 1, 60).harm (H::transformer, 0.55f, 0.9f).rev (RV::room, 0.07f, 0.7f).dly (D::analog, 4, 0.1f, 0.25f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Rage", "Rage", "Voz de rage: brillante, saturada y con plate", "principal,rage,brillante")
+        .eq (1.0f, 3.0f, 3.5f, 0.0f).comp (C::fet, 8, 6, 2, 80).harm (H::transformer, 0.4f, 0.8f).rev (RV::plate, 0.12f, 1.2f).dly (D::digital, 5, 0.12f, 0.3f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Plugg Soft", "Plugg", "Voz de plugg: suave, lejana y con eco de cinta", "principal,plugg,suave,cinta")
+        .eq (1.0f, 1.0f, 3.0f, 0.0f).comp (C::opto, 5, 3, 15, 200).harm (H::tape, 0.15f, 0.6f).rev (RV::hall, 0.18f, 2.2f, 45).dly (D::tape, 7, 0.15f, 0.4f, 0.75f).stereo (1.0f).autom (0.3f, 0.2f));
+    p.push_back (R (V::principal, "Lead Melodic Trap", "Trap mel\xc3\xb3" "dico", "Voz de trap mel\xc3\xb3" "dico: limpia, con aire y plate", "principal,trap,melodico,limpia")
+        .eq (1.0f, 2.0f, 3.0f, 0.5f).comp (C::vca, 6, 4, 6, 100).harm (H::tape, 0.2f, 0.6f).rev (RV::plate, 0.14f, 1.6f, 40).dly (D::digital, 7, 0.12f, 0.35f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Reggaet\xc3\xb3n", "Reggaet\xc3\xb3n moderno", "Voz de reggaet\xc3\xb3n moderno: brillante, firme y con plate", "principal,reggaeton,brillante")
+        .eq (1.0f, 2.5f, 3.0f, 0.5f).comp (C::vca, 7, 5, 5, 90).harm (H::exciter, 0.2f, 0.6f).rev (RV::plate, 0.12f, 1.2f, 35).dly (D::digital, 4, 0.1f, 0.3f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Dembow", "Dembow", "Voz de dembow: presente, seca y con pegada", "principal,dembow,seco")
+        .eq (1.0f, 2.5f, 2.0f, 0.5f).comp (C::fet, 8, 6, 3, 80).harm (H::tube, 0.25f, 0.7f).rev (RV::room, 0.08f, 0.8f).dly (D::digital, 4, 0.08f, 0.25f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Rap 2000", "Rap de los 2000", "Voz de rap dosmilero: cuerpo, cinta y poco espacio", "principal,rap,2000,cinta")
+        .eq (1.0f, 1.5f, 0.5f, 1.0f).comp (C::fet, 8, 6, 3, 90).harm (H::tape, 0.3f, 0.8f, -0.2f).rev (RV::room, 0.07f, 0.7f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Hyperpop", "Hyperpop / digicore", "Voz de hyperpop: muy brillante, apretada y con excitador", "principal,hyperpop,digicore,brillante")
+        .eq (1.2f, 3.0f, 4.0f, -1.0f).comp (C::fet, 9, 8, 1, 60).harm (H::exciter, 0.35f, 0.8f).rev (RV::plate, 0.12f, 1.2f).dly (D::digital, 2, 0.12f, 0.25f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Phonk", "Phonk", "Voz de phonk: oscura, saturada y con cinta", "principal,phonk,oscura,cinta")
+        .eq (1.1f, 1.0f, -1.0f, 1.0f).comp (C::fet, 9, 8, 2, 80).harm (H::tape, 0.5f, 0.9f, -0.4f).rev (RV::room, 0.1f, 0.9f).dly (D::tape, 4, 0.12f, 0.3f, 0.8f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Emo Rap", "Emo rap", "Voz de emo rap: cerca, triste y con hall largo", "principal,emo,hall,triste")
+        .eq (1.0f, 1.5f, 2.5f, 0.5f).comp (C::vca, 6, 4, 6, 100).harm (H::tape, 0.25f, 0.7f).rev (RV::hall, 0.18f, 2.4f, 45).dly (D::digital, 7, 0.15f, 0.4f, 0.8f).stereo (1.0f).autom (0.3f, 0.3f));
+    p.push_back (R (V::principal, "Lead R&B Silk", "R&B", "Voz de R&B sedosa, aire arriba y sin eses", "principal,rnb,seda,aire")
+        .eq (1.0f, 1.5f, 3.5f, 0.5f).comp (C::opto, 6, 3, 10, 150).harm (H::tube, 0.15f, 0.6f).voc (1.2f, 0.5f, 0.3f).rev (RV::hall, 0.16f, 2.2f, 50).dly (D::digital, 8, 0.1f, 0.35f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Pop Clean", "Pop", "Voz pop limpia y transparente, lista para radio", "principal,pop,limpia,radio")
+        .eq (1.0f, 1.5f, 3.5f, 0.0f).comp (C::clean, 5, 3, 10, 120).noHarm().voc (1.3f, 0.5f, 0.2f).rev (RV::hall, 0.14f, 2.0f, 55).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Afrobeats", "Afrobeats", "Voz de afrobeats: brillante, suave y con eco con puntillo", "principal,afrobeats,brillante")
+        .eq (1.0f, 2.0f, 3.0f, 0.5f).comp (C::vca, 6, 4, 8, 90).harm (H::tube, 0.15f).rev (RV::plate, 0.12f, 1.3f).dly (D::digital, 5, 0.12f, 0.3f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Techno Dark", "Techno", "Voz de techno: oscura, saturada y con hall", "principal,techno,oscura")
+        .eq (1.1f, 1.0f, 1.5f, 0.0f).comp (C::fet, 8, 6, 3, 80).harm (H::transformer, 0.35f, 0.8f).rev (RV::hall, 0.16f, 2.2f, 40, 0.4f).dly (D::digital, 5, 0.14f, 0.4f, 0.8f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Guaracha", "Guaracha / aleteo", "Voz de guaracha: brillante, r\xc3\xa1pida y con pegada", "principal,guaracha,aleteo,brillante")
+        .eq (1.1f, 2.5f, 4.0f, -0.5f).comp (C::vca, 7, 5, 4, 90).harm (H::exciter, 0.35f, 0.7f).rev (RV::plate, 0.12f, 1.4f, 30).dly (D::pingpong, 2, 0.1f, 0.3f, 0.85f).stereo (1.0f));
+    p.push_back (R (V::principal, "Lead Minimal Dry", "Minimal / rominimal", "Voz de minimal: seca y con eco largo que deja aire al groove", "principal,minimal,seca,eco")
+        .eq (1.0f, 1.0f, 1.0f, 1.0f).comp (C::opto, 5, 3, 15, 150).noHarm().rev (RV::ambience, 0.04f, 0.4f).dly (D::analog, 8, 0.16f, 0.45f, 0.75f).stereo (1.0f));
+    p.push_back (R (V::coro, "Coro Club Underground", "Tech house underground", "Coro de tech house underground: detr\xc3\xa1s, c\xc3\xa1lido y abierto, sin pisar la voz", "coro,club,tech house,underground,noscope,yyy891")
+        .eq (1.6f, 0.5f, 2.5f, -2.0f).comp (C::opto, 5, 4, 10, 200).harm (H::tape, 0.3f, 0.8f).rev (RV::room, 0.2f, 1.2f, 30).dly (D::digital, 5, 0.12f, 0.35f, 0.6f).stereo (1.6f, 0.2f));
+    p.push_back (R (V::doble, "Doble Club Underground", "Tech house underground", "Doble pegado con color de cinta, para engordar la principal", "doble,club,tech house,underground,noscope,yyy891")
+        .eq (1.4f, -0.5f, 1.5f, -1.5f).comp (C::vca, 7, 5, 3, 90).harm (H::tape, 0.3f, 0.7f).voc (1.4f, 0.4f, 0.8f).rev (RV::room, 0.08f, 0.8f).stereo (1.5f));
+    p.push_back (R (V::armonia, "Armon\xc3\xad" "a Club Underground", "Tech house underground", "Armon\xc3\xad" "a abierta con plate y eco con puntillo", "armonia,club,tech house,underground,noscope,yyy891")
+        .eq (1.6f, -0.5f, 3.0f, -2.0f).comp (C::opto, 5, 3, 10, 250).harm (H::tape, 0.25f).rev (RV::plate, 0.22f, 1.6f, 30).dly (D::digital, 5, 0.12f, 0.35f, 0.5f).stereo (1.7f, 0.2f));
+    p.push_back (R (V::adlib, "Ad-lib Club Underground", "Tech house underground", "Ad-lib con eco con puntillo y remate al final de frase", "adlib,club,tech house,underground,noscope,yyy891")
+        .eq (1.4f, 2.0f, 2.0f, -1.0f).comp (C::fet, 7, 6, 2, 80).harm (H::tape, 0.35f).rev (RV::room, 0.12f, 0.9f).dly (D::digital, 5, 0.2f, 0.4f, 0.6f).stereo (1.4f).autom (0.5f, 0.0f));
+    p.push_back (R (V::efecto, "FX Club Filter Throw", "Tech house underground", "Voz filtrada tipo radio con eco ping-pong para transiciones", "filtro,transicion,eco,club,tech house,underground,noscope,yyy891")
+        .eq (2.5f, 3.0f, -3.0f, -2.5f).comp (C::fet, 8, 6, 2, 80).harm (H::transformer, 0.45f).rev (RV::plate, 0.2f, 1.6f).dly (D::pingpong, 5, 0.3f, 0.5f, 0.4f).stereo (1.5f).autom (0.8f, 0.2f));
+    p.push_back (R (V::chop, "Chop Club Underground", "Tech house underground", "Chop vocal seco con puerta a corcheas", "chop,gate,club,tech house,underground,noscope,yyy891")
+        .eq (1.3f, 2.0f, 2.0f).comp (C::fet, 7, 6, 1, 60).harm (H::tape, 0.3f).rev (RV::room, 0.1f, 0.6f).crea (CR::gate, 4, 0.6f));
+    p.push_back (R (V::coro, "Coro Tech House", "Tech house", "Coro de tech house: ancho, brillante y con plate", "coro,tech house,club")
+        .eq (1.6f, 1.0f, 3.0f, -2.0f).comp (C::vca, 6, 4, 5, 120).harm (H::tape, 0.25f).rev (RV::plate, 0.22f, 1.6f, 35).dly (D::digital, 7, 0.12f, 0.35f, 0.6f).stereo (1.7f, 0.25f));
+    p.push_back (R (V::doble, "Doble Tech House", "Tech house", "Doble ancho y limpio para el estribillo", "doble,tech house,club")
+        .eq (1.4f, 0.0f, 2.0f, -1.5f).comp (C::vca, 7, 5, 3, 90).harm (H::tape, 0.2f).voc (1.4f, 0.4f, 0.8f).rev (RV::plate, 0.08f, 1.0f).stereo (1.6f));
+    p.push_back (R (V::adlib, "Ad-lib Tech House", "Tech house", "Ad-lib con eco con puntillo que rebota en el groove", "adlib,tech house,club")
+        .eq (1.4f, 2.0f, 3.0f, -1.0f).comp (C::fet, 7, 6, 2, 80).harm (H::tape, 0.3f).rev (RV::plate, 0.15f, 1.2f).dly (D::digital, 5, 0.2f, 0.4f, 0.6f).stereo (1.5f).autom (0.5f, 0.0f));
+    p.push_back (R (V::efecto, "FX Tech House Stutter", "Tech house", "Repetici\xc3\xb3n a semicorcheas para subidas", "stutter,subida,tech house,club")
+        .eq (1.4f, 2.0f, 2.0f).comp (C::fet, 7, 6, 2, 80).harm (H::tape, 0.3f).rev (RV::plate, 0.14f, 1.2f).crea (CR::stutter, 2, 0.8f));
+    p.push_back (R (V::armonia, "Armon\xc3\xad" "a Tech House", "Tech house", "Armon\xc3\xad" "a abierta y brillante con plate", "armonia,tech house,club")
+        .eq (1.6f, 0.0f, 3.0f, -1.5f).comp (C::opto, 5, 3, 10, 200).harm (H::tape, 0.2f).rev (RV::plate, 0.22f, 1.8f, 35).stereo (1.8f, 0.25f));
+    p.push_back (R (V::coro, "Coro House Gospel", "House", "Coro de house con sabor gospel, hall amplio", "coro,gospel,house,club")
+        .eq (1.5f, 1.0f, 3.0f, -1.0f).comp (C::opto, 5, 3, 10, 250).harm (H::tube, 0.2f).rev (RV::hall, 0.3f, 2.6f, 40).stereo (1.8f, 0.25f));
+    p.push_back (R (V::armonia, "Armon\xc3\xad" "a House Diva", "House", "Armon\xc3\xad" "as de diva de house, aire y eco con puntillo", "armonia,diva,house,club")
+        .eq (1.5f, 0.5f, 3.5f, -1.5f).comp (C::opto, 5, 3, 10, 200).harm (H::tube, 0.15f).rev (RV::hall, 0.26f, 2.4f, 40).dly (D::digital, 8, 0.1f, 0.35f, 0.6f).stereo (1.8f, 0.25f));
+    p.push_back (R (V::adlib, "Ad-lib House Shout", "House", "Grito de house que se queda en la sala", "adlib,grito,house,club")
+        .eq (1.3f, 2.0f, 2.5f, 0.0f).comp (C::fet, 7, 6, 2, 80).harm (H::tube, 0.3f).rev (RV::hall, 0.2f, 2.0f).dly (D::digital, 8, 0.15f, 0.4f, 0.6f).stereo (1.4f).autom (0.5f, 0.2f));
+    p.push_back (R (V::doble, "Doble House", "House", "Doble suave con hall", "doble,house,club")
+        .eq (1.4f, 1.0f, 1.5f, -1.0f).comp (C::vca, 7, 5, 3, 100).harm (H::tube, 0.25f).voc (1.4f, 0.4f, 0.8f).rev (RV::room, 0.1f, 1.0f).stereo (1.5f));
+    p.push_back (R (V::coro, "Coro Deep Haze", "Deep house", "Coro brumoso y c\xc3\xa1lido, lejos", "coro,bruma,deep house,club")
+        .eq (1.7f, -1.0f, 2.0f, -2.0f).comp (C::opto, 4, 3, 15, 300).harm (H::tape, 0.25f, 1, -0.3f).rev (RV::hall, 0.35f, 3.2f, 45, 0.45f).dly (D::tape, 5, 0.15f, 0.4f, 0.5f).stereo (1.8f, 0.25f));
+    p.push_back (R (V::armonia, "Armon\xc3\xad" "a Deep Warm", "Deep house", "Armon\xc3\xad" "a c\xc3\xa1lida con cinta y hall oscuro", "armonia,calida,deep house,club")
+        .eq (1.6f, -0.5f, 1.5f, -1.5f).comp (C::opto, 5, 3, 15, 300).harm (H::tape, 0.25f, 1, -0.3f).rev (RV::hall, 0.3f, 2.8f, 40, 0.45f).stereo (1.7f, 0.2f));
+    p.push_back (R (V::efecto, "FX Deep Dub Echo", "Deep house", "Eco anal\xc3\xb3gico tipo dub para remates", "dub,eco,deep house,club")
+        .eq (1.6f, 1.0f, -1.0f, -1.0f).comp (C::vca, 6, 4, 5, 120).harm (H::tape, 0.35f).rev (RV::chamber, 0.18f, 1.8f).dly (D::analog, 5, 0.35f, 0.6f, 0.35f).stereo (1.5f).autom (0.6f, 0.2f));
+    p.push_back (R (V::coro, "Coro Afro Chant", "Afro house", "Coro de canto afro: presente, ancho y con eco", "coro,canto,afro house,club")
+        .eq (1.5f, 1.5f, 2.5f, -1.0f).comp (C::vca, 6, 4, 5, 120).harm (H::tube, 0.25f).rev (RV::plate, 0.22f, 1.8f, 30).dly (D::digital, 5, 0.12f, 0.35f, 0.6f).stereo (1.7f, 0.2f));
+    p.push_back (R (V::respuesta, "Respuesta Afro Call", "Afro house", "Respuesta que salta de lado a lado", "respuesta,pingpong,afro house,club")
+        .eq (1.3f, 2.0f, 2.5f).comp (C::vca, 6, 4, 4, 100).harm (H::tube, 0.2f).rev (RV::plate, 0.16f, 1.4f).dly (D::pingpong, 5, 0.2f, 0.4f, 0.4f).stereo (1.4f).autom (0.6f, 0.0f));
+    p.push_back (R (V::armonia, "Armon\xc3\xad" "a Afro", "Afro house", "Armon\xc3\xad" "a abierta y suave", "armonia,afro house,club")
+        .eq (1.5f, 0.5f, 3.0f, -1.5f).comp (C::opto, 5, 3, 10, 200).harm (H::tube, 0.15f).rev (RV::plate, 0.22f, 1.8f, 35).stereo (1.7f, 0.2f));
+    p.push_back (R (V::chop, "Chop Minimal", "Minimal / rominimal", "Chop seco con eco largo y puerta ligera", "chop,eco,minimal,rominimal,club")
+        .eq (1.4f, 1.5f, 1.5f).comp (C::fet, 7, 6, 1, 60).harm (H::tape, 0.25f).rev (RV::room, 0.1f, 0.6f).dly (D::digital, 5, 0.18f, 0.4f, 0.5f).crea (CR::gate, 2, 0.5f));
+    p.push_back (R (V::adlib, "Ad-lib Minimal Echo", "Minimal / rominimal", "Ad-lib casi seco con eco que se repite", "adlib,eco,minimal,rominimal,club")
+        .eq (1.4f, 1.0f, 1.5f, -1.0f).comp (C::vca, 6, 4, 4, 100).harm (H::tape, 0.25f).rev (RV::room, 0.1f, 0.8f).dly (D::digital, 5, 0.25f, 0.5f, 0.5f).stereo (1.3f).autom (0.6f, 0.0f));
+    p.push_back (R (V::chop, "Chop Garage Pitch", "UK garage", "Chop de garage con capa una octava arriba", "chop,pitch,octava,garage,ukg,club")
+        .eq (1.3f, 2.0f, 3.0f).comp (C::fet, 7, 6, 1, 60).harm (H::exciter, 0.25f).rev (RV::plate, 0.12f, 1.0f).crea (CR::pitch, 4, 0.5f).pitch (12.0f).stereo (1.3f));
+    p.push_back (R (V::coro, "Coro Garage", "UK garage", "Coro brillante y r\xc3\xa1pido", "coro,brillante,garage,ukg,club")
+        .eq (1.5f, 1.5f, 3.5f, -1.5f).comp (C::vca, 6, 4, 4, 100).harm (H::exciter, 0.25f).rev (RV::plate, 0.2f, 1.4f).stereo (1.7f, 0.2f));
+    p.push_back (R (V::adlib, "Ad-lib Garage", "UK garage", "Ad-lib con eco en tresillo", "adlib,tresillo,garage,ukg,club")
+        .eq (1.3f, 2.5f, 3.0f).comp (C::fet, 7, 6, 2, 80).harm (H::exciter, 0.25f).rev (RV::plate, 0.12f, 1.0f).dly (D::digital, 3, 0.15f, 0.3f, 0.6f).stereo (1.4f));
+    p.push_back (R (V::chop, "Chop Jersey", "Jersey club", "Chop que se repite en tresillos", "chop,stutter,jersey,club")
+        .eq (1.3f, 2.5f, 2.5f).comp (C::fet, 8, 6, 1, 60).harm (H::transformer, 0.35f).rev (RV::room, 0.08f, 0.5f).crea (CR::stutter, 1, 0.7f));
+    p.push_back (R (V::adlib, "Ad-lib Jersey Bounce", "Jersey club", "Ad-lib duro con eco en tresillo", "adlib,jersey,club")
+        .eq (1.3f, 3.0f, 2.5f).comp (C::fet, 8, 6, 1, 60).harm (H::transformer, 0.35f).rev (RV::room, 0.1f, 0.6f).dly (D::digital, 3, 0.15f, 0.3f, 0.7f).stereo (1.4f));
+    p.push_back (R (V::coro, "Coro Jersey", "Jersey club", "Coro de grupo con pegada", "coro,grupo,jersey,club")
+        .eq (1.5f, 2.0f, 2.5f, -1.5f).comp (C::fet, 7, 6, 2, 80).harm (H::transformer, 0.35f).rev (RV::room, 0.15f, 0.9f).stereo (1.7f, 0.2f));
+    p.push_back (R (V::efecto, "FX Techno Tunnel", "Techno", "Voz en un t\xc3\xbanel oscuro con eco ping-pong", "tunel,oscuro,techno,club")
+        .eq (2.0f, 1.0f, 0.0f, -2.0f).comp (C::fet, 8, 6, 2, 80).harm (H::transformer, 0.5f).rev (RV::hall, 0.35f, 3.5f, 40, 0.4f).dly (D::pingpong, 5, 0.25f, 0.55f, 0.4f).stereo (1.8f));
+    p.push_back (R (V::textura, "Texture Techno Drone", "Techno", "Voz convertida en un drone granular", "drone,granular,techno,club")
+        .eq (2.2f, -2.0f, 1.0f, -3.0f).comp (C::opto, 4, 3, 15, 400).harm (H::transformer, 0.3f).rev (RV::hall, 0.6f, 6.0f, 50, 0.35f).crea (CR::granular, 5, 0.5f).stereo (2.0f, 0.3f));
+    p.push_back (R (V::coro, "Coro Club Pop", "Club cantado", "Coro de club pop: ancho y brillante", "coro,club,cantado,pop,yyy891")
+        .eq (1.5f, 1.0f, 3.5f, -1.5f).comp (C::vca, 6, 4, 4, 110).harm (H::exciter, 0.25f).rev (RV::plate, 0.22f, 1.6f).dly (D::digital, 7, 0.1f, 0.3f, 0.6f).stereo (1.8f, 0.25f));
+    p.push_back (R (V::doble, "Doble Club Pop", "Club cantado", "Doble pulido para el estribillo", "doble,club,cantado,pop,yyy891")
+        .eq (1.4f, 0.0f, 2.5f, -1.5f).comp (C::vca, 7, 5, 3, 90).harm (H::exciter, 0.2f).voc (1.4f, 0.5f, 0.8f).rev (RV::plate, 0.1f, 1.2f).stereo (1.6f, 0.2f));
+    p.push_back (R (V::armonia, "Armon\xc3\xad" "a Club Pop", "Club cantado", "Armon\xc3\xad" "as apiladas y brillantes", "armonia,club,cantado,pop,yyy891")
+        .eq (1.6f, 0.0f, 3.0f, -2.0f).comp (C::opto, 5, 3, 10, 200).noHarm().rev (RV::plate, 0.18f, 1.4f, 30).dly (D::pingpong, 5, 0.16f, 0.35f, 0.5f).stereo (1.9f, 0.4f));
+    p.push_back (R (V::adlib, "Ad-lib Club Pop", "Club cantado", "Ad-lib pulido con eco con puntillo", "adlib,club,cantado,pop,yyy891")
+        .eq (1.3f, 2.0f, 3.5f).comp (C::vca, 6, 4, 3, 100).harm (H::exciter, 0.3f).rev (RV::plate, 0.16f, 1.4f).dly (D::digital, 5, 0.18f, 0.35f, 0.6f).stereo (1.5f).autom (0.5f, 0.0f));
+    p.push_back (R (V::adlib, "Ad-lib Guaracha", "Guaracha / aleteo", "Ad-lib brillante con eco r\xc3\xa1pido", "adlib,guaracha,aleteo,club")
+        .eq (1.4f, 3.5f, 2.0f, -1.0f).comp (C::fet, 9, 8, 1, 60).harm (H::transformer, 0.35f).rev (RV::room, 0.12f, 0.7f).dly (D::pingpong, 3, 0.18f, 0.35f, 0.6f).stereo (1.5f));
+    p.push_back (R (V::coro, "Coro Guaracha", "Guaracha / aleteo", "Coro de fiesta, brillante y ancho", "coro,fiesta,guaracha,aleteo,club")
+        .eq (1.5f, 2.0f, 3.0f, -1.5f).comp (C::fet, 7, 6, 2, 80).harm (H::exciter, 0.3f).rev (RV::plate, 0.18f, 1.2f).stereo (1.7f, 0.2f));
+    p.push_back (R (V::adlib, "Ad-lib Neoperreo", "Neoperreo", "Ad-lib sucio con eco a corcheas", "adlib,sucio,neoperreo,reggaeton,underground,ladiferencia2006,yung beef")
+        .eq (1.4f, 2.5f, 2.5f, -0.5f).comp (C::fet, 8, 6, 2, 70).harm (H::transformer, 0.45f).rev (RV::plate, 0.14f, 1.2f).dly (D::digital, 4, 0.18f, 0.3f, 0.6f).stereo (1.4f).autom (0.5f, 0.0f));
+    p.push_back (R (V::coro, "Coro Neoperreo", "Neoperreo", "Coro saturado y ancho", "coro,neoperreo,reggaeton,underground,ladiferencia2006,yung beef")
+        .eq (1.5f, 1.5f, 2.5f, -1.5f).comp (C::fet, 7, 6, 2, 80).harm (H::transformer, 0.4f).rev (RV::plate, 0.2f, 1.4f).stereo (1.7f, 0.25f));
+    p.push_back (R (V::doble, "Doble Neoperreo", "Neoperreo", "Doble sucio pegado a la principal", "doble,neoperreo,reggaeton,underground,ladiferencia2006,yung beef")
+        .eq (1.4f, 0.5f, 1.5f, -1.0f).comp (C::fet, 8, 6, 2, 80).harm (H::transformer, 0.4f).voc (1.4f, 0.5f, 0.8f).rev (RV::room, 0.08f, 0.8f).stereo (1.4f));
+    p.push_back (R (V::efecto, "FX Neoperreo Radio", "Neoperreo", "Voz de radio saturada para intros y puentes", "radio,lofi,neoperreo,reggaeton,underground,ladiferencia2006,yung beef")
+        .eq (3.0f, 4.0f, -4.0f, -3.0f).comp (C::fet, 9, 8, 1, 60).harm (H::transformer, 0.6f).rev (RV::plate, 0.15f, 1.2f).dly (D::digital, 4, 0.15f, 0.3f, 0.6f));
+    p.push_back (R (V::armonia, "Armon\xc3\xad" "a Neoperreo", "Neoperreo", "Armon\xc3\xad" "a con transformador y plate", "armonia,neoperreo,reggaeton,underground,ladiferencia2006,yung beef")
+        .eq (1.5f, 1.0f, 2.0f, -1.0f).comp (C::fet, 7, 6, 2, 80).harm (H::transformer, 0.45f).rev (RV::room, 0.18f, 1.0f).dly (D::pingpong, 4, 0.14f, 0.3f, 0.5f).stereo (1.6f, 0.2f));
+    p.push_back (R (V::adlib, "Ad-lib Dembow", "Dembow", "Ad-lib con pegada y eco corto", "adlib,dembow,reggaeton")
+        .eq (1.3f, 2.5f, 2.0f).comp (C::fet, 8, 6, 2, 70).harm (H::tube, 0.35f).rev (RV::room, 0.12f, 0.8f).dly (D::digital, 4, 0.15f, 0.25f, 0.6f).stereo (1.3f));
+    p.push_back (R (V::coro, "Coro Dembow", "Dembow", "Coro de calle, compacto", "coro,dembow,reggaeton")
+        .eq (1.4f, 2.0f, 2.0f, -1.0f).comp (C::fet, 7, 6, 2, 80).harm (H::tube, 0.3f).rev (RV::room, 0.16f, 1.0f).stereo (1.6f, 0.2f));
+    p.push_back (R (V::respuesta, "Respuesta Dembow", "Dembow", "Respuesta seca y contundente", "respuesta,dembow,reggaeton")
+        .eq (1.3f, 2.5f, 1.5f).comp (C::fet, 8, 6, 2, 80).harm (H::tube, 0.35f).rev (RV::room, 0.1f, 0.7f).stereo (1.2f));
+    p.push_back (R (V::adlib, "Ad-lib Underground ES", "Trap underground espa\xc3\xb1ol", "Ad-lib con cinta y eco con puntillo", "adlib,trap,underground,espanol,gloosito,kaydy cain")
+        .eq (1.3f, 2.0f, 2.0f, -0.5f).comp (C::vca, 7, 5, 3, 90).harm (H::tape, 0.4f).rev (RV::plate, 0.16f, 1.4f).dly (D::digital, 5, 0.18f, 0.35f, 0.6f).stereo (1.4f).autom (0.4f, 0.0f));
+    p.push_back (R (V::doble, "Doble Underground ES", "Trap underground espa\xc3\xb1ol", "Doble con cinta, ancho", "doble,trap,underground,espanol,gloosito,kaydy cain")
+        .eq (1.4f, 0.0f, 1.5f, -1.5f).comp (C::vca, 7, 5, 3, 90).harm (H::tape, 0.35f).voc (1.4f, 0.4f, 0.8f).rev (RV::plate, 0.08f, 1.0f).stereo (1.5f));
+    p.push_back (R (V::coro, "Coro Underground ES", "Trap underground espa\xc3\xb1ol", "Coro detr\xc3\xa1s con plate y eco a negras", "coro,trap,underground,espanol,gloosito,kaydy cain")
+        .eq (1.6f, 0.5f, 2.5f, -2.0f).comp (C::opto, 5, 4, 10, 200).harm (H::tape, 0.3f).rev (RV::plate, 0.22f, 1.8f).dly (D::digital, 7, 0.1f, 0.35f, 0.6f).stereo (1.7f, 0.25f));
+    p.push_back (R (V::armonia, "Armon\xc3\xad" "a Underground ES", "Trap underground espa\xc3\xb1ol", "Armon\xc3\xad" "a con hall y cinta", "armonia,trap,underground,espanol,gloosito,kaydy cain")
+        .eq (1.5f, 0.0f, 2.5f, -1.5f).comp (C::opto, 5, 3, 10, 250).harm (H::tape, 0.25f).rev (RV::hall, 0.25f, 2.4f, 35).stereo (1.7f, 0.2f));
+    p.push_back (R (V::efecto, "FX Underground ES Tape", "Trap underground espa\xc3\xb1ol", "Eco de cinta saturado para remates", "cinta,eco,trap,underground,espanol,gloosito,kaydy cain")
+        .eq (1.6f, 0.5f, -1.5f, -1.0f).comp (C::opto, 5, 4, 10, 200).harm (H::tape, 0.55f, 1, -0.4f).rev (RV::chamber, 0.18f, 1.6f).dly (D::tape, 5, 0.3f, 0.55f, 0.4f));
+    p.push_back (R (V::adlib, "Ad-lib Jerk", "Jerk", "Ad-lib chill\xc3\xb3n y apretado", "adlib,jerk,trap")
+        .eq (1.3f, 3.0f, 3.0f, -0.5f).comp (C::fet, 9, 8, 1, 60).harm (H::transformer, 0.5f).rev (RV::plate, 0.1f, 0.9f).dly (D::digital, 2, 0.15f, 0.25f, 0.7f).stereo (1.4f));
+    p.push_back (R (V::doble, "Doble Jerk", "Jerk", "Doble saturado y pegado", "doble,jerk,trap")
+        .eq (1.4f, 1.0f, 2.0f, -1.0f).comp (C::fet, 9, 8, 1, 60).harm (H::transformer, 0.45f).voc (1.4f, 0.5f, 0.8f).rev (RV::room, 0.06f, 0.6f).stereo (1.5f));
+    p.push_back (R (V::coro, "Coro Jerk", "Jerk", "Coro saturado y muy abierto", "coro,jerk,trap")
+        .eq (1.5f, 2.0f, 3.0f, -1.5f).comp (C::fet, 8, 6, 2, 70).harm (H::transformer, 0.45f).rev (RV::plate, 0.14f, 1.0f).stereo (1.8f, 0.3f));
+    p.push_back (R (V::efecto, "FX Jerk Stutter", "Jerk", "Repetici\xc3\xb3n a semicorcheas saturada", "stutter,jerk,trap")
+        .eq (1.3f, 3.0f, 2.5f).comp (C::fet, 8, 6, 1, 60).harm (H::transformer, 0.45f).rev (RV::plate, 0.1f, 0.9f).crea (CR::stutter, 2, 0.85f));
+    p.push_back (R (V::adlib, "Ad-lib Hyperpop", "Hyperpop / digicore", "Ad-lib muy brillante con eco r\xc3\xa1pido", "adlib,hyperpop,digicore")
+        .eq (1.4f, 3.0f, 4.0f, -1.0f).comp (C::fet, 9, 8, 1, 60).harm (H::exciter, 0.45f).rev (RV::plate, 0.14f, 1.2f).dly (D::digital, 2, 0.18f, 0.3f, 0.7f).stereo (1.6f));
+    p.push_back (R (V::armonia, "Armon\xc3\xad" "a Hyperpop", "Hyperpop / digicore", "Armon\xc3\xad" "as brillantes y abiertas", "armonia,hyperpop,digicore")
+        .eq (1.6f, 1.0f, 4.0f, -2.0f).comp (C::fet, 8, 6, 2, 80).harm (H::exciter, 0.4f).rev (RV::plate, 0.22f, 1.6f).stereo (1.9f, 0.3f));
+    p.push_back (R (V::efecto, "FX Hyperpop Octave", "Hyperpop / digicore", "Capa una octava arriba (efecto)", "octava,pitch,hyperpop,digicore")
+        .eq (1.4f, 2.0f, 3.0f).comp (C::fet, 8, 6, 2, 80).harm (H::exciter, 0.4f).rev (RV::plate, 0.15f, 1.2f).crea (CR::pitch, 4, 0.5f).pitch (12.0f).stereo (1.5f));
+    p.push_back (R (V::adlib, "Ad-lib Emo", "Emo rap", "Ad-lib triste con hall y eco a negras", "adlib,emo,rap")
+        .eq (1.4f, 1.0f, 2.5f, -1.0f).comp (C::vca, 6, 4, 4, 120).harm (H::tape, 0.25f).rev (RV::hall, 0.25f, 2.6f, 35).dly (D::digital, 7, 0.2f, 0.4f, 0.6f).stereo (1.5f).autom (0.4f, 0.4f));
+    p.push_back (R (V::coro, "Coro Emo", "Emo rap", "Coro lejano y triste", "coro,emo,rap")
+        .eq (1.7f, -0.5f, 2.5f, -2.0f).comp (C::opto, 5, 3, 10, 300).harm (H::tape, 0.25f).rev (RV::hall, 0.35f, 3.2f, 40).stereo (1.8f, 0.3f));
+    p.push_back (R (V::doble, "Doble Emo", "Emo rap", "Doble suave escondido", "doble,emo,rap")
+        .eq (1.5f, -0.5f, 0.5f, -1.5f).comp (C::opto, 6, 4, 10, 200).harm (H::tape, 0.25f, 1, -0.3f).voc (1.5f, 0.5f, 0.9f).rev (RV::plate, 0.1f, 1.4f).stereo (1.4f));
+    p.push_back (R (V::adlib, "Ad-lib Drill", "Drill", "Ad-lib seco y duro", "adlib,drill,rap")
+        .eq (1.2f, 2.5f, 1.0f, 0.5f).comp (C::fet, 9, 8, 1, 70).harm (H::transformer, 0.4f).rev (RV::room, 0.08f, 0.6f).dly (D::digital, 4, 0.12f, 0.25f, 0.7f).stereo (1.2f));
+    p.push_back (R (V::doble, "Doble Drill", "Drill", "Doble muy pegado y seco", "doble,drill,rap")
+        .eq (1.3f, 1.0f, 0.5f, -0.5f).comp (C::fet, 9, 8, 1, 70).harm (H::transformer, 0.4f).voc (1.4f, 0.5f, 0.8f).rev (RV::ambience, 0.06f, 0.4f).stereo (1.2f));
+    p.push_back (R (V::coro, "Coro Drill Gang", "Drill", "Coro de grupo, duro", "coro,grupo,drill,rap")
+        .eq (1.4f, 2.0f, 1.0f, -1.0f).comp (C::fet, 9, 8, 1, 70).harm (H::transformer, 0.45f).rev (RV::room, 0.12f, 0.8f).stereo (1.7f, 0.25f));
+    p.push_back (R (V::adlib, "Ad-lib Phonk", "Phonk", "Ad-lib oscuro con cinta", "adlib,phonk,memphis")
+        .eq (1.6f, 2.0f, -2.0f, -1.0f).comp (C::fet, 9, 8, 1, 70).harm (H::tape, 0.6f, 1, -0.5f).rev (RV::room, 0.14f, 0.9f).dly (D::tape, 4, 0.2f, 0.35f, 0.6f));
+    p.push_back (R (V::efecto, "FX Phonk Memphis", "Phonk", "Voz de cassette de Memphis", "cassette,lofi,phonk,memphis")
+        .eq (3.0f, 3.0f, -5.0f, -2.0f).comp (C::fet, 9, 8, 1, 70).harm (H::tape, 0.7f, 1, -0.6f).rev (RV::room, 0.12f, 0.8f).dly (D::tape, 4, 0.2f, 0.4f, 0.6f));
+    p.push_back (R (V::coro, "Coro Afrobeats", "Afrobeats", "Coro suave y brillante", "coro,afrobeats,afro")
+        .eq (1.5f, 1.5f, 3.0f, -1.0f).comp (C::vca, 6, 4, 5, 120).harm (H::tube, 0.2f).rev (RV::plate, 0.22f, 1.6f).stereo (1.7f, 0.2f));
+    p.push_back (R (V::adlib, "Ad-lib Afrobeats", "Afrobeats", "Ad-lib con eco con puntillo", "adlib,afrobeats,afro")
+        .eq (1.3f, 2.0f, 3.0f).comp (C::vca, 6, 4, 3, 100).harm (H::tube, 0.25f).rev (RV::plate, 0.15f, 1.2f).dly (D::digital, 5, 0.18f, 0.35f, 0.6f).stereo (1.4f).autom (0.5f, 0.0f));
+
     std::vector<Recipe> out;
     for (auto& r : p) out.push_back (r.r);
     return out;
@@ -314,7 +506,7 @@ PresetLibrary::PresetLibrary() : factory (makeFactory()) { loadFavourites(); }
 
 juce::StringArray PresetLibrary::categories()
 {
-    return { "Ad-libs", "Coros", "Dobles y segundas", T ("Armon\xc3\xad" "as"), "Efectos", "Usuario" };
+    return { "Voz principal", "Ad-libs", "Coros", "Dobles y segundas", T ("Armon\xc3\xad" "as"), "Efectos", "Usuario" };
 }
 
 juce::String PresetLibrary::categoryFor (VoiceType t)
@@ -323,6 +515,7 @@ juce::String PresetLibrary::categoryFor (VoiceType t)
     {
         case VoiceType::adlib: case VoiceType::respuesta: case VoiceType::chop: case VoiceType::grito: case VoiceType::hablada: return "Ad-libs";
         case VoiceType::coro: return "Coros";
+        case VoiceType::principal: return "Voz principal";
         case VoiceType::doble: case VoiceType::segunda: return "Dobles y segundas";
         case VoiceType::armonia: return T ("Armon\xc3\xad" "as");
         default: return "Efectos";

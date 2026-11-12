@@ -76,7 +76,8 @@ void ChainIvoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     for (auto* b : { &kwDryHp, &kwWetHp }) { b->setup (sampleRate, EqBand::highPass, 60.0f, 0.5f, 0.0f); b->reset(); }
     for (auto* b : { &kwDryHs, &kwWetHs }) { b->setup (sampleRate, EqBand::highShelf, 1500.0f, 0.7071f, 4.0f); b->reset(); }
     dryPow = wetPow = 0.0; matchTarget = 0.0f;
-    setLatencySamples (lat);
+    limiter.prepare (sampleRate);
+    setLatencySamples (lat + limiter.latency());
 }
 
 void ChainIvoProcessor::releaseResources() {}
@@ -289,16 +290,18 @@ void ChainIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
         {
             float y = ch[c][i] * g;
             y = y + bp * (dryBuf.getSample (c, i) - y);
-            if (clipSafe && std::abs (y) > 0.891f)   // -1 dBFS: rodilla suave hasta 0 dBFS (sólo protección)
-            {
-                const float s = y > 0 ? 1.0f : -1.0f, a = std::abs (y);
-                y = s * (0.891f + 0.109f * std::tanh ((a - 0.891f) / 0.109f));
-                ++clips;
-            }
             ch[c][i] = y;
         }
     }
     gainMatchDb.store (matchTarget);
+    // Protección de salida: limitador con anticipación a -1 dBFS (siempre añade la misma latencia,
+    // esté activo o no, para que el host no tenga que recompensar al cambiarlo)
+    {
+        const float minGain = limiter.process (ch, nch, n, 0.891f, clipSafe);
+        const float grDb = minGain < 0.9999f ? -gainToDb (minGain) : 0.0f;
+        limiterGr.store (std::max (grDb, limiterGr.load() * 0.9f));
+        if (grDb > 3.0f) clips = 1;   // sólo cuenta como aviso si el limitador trabaja de verdad
+    }
     if (clips > 0) clipCount += clips;
     if (nch == 1 && main.getNumChannels() > 1) main.copyFrom (1, 0, main, 0, 0, n);
     outMeter.feed (ch, nch, n);
@@ -379,6 +382,7 @@ void ChainIvoProcessor::applyBuild (const BuildResult& b, const juce::String& pr
 void ChainIvoProcessor::loadFactoryPreset (int i)
 {
     fillGroup (lastAnalysis);
+    lastAnalysis.bpm = lastBpm.load();
     lastAnalysis.hasInstrumental = instName.isNotEmpty(); lastAnalysis.instrumentalSpectrum = instSpectrum;
     const auto& list = presets.recipes();
     if (i < 0 || i >= (int) list.size()) return;
@@ -392,6 +396,7 @@ void ChainIvoProcessor::loadFactoryPreset (int i)
 void ChainIvoProcessor::autoPropose()
 {
     fillGroup (lastAnalysis);
+    lastAnalysis.bpm = lastBpm.load();
     lastAnalysis.hasInstrumental = instName.isNotEmpty(); lastAnalysis.instrumentalSpectrum = instSpectrum;
     const auto r = defaultRecipe ((VoiceType) juce::jlimit (0, (int) VoiceType::count - 1, getVoiceType()));
     applyBuild (buildChain (r, lastAnalysis, getGenre()), juce::String::fromUTF8 ("Propuesta autom\xc3\xa1tica"));
@@ -566,10 +571,10 @@ void ChainIvoProcessor::timerCallback()
         group->update (groupId, me);
         fillGroup (lastAnalysis);
     }
-    if (lastAnalysis.activeSeconds >= 2.0f)
+    if (lastAnalysis.activeSeconds >= 2.0f || voiceTypeFromName (trackName) >= 0)
     {
-        lastClass = classify (lastAnalysis);
-        if (lastAnalysis.ready) apvts.state.setProperty (kDetected, (int) lastClass.type, nullptr);
+        lastClass = classify (lastAnalysis, trackName);
+        if (lastAnalysis.ready || lastClass.fromName) apvts.state.setProperty (kDetected, (int) lastClass.type, nullptr);
     }
     // Perfil personal: lo que el usuario deja cambiado (estable 2 s) después de una propuesta de AUTO
     if (profile.enabled() && ! lastAuto.empty())

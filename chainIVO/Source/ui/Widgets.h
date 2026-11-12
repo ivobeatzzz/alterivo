@@ -20,6 +20,8 @@ bool loadDarkSkin();
 void saveDarkSkin (bool);
 
 // Superficies
+// Sombra difuminada con caché: la misma forma no se vuelve a difuminar en cada repintado
+void cachedShadow (juce::Graphics&, const juce::Path&, juce::Colour, int radius, juce::Point<int> offset);
 void raised (juce::Graphics&, juce::Rectangle<float>, float radius, float lift = 1.0f);
 void shadowOnly (juce::Graphics&, juce::Rectangle<float>, float radius, float lift);
 void well (juce::Graphics&, juce::Rectangle<float>, float radius);
@@ -52,6 +54,9 @@ public:
     void mouseDown (const juce::MouseEvent&) override;
     juce::StringArray names;
 private:
+    // Huecos iguales si todos los textos caben; si alguno no cabe, cada hueco mide según su texto
+    // (así no hay pestañas con letra más pequeña que otras)
+    juce::Rectangle<float> segmentBounds (int i) const;
     int selected = 0; bool dot; float fs;
 };
 
@@ -145,5 +150,6 @@ public:
     void paint (juce::Graphics&) override;
 private:
     juce::String lbl; float db = -100.0f, hold = -100.0f; int holdFrames = 0;
+    float paintedDb = 1000.0f, paintedHold = 1000.0f;   // sólo se repinta si cambia algo visible
 };
 } // namespace chainivo::ui

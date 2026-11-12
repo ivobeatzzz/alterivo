@@ -69,6 +69,7 @@ private:
     Toggle lockToggle { "LOCK" }, soloToggle { "SOLO" };
     PillButton autoButton { "AUTO", PillButton::lime };
     std::vector<float> histComp, histDeess, histHarsh, histBreath, histWord, histWet;
+    int tickCount = 0;
 };
 
 class TrackCard : public juce::Component

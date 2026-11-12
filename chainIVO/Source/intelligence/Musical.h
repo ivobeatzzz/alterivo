@@ -11,7 +11,8 @@
 
 namespace chainivo
 {
-enum class VoiceType { adlib = 0, coro, doble, segunda, armonia, respuesta, introOutro, chop, susurro, grito, hablada, textura, ambiente, efecto, count };
+// (el orden se guarda en los proyectos: los tipos nuevos van siempre al final)
+enum class VoiceType { adlib = 0, coro, doble, segunda, armonia, respuesta, introOutro, chop, susurro, grito, hablada, textura, ambiente, efecto, principal, count };
 const juce::StringArray& voiceTypeNames();          // en español, para la interfaz
 juce::String voiceTypeName (VoiceType t);
 
@@ -66,8 +67,12 @@ struct Classification
     float confidence = 0.0f;      // 0..1
     juce::String reason;          // por qué (en una frase)
     bool needsLead = false;       // hay tipos que no se pueden distinguir sin la voz principal
+    bool fromName = false;        // decidido por el nombre de la pista (p. ej. "COROS rec")
 };
-Classification classify (const AnalysisResult&);
+// trackName: nombre de la pista en el DAW (si el host lo da). Si dice claramente qué es, manda el nombre.
+Classification classify (const AnalysisResult&, const juce::String& trackName = {});
+// Tipo de voz por el nombre de la pista; -1 si el nombre no lo dice
+int voiceTypeFromName (const juce::String& trackName);
 
 struct BuildResult
 {
