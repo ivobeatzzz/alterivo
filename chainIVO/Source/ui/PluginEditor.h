@@ -125,6 +125,20 @@ private:
     std::unique_ptr<juce::FileChooser> chooser;
 };
 
+// Deshacer / rehacer: una sola pastilla con dos flechas claras (se apagan cuando no hay nada que deshacer)
+class UndoRedo : public juce::Component, public juce::SettableTooltipClient
+{
+public:
+    explicit UndoRedo (juce::UndoManager& u) : um (u) { setMouseCursor (juce::MouseCursor::PointingHandCursor); setTooltip ("Deshacer / rehacer"); }
+    void paint (juce::Graphics&) override;
+    void mouseDown (const juce::MouseEvent& e) override { if (e.position.x < getWidth() * 0.5f) um.undo(); else um.redo(); repaint(); }
+    void mouseMove (const juce::MouseEvent& e) override { const int h = e.position.x < getWidth() * 0.5f ? 0 : 1; if (h != hover) { hover = h; repaint(); } }
+    void mouseExit (const juce::MouseEvent&) override { hover = -1; repaint(); }
+private:
+    juce::UndoManager& um;
+    int hover = -1;
+};
+
 class MainView : public juce::Component, private juce::Timer
 {
 public:
@@ -140,7 +154,7 @@ private:
     ChainIvoProcessor& proc;
     Segmented modeSwitch { { "AUTO", "PRO" } };
     PresetPill presetPill;
-    IconButton undoB { IconButton::undo }, redoB { IconButton::redo };
+    UndoRedo undoRedo;
     Segmented abSwitch { { "A", "B" }, false, 12.0f };
     TrackCard trackCard;
     juce::OwnedArray<ChainTile> tiles;

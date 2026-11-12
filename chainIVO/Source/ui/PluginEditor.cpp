@@ -971,12 +971,39 @@ void PresetBrowser::saveAs()
     }), true);
 }
 
+// =================================================================== UndoRedo
+void UndoRedo::paint (juce::Graphics& g)
+{
+    auto r = getLocalBounds().toFloat();
+    well (g, r, r.getHeight() * 0.5f);
+    const auto inner = r.reduced (4.0f);
+    const bool can[2] = { um.canUndo(), um.canRedo() };
+    for (int i = 0; i < 2; ++i)
+    {
+        auto half = juce::Rectangle<float> (inner.getX() + inner.getWidth() * 0.5f * (float) i, inner.getY(), inner.getWidth() * 0.5f, inner.getHeight()).reduced (1.0f, 0.0f);
+        if (hover == i && can[i]) raised (g, half, half.getHeight() * 0.5f, 0.0f);
+        // Flecha curva clásica: arco que vuelve hacia atrás (o hacia delante) con punta rellena
+        const auto c = half.getCentre();
+        const float dir = i == 0 ? -1.0f : 1.0f, s = 6.5f;
+        juce::Path tail;
+        tail.startNewSubPath (c.x - dir * s * 0.9f, c.y + s * 0.95f);
+        tail.cubicTo (c.x - dir * s * 1.05f, c.y - s * 0.2f, c.x - dir * s * 0.35f, c.y - s * 0.75f, c.x + dir * s * 0.55f, c.y - s * 0.75f);
+        juce::Path head;
+        head.addTriangle (c.x + dir * s * 1.25f, c.y - s * 0.75f, c.x + dir * s * 0.3f, c.y - s * 1.45f, c.x + dir * s * 0.3f, c.y - s * 0.05f);
+        g.setColour (can[i] ? ink : faint);
+        g.strokePath (tail, juce::PathStrokeType (1.9f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        g.fillPath (head);
+    }
+    g.setColour (shadow.withAlpha (0.10f));
+    g.fillRect (juce::Rectangle<float> (r.getCentreX() - 0.5f, r.getY() + 12.0f, 1.0f, r.getHeight() - 24.0f));
+}
+
 // =================================================================== MainView
 MainView::MainView (ChainIvoProcessor& p)
     : proc (p), presetPill (p), trackCard (p), engineView (p),
       inputK ("INPUT", p.apvts, pid::input, &p.undo), intensityK ("INTENSITY", p.apvts, pid::intensity, &p.undo),
       mixK ("DRY / WET", p.apvts, pid::mix, &p.undo), outputK ("OUTPUT", p.apvts, pid::output, &p.undo),
-      gainMatch ("GAIN MATCH", p.apvts, pid::gainMatch), clipSafe ("CLIP SAFE", p.apvts, pid::clipSafe), bypass ("BYPASS", p.apvts, pid::bypass),
+      undoRedo (p.undo), gainMatch ("GAIN MATCH", p.apvts, pid::gainMatch), clipSafe ("CLIP SAFE", p.apvts, pid::clipSafe), bypass ("BYPASS", p.apvts, pid::bypass),
       browser (p)
 {
     setLookAndFeel (&lnf);
@@ -984,10 +1011,7 @@ MainView::MainView (ChainIvoProcessor& p)
     modeSwitch.onChange = [this] (int i) { proc.setPro (i == 1); selectEngine (selected); layoutTiles(); };
     addAndMakeVisible (presetPill);
     presetPill.onOpen = [this] { browser.open(); };
-    addAndMakeVisible (undoB); addAndMakeVisible (redoB);
-    undoB.setTooltip ("Deshacer"); redoB.setTooltip ("Rehacer");
-    undoB.onClick = [this] { proc.undo.undo(); };
-    redoB.onClick = [this] { proc.undo.redo(); };
+    addAndMakeVisible (undoRedo);
     addAndMakeVisible (abSwitch);
     abSwitch.onChange = [this] (int i) { proc.selectAb (i); };
     addAndMakeVisible (trackCard);
@@ -1041,7 +1065,7 @@ void MainView::resized()
 {
     // Cabecera: todo centrado en y = 56 y con 16 px entre piezas, alineado al margen derecho (1000)
     abSwitch.setBounds (904, 34, 96, 44);
-    redoB.setBounds (856, 40, 32, 32); undoB.setBounds (820, 40, 32, 32);
+    undoRedo.setBounds (816, 34, 76, 44);
     presetPill.setBounds (560, 30, 244, 52);
     modeSwitch.setBounds (354, 34, 190, 44);
     trackCard.setBounds (kTrackCard);
@@ -1105,6 +1129,7 @@ void MainView::timerCallback()
         presetPill.repaint();
         modeSwitch.setSelected (proc.isPro() ? 1 : 0);
         abSwitch.setSelected (proc.getAbSlot());
+        undoRedo.repaint();
         quality.setSelected (proc.getQuality());
         if (proc.isPro() != lastPro) { lastPro = proc.isPro(); selectEngine (selected); layoutTiles(); }
         repaint (juce::Rectangle<int> (300, 100, 720, 170));   // pista de LA CADENA y sombras de las fichas
