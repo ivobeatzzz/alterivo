@@ -268,7 +268,7 @@ void Toggle::paint (juce::Graphics& g)
     g.fillPath (kp);
     if (text.isNotEmpty())
     {
-        g.setColour (ink); g.setFont (font (F::manX, 9.5f, 0.16f));
+        g.setColour (ink); g.setFont (font (F::manX, 9.5f, 0.1f));
         g.drawText (text.toUpperCase(), getLocalBounds().toFloat().withTrimmedLeft (46.0f), juce::Justification::centredLeft, false);
     }
 }

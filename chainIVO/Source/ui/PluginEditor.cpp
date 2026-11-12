@@ -92,27 +92,28 @@ void ChainTile::paint (juce::Graphics& g)
         if (selected) { g.setColour (juce::Colour (0xffa9e04b)); g.drawRoundedRectangle (r.reduced (1.25f), 17.0f, 2.0f); }
     }
     const auto txt = on ? ink : faint;
+    const float cx = r.getCentreX();
+    logoDot (g, { cx, 17.0f }, 3.5f, on);
     g.setColour (on ? dim2 : faint); g.setFont (font (F::manX, 9.0f, 0.13f));
-    g.drawText (kEngineNames[engine], juce::Rectangle<float> (14, 12, r.getWidth() - 34, 14), juce::Justification::centredLeft, false);
-    logoDot (g, { r.getRight() - 14.0f, 20.0f }, on ? 4.0f : 4.0f, on);
+    g.drawText (kEngineNames[engine], juce::Rectangle<float> (4, 28, r.getWidth() - 4, 13), juce::Justification::centred, false);
     g.setColour (txt); g.setFont (font (F::soraBold, 18.0f, -0.01f));
-    g.drawFittedText (headline, juce::Rectangle<int> (14, 34, (int) r.getWidth() - 24, 26), juce::Justification::centredLeft, 1, 0.8f);
-    g.setColour (on ? dim2 : faint); g.setFont (font (F::man, 11.5f));
-    g.drawText (line1, juce::Rectangle<float> (14, 64, r.getWidth() - 20, 16), juce::Justification::centredLeft, true);
-    g.drawText (line2, juce::Rectangle<float> (14, 80, r.getWidth() - 20, 16), juce::Justification::centredLeft, true);
+    g.drawFittedText (headline, juce::Rectangle<int> (8, 45, (int) r.getWidth() - 12, 26), juce::Justification::centred, 1, 0.75f);
+    g.setColour (on ? dim2 : faint); g.setFont (font (F::man, 11.0f));
+    g.drawFittedText (line1, juce::Rectangle<int> (6, 74, (int) r.getWidth() - 8, 15), juce::Justification::centred, 1, 0.8f);
+    g.drawFittedText (line2, juce::Rectangle<int> (6, 90, (int) r.getWidth() - 8, 15), juce::Justification::centred, 1, 0.8f);
     if (pro && hovering)
     {
         g.setColour (ink.withAlpha (0.6f)); g.setFont (font (F::manX, 14.0f));
         if (position > 0) g.drawText (u8 ("\xe2\x80\xb9"), juce::Rectangle<float> (4, r.getBottom() - 22, 20, 18), juce::Justification::centred, false);
         if (position < 5) g.drawText (u8 ("\xe2\x80\xba"), juce::Rectangle<float> (r.getRight() - 22, r.getBottom() - 22, 20, 18), juce::Justification::centred, false);
     }
-    if (proc.isLocked (engine)) { g.setColour (deep); g.setFont (font (F::manX, 8.0f, 0.2f)); g.drawText ("LOCK", juce::Rectangle<float> (r.getRight() - 46, r.getBottom() - 18, 40, 12), juce::Justification::centredRight, false); }
+    if (proc.isLocked (engine)) { g.setColour (deep); g.setFont (font (F::manX, 7.5f, 0.2f)); g.drawText ("LOCK", juce::Rectangle<float> (r.getRight() - 40, 11, 32, 12), juce::Justification::centredRight, false); }
 }
 
 void ChainTile::mouseDown (const juce::MouseEvent& e)
 {
     const auto r = getLocalBounds().toFloat().reduced (2.0f);
-    if (e.position.getDistanceFrom ({ r.getRight() - 14.0f, 20.0f }) < 13.0f)
+    if (e.position.getDistanceFrom ({ r.getCentreX(), 17.0f }) < 13.0f)
     {
         auto* prm = proc.apvts.getParameter (kOnIds[engine]);
         proc.undo.beginNewTransaction();
@@ -239,7 +240,7 @@ void EngineView::paint (juce::Graphics& g)
                                      "VOCAL \xc2\xb7 de-ess, dureza y respiraciones", "SPACE \xc2\xb7 cola y ecos", "CREATIVE \xc2\xb7 patr\xc3\xb3n r\xc3\xadtmico" };
     const auto an = proc.getAnalysis();
     juce::String title = u8 (titles[engine]);
-    if (engine == 0) title = an.hasLead ? u8 ("EQ \xc2\xb7 ") + voiceTypeName ((VoiceType) proc.getVoiceType()) + u8 (" frente a la voz principal") : u8 ("EQ \xc2\xb7 espectro de la pista y curva real");
+    if (engine == 0) title = an.hasLead ? u8 ("EQ \xc2\xb7 frente a la voz principal") : u8 ("EQ \xc2\xb7 espectro y curva");
     if (pro) title = juce::String (kEngineNames[engine]) + u8 (" \xc2\xb7 ajustes");
     label (g, title, { 22, 14, 420, 18 }, juce::Justification::centredLeft, dim, 10.0f);
 
@@ -482,7 +483,7 @@ void EngineView::paintCreative (juce::Graphics& g, juce::Rectangle<float> r)
     if (pv (proc, pid::wordOn) > 0.5f)
     {
         // Carril real: gris = palabra detectada, lima = palabra (o compás) con efecto
-        auto lane = r.removeFromBottom (std::min (60.0f, r.getHeight() * 0.45f));
+        auto lane = r.removeFromBottom (std::min (52.0f, r.getHeight() * 0.35f));
         label (g, u8 ("Palabras \xc2\xb7 ") + proc.apvts.getParameter (pid::wordFx)->getCurrentValueAsText() + u8 (" en ") + proc.apvts.getParameter (pid::wordTarget)->getCurrentValueAsText()
                   + u8 (" \xc2\xb7 ") + juce::String (proc.wordsDetected()), lane.removeFromTop (14), juce::Justification::centredLeft, dim, 8.5f);
         const float w = lane.getWidth() / (float) histWord.size();
@@ -502,7 +503,8 @@ void EngineView::paintCreative (juce::Graphics& g, juce::Rectangle<float> r)
         g.drawText (u8 ("Apagado. Nunca se activa solo: enci\xc3\xa9ndelo con el punto de la ficha CREATIVE"), r, juce::Justification::centred, false);
         return;
     }
-    const auto row = r.withSizeKeepingCentre (r.getWidth() - 20, 60);
+    auto textArea = r.removeFromBottom (32.0f);
+    const auto row = r.withSizeKeepingCentre (r.getWidth() - 20, std::min (56.0f, r.getHeight() - 8.0f));
     const float w = row.getWidth() / 4.0f;
     for (int i = 0; i < 4; ++i)
     {
@@ -519,7 +521,7 @@ void EngineView::paintCreative (juce::Graphics& g, juce::Rectangle<float> r)
     g.setColour (body); g.setFont (font (F::man, 12.0f));
     g.drawFittedText (type == 3 ? u8 ("Capa afinada mezclada con la voz (la voz original no se toca)")
                 : type == 4 ? u8 ("Nube de granos del \xc3\xbaltimo segundo \xc2\xb7 tama\xc3\xb1o seg\xc3\xban RATE (") + choiceText (proc, pid::creaNote) + ")"
-                : u8 ("Grupo de 4 divisiones de ") + choiceText (proc, pid::creaNote) + u8 (" \xc2\xb7 sincronizado al tempo del proyecto"), r.withTrimmedTop (r.getHeight() - 30).toNearestInt(), juce::Justification::centred, 2, 0.8f);
+                : u8 ("Grupo de 4 divisiones de ") + choiceText (proc, pid::creaNote) + u8 (" \xc2\xb7 sincronizado al tempo del proyecto"), textArea.toNearestInt(), juce::Justification::centred, 2, 0.8f);
 }
 
 // =================================================================== TrackCard
@@ -558,64 +560,90 @@ void TrackCard::refresh()
 
 void TrackCard::resized()
 {
-    float x = 24, y = 178; const float maxX = (float) getWidth() - 24;
+    // Chips en filas centradas
+    const float maxW = (float) getWidth() - 40.0f, gap = 6.0f;
+    std::vector<std::vector<Chip*>> rows (1);
+    float rowW = 0;
     for (auto* c : chips)
     {
-        const int w = c->preferredWidth();
-        if (x + (float) w > maxX) { x = 24; y += 34; }
-        c->setBounds ((int) x, (int) y, w, 32);
-        x += (float) w + 6;
+        const float w = (float) c->preferredWidth();
+        if (! rows.back().empty() && rowW + gap + w > maxW) { rows.emplace_back(); rowW = 0; }
+        rowW += (rows.back().empty() ? 0 : gap) + w;
+        rows.back().push_back (c);
     }
-    genreBox = { 24, 314, (float) getWidth() - 48, 40 };
-    reBox = { 24, 364, 86, 22 };
-    toolsBox = { 110, 364, (float) getWidth() - 134, 22 };
+    float y = 164;
+    for (auto& r : rows)
+    {
+        float total = 0; for (auto* c : r) total += (float) c->preferredWidth(); total += gap * (float) (r.size() - 1);
+        float x = ((float) getWidth() - total) * 0.5f;
+        for (auto* c : r) { c->setBounds ((int) x, (int) y, c->preferredWidth(), 32); x += (float) c->preferredWidth() + gap; }
+        y += 34;
+    }
+    genreBox = { 24, 302, (float) getWidth() - 48, 40 };
+    reBox = { 24, 360, 92, 24 };
+    toolsBox = { 116, 360, (float) getWidth() - 140, 24 };
 }
 
 void TrackCard::paint (juce::Graphics& g)
 {
+    const float W = (float) getWidth();
     raised (g, getLocalBounds().toFloat(), 22.0f, 1.0f);
-    label (g, "Tu pista", { 24, 18, 200, 14 }, juce::Justification::centredLeft);
+    label (g, "Tu pista", { 0, 18, W, 14 }, juce::Justification::centred);
     const auto an = proc.getAnalysis();
     const auto cl = proc.getClassification();
     const bool manual = ! proc.isVoiceTypeAuto();
     const bool analysing = ! an.ready;
-    g.setColour (ink); g.setFont (font (F::soraBold, 34.0f, -0.02f));
-    juce::String big = (an.activeSeconds < 2.0f && ! manual) ? juce::String ("...") : voiceTypeName ((VoiceType) proc.getVoiceType()).toUpperCase();
-    g.drawFittedText (big, juce::Rectangle<int> (24, 36, getWidth() - 48, 42), juce::Justification::centredLeft, 1, 0.7f);
+
+    // Tipo de voz: discreto y centrado
+    const juce::String typeName = (an.activeSeconds < 2.0f && ! manual) ? u8 ("Escuchando\xe2\x80\xa6") : voiceTypeName ((VoiceType) proc.getVoiceType());
+    g.setColour (ink); g.setFont (font (F::soraSemi, 20.0f, -0.01f));
+    g.drawFittedText (typeName, juce::Rectangle<int> (20, 38, (int) W - 40, 26), juce::Justification::centred, 1, 0.8f);
 
     juce::String left, right; float frac;
-    if (manual) { left = u8 ("Elegido por ti"); right = an.ready ? juce::String (juce::roundToInt (cl.confidence * 100)) + u8 (" % detect.") : juce::String(); frac = 1.0f; }
-    else if (analysing) { left = an.activeSeconds < 0.5f ? u8 ("Esperando audio\xe2\x80\xa6") : u8 ("Analizando\xe2\x80\xa6"); right = juce::String (juce::roundToInt (an.progress * 100)) + " %"; frac = an.progress; }
+    if (manual) { left = u8 ("Elegido por ti"); right = an.ready ? juce::String (juce::roundToInt (cl.confidence * 100)) + " %" : juce::String(); frac = 1.0f; }
+    else if (analysing) { left = an.activeSeconds < 0.5f ? u8 ("Esperando audio") : u8 ("Analizando"); right = juce::String (juce::roundToInt (an.progress * 100)) + " %"; frac = an.progress; }
     else { left = "Detectado solo"; right = juce::String (juce::roundToInt (cl.confidence * 100)) + " %"; frac = cl.confidence; }
-    g.setColour (dim2); g.setFont (font (F::man, 12.0f));
-    g.drawText (left, juce::Rectangle<float> (24, 84, 160, 16), juce::Justification::centredLeft, false);
-    g.setColour (green); g.setFont (font (F::manX, 12.0f));
-    g.drawText (right, juce::Rectangle<float> (getWidth() - 124.0f, 84, 100, 16), juce::Justification::centredRight, false);
-    const auto bar = juce::Rectangle<float> (24, 104, (float) getWidth() - 48, 9);
-    well (g, bar, 4.5f);
+    {
+        const auto fl = font (F::man, 12.0f), fr = font (F::manX, 12.0f);
+        const juce::String sep = right.isNotEmpty() ? u8 ("  \xc2\xb7  ") : juce::String();
+        const float wl = textWidth (fl, left + sep), wr = textWidth (fr, right);
+        float x = (W - wl - wr) * 0.5f;
+        g.setColour (dim2); g.setFont (fl); g.drawText (left + sep, juce::Rectangle<float> (x, 66, wl + 2, 16), juce::Justification::centredLeft, false);
+        g.setColour (green); g.setFont (fr); g.drawText (right, juce::Rectangle<float> (x + wl, 66, wr + 4, 16), juce::Justification::centredLeft, false);
+    }
+    const auto bar = juce::Rectangle<float> (24, 88, W - 48, 8);
+    well (g, bar, 4.0f);
     if (frac > 0.01f)
     {
         g.setGradientFill (juce::ColourGradient (juce::Colour (0xff4e9c2c), bar.getX(), 0, lime, bar.getRight(), 0, false));
-        g.fillRoundedRectangle (bar.reduced (2.0f).withWidth ((bar.getWidth() - 4.0f) * frac), 2.5f);
+        g.fillRoundedRectangle (bar.reduced (2.0f).withWidth ((bar.getWidth() - 4.0f) * frac), 2.0f);
     }
     g.setColour (dim2); g.setFont (font (F::man, 11.0f));
     juce::String reason = an.activeSeconds >= 2.0f ? cl.reason : u8 ("Pon la pista a sonar unos segundos");
     if (cl.needsLead && an.ready) reason += u8 (". Sin voz principal no distingo doble, armon\xc3\xad" "a o respuesta");
     if (an.groupCount > 0) reason = u8 ("Grupo: ") + juce::String (an.groupCount + 1) + u8 (" capas con chainIVO \xc2\xb7 ") + reason;
-    g.drawFittedText (reason, juce::Rectangle<int> (24, 118, getWidth() - 48, 30), juce::Justification::topLeft, 2, 0.9f);
+    g.drawFittedText (reason, juce::Rectangle<int> (20, 102, (int) W - 40, 30), juce::Justification::centredTop, 2, 0.9f);
 
-    label (g, "Tipo de voz", { 24, 158, 200, 14 }, juce::Justification::centredLeft);
-    label (g, "Estilo", { 24, 294, 200, 14 }, juce::Justification::centredLeft);
+    label (g, "Tipo de voz", { 0, 144, W, 14 }, juce::Justification::centred);
+    label (g, "Estilo", { 0, 282, W, 14 }, juce::Justification::centred);
     raised (g, genreBox, 12.0f, 0.5f);
     const int gi = proc.getGenre();
-    g.setColour (ink); g.setFont (font (F::man, 14.0f));
-    g.drawText (gi >= 0 ? u8 (genre (gi).name) : u8 ("Sin estilo"), genreBox.reduced (16, 0), juce::Justification::centredLeft, false);
-    g.setColour (dim2); g.setFont (font (F::man, 12.0f));
-    g.drawText (gi >= 0 ? u8 (genre (gi).family) + u8 ("  \xe2\x96\xbe") : u8 ("elegir  \xe2\x96\xbe"), genreBox.reduced (16, 0), juce::Justification::centredRight, false);
-    g.setColour (deep); g.setFont (font (F::manX, 10.0f, 0.08f));
-    g.drawText (u8 ("\xe2\x86\xbb  ANALIZAR"), reBox, juce::Justification::centredLeft, false);
-    juce::String tools = proc.isExporting() ? u8 ("EXPORTANDO\xe2\x80\xa6") : (proc.isInstrumentalBusy() ? u8 ("LEYENDO BEAT\xe2\x80\xa6") : u8 ("BEAT \xc2\xb7 EXPORTAR \xe2\x96\xbe"));
-    g.drawText (tools, toolsBox, juce::Justification::centredRight, false);
+    {
+        const juce::String name = gi >= 0 ? u8 (genre (gi).name) : u8 ("Sin estilo");
+        const juce::String fam = gi >= 0 ? u8 ("  \xc2\xb7  ") + u8 (genre (gi).family) : juce::String();
+        const auto fn = font (F::man, 14.0f), ff = font (F::man, 12.0f);
+        const float wn = textWidth (fn, name), wf = textWidth (ff, fam), wa = 16.0f;
+        float x = genreBox.getCentreX() - (wn + wf + wa) * 0.5f;
+        g.setColour (ink); g.setFont (fn); g.drawText (name, juce::Rectangle<float> (x, genreBox.getY(), wn + 2, genreBox.getHeight()), juce::Justification::centredLeft, false);
+        g.setColour (dim2); g.setFont (ff); g.drawText (fam + u8 ("  \xe2\x96\xbe"), juce::Rectangle<float> (x + wn, genreBox.getY(), wf + wa + 10, genreBox.getHeight()), juce::Justification::centredLeft, false);
+    }
+    // Pie de la tarjeta: dos acciones centradas en su mitad, con separador
+    g.setColour (shadow.withAlpha (0.08f)); g.fillRect (juce::Rectangle<float> (24, 352, W - 48, 1));
+    g.fillRect (juce::Rectangle<float> (reBox.getRight(), 364, 1, 16));
+    g.setColour (deep); g.setFont (font (F::manX, 9.5f, 0.1f));
+    g.drawText (u8 ("\xe2\x86\xbb  ANALIZAR"), reBox, juce::Justification::centred, false);
+    juce::String tools = proc.isExporting() ? u8 ("EXPORTANDO\xe2\x80\xa6") : (proc.isInstrumentalBusy() ? u8 ("LEYENDO BEAT\xe2\x80\xa6") : u8 ("BEAT \xc2\xb7 EXPORTAR  \xe2\x96\xbe"));
+    g.drawText (tools, toolsBox, juce::Justification::centred, false);
 }
 
 void TrackCard::mouseDown (const juce::MouseEvent& e)
@@ -961,21 +989,23 @@ void MainView::layoutTiles()
 
 void MainView::resized()
 {
-    modeSwitch.setBounds (372, 34, 190, 46);
-    presetPill.setBounds (578, 30, 244, 54);
-    undoB.setBounds (830, 41, 32, 32); redoB.setBounds (862, 41, 32, 32);
-    abSwitch.setBounds (904, 34, 96, 46);
+    // Cabecera: todo centrado en y = 56 y con 16 px entre piezas, alineado al margen derecho (1000)
+    abSwitch.setBounds (904, 34, 96, 44);
+    redoB.setBounds (856, 40, 32, 32); undoB.setBounds (820, 40, 32, 32);
+    presetPill.setBounds (560, 30, 244, 52);
+    modeSwitch.setBounds (354, 34, 190, 44);
     trackCard.setBounds (kTrackCard);
     layoutTiles();
     engineView.setBounds (kEngineCard);
     auto knobBox = [] (int cx, int cy, int w, int h) { return juce::Rectangle<int> (cx - w / 2, cy - h / 2, w, h); };
-    inputK.setBounds (knobBox (100, 634, 110, 196));
+    // Mandos globales: misma separación (144 px) y nombres a la misma altura que QUALITY
+    inputK.setBounds (knobBox (104, 634, 110, 196));
     intensityK.setBounds (knobBox (248, 634, 170, 196));
-    mixK.setBounds (knobBox (398, 634, 110, 196));
-    outputK.setBounds (knobBox (528, 634, 110, 196));
-    quality.setBounds (640, 566, 360, 44);
-    gainMatch.setBounds (640, 624, 136, 30); clipSafe.setBounds (780, 624, 122, 30); bypass.setBounds (906, 624, 104, 30);
-    inMeter.setBounds (646, 662, 160, 14); outMeter.setBounds (822, 662, 160, 14);
+    mixK.setBounds (knobBox (392, 634, 110, 196));
+    outputK.setBounds (knobBox (536, 634, 110, 196));
+    quality.setBounds (640, 558, 360, 44);
+    gainMatch.setBounds (640, 614, 132, 30); clipSafe.setBounds (778, 614, 116, 30); bypass.setBounds (900, 614, 100, 30);
+    inMeter.setBounds (640, 656, 172, 14); outMeter.setBounds (828, 656, 172, 14);
     browser.setBounds (getLocalBounds());
 }
 
@@ -991,18 +1021,19 @@ void MainView::paint (juce::Graphics& g)
     juce::AttributedString t;
     t.append ("chain", font (F::soraLight, 34.0f, -0.01f), ink);
     t.append ("IVO", font (F::soraBold, 34.0f, -0.01f), deep);
-    t.draw (g, { 40, 24, 300, 46 });
+    t.draw (g, { 40, 26, 300, 42 });
     label (g, u8 ("Secondary \xc2\xb7 Vocal \xc2\xb7 Chain"), { 42, 70, 300, 14 }, juce::Justification::centredLeft);
     label (g, "La cadena", { 328, 110, 200, 14 }, juce::Justification::centredLeft);
+    g.setColour (shadow.withAlpha (0.07f)); g.fillRect (juce::Rectangle<float> (40, 526, 960, 1));   // separa la zona de trabajo de los globales
     g.setColour (dim2); g.setFont (font (F::man, 12.0f));
     const juce::String hint = proc.isPro() ? u8 ("PRO: orden real de la cadena \xc2\xb7 \xe2\x80\xb9 \xe2\x80\xba para moverlas \xc2\xb7 el punto enciende o apaga")
                                            : u8 ("AUTO ha montado ") + juce::String (std::max (proc.getEnginesBuilt(), 0)) + u8 (" de 6 m\xc3\xb3" "dulos \xc2\xb7 pulsa uno para verlo");
     g.drawText (hint, juce::Rectangle<float> (500, 106, 500, 18), juce::Justification::centredRight, false);
-    label (g, "Quality", { 646, 548, 200, 14 }, juce::Justification::centredLeft);
+    label (g, "Quality", { 640, 536, 360, 14 }, juce::Justification::centred);
     g.setColour (dim2); g.setFont (font (F::man, 12.0f));
     const float latMs = (float) proc.getLatencySamples() * 1000.0f / (float) proc.getSampleRateSafe();
     g.drawText ("CPU " + juce::String (juce::roundToInt (proc.cpuLoad.load() * 100.0f)) + u8 (" % \xc2\xb7 ") + juce::String (latMs, 1) + u8 (" ms \xc2\xb7 GM ") + dbs (proc.gainMatchDb.load()) + u8 (" \xc2\xb7 corr. ") + juce::String (proc.correlation.load(), 2) + (proc.dspErrors.load() > 0 ? u8 (" \xc2\xb7 recuperado ") + juce::String (proc.dspErrors.load()) : juce::String()),
-                juce::Rectangle<float> (646, 690, 300, 18), juce::Justification::centredLeft, false);
+                juce::Rectangle<float> (640, 688, 270, 18), juce::Justification::centredLeft, false);
     drawLogo (g, { 922, 684, 78, 26 });
 }
 
