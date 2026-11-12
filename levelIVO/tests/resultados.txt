@@ -1,0 +1,34 @@
+levelIVO 0.1 — resultados de las pruebas (Linux, voz hablada de 26 s a 48 kHz, errores y defectos inyectados)
+
+== Núcleo (tests/bench.cpp)
+Voz: 26.4 s
+Detección: 12 frases, 76 palabras, 99 sílabas, 4 respiraciones, 0 otras voces, 189 ataques, 18 clics cand., 0 golpes, clipping 0
+  confianza media de palabras 0.73 · voz -34.2 LUFS · suelo -64.7
+Nulo (todo apagado): -300.0 dB
+
+Nivelación (5 tomas con deriva ±4 dB y 30 % de palabras a ±4-6 dB):
+                error quitado   intra-palabra   pausas    toca toma buena   dispersión
+  Natural           11 %        -0.01 dB         -0.1 dB   0.42 dB          4.89 dB
+  Balanced          17 %        +0.01 dB         -0.1 dB   0.76 dB          4.26 dB
+  Controlled        20 %        +0.07 dB         -0.1 dB   1.48 dB          3.23 dB
+
+Clipping: 28 muestras recortadas, 6 tramos detectados, 6 reparados, 0 sin reparar · SDR en lo recortado 20.6 → 46.2 dB
+Clics: 30 inyectados, 25 detectados y reparados, 13 falsas alarmas en la voz limpia · SDR local -7.2 → 22.7 dB
+Golpes: 6 inyectados, 6 detectados, 0 falsas alarmas · energía del golpe 24.6 dB menos
+Ruido (-50 dBFS): pausas 7.3 dB más bajas · SDR en la voz 23.6 → 25.0 dB · suelo medido -54.0 dBFS
+Sangrado SIN referencia: pausas 3.7 dB más bajas · SDR en la voz 17.3 → 17.2 dB
+Sangrado CON referencia: pausas 9.0 dB más bajas · SDR en la voz 17.3 → 33.8 dB · retardo 145 (real 144) · coherencia 0.71
+
+3 min estéreo con referencia: análisis 3442 ms · limpieza completa 5020 ms · decisión de nivel 27 ms
+
+== Plugin completo como en un DAW (tests/plugintest.cpp)
+Latencia offline: 0 muestras
+Captura: 26.4 s en 1 región(es), inicio en el DAW 1440000 · estado: VOZ · 0:26 · análisis listo, revísalo y pulsa APLICAR
+Resultado: 76 palabras, corrección media 0.76 dB, dispersión 4.25 -> 3.62 dB
+Antes de aplicar (escucha ORIGINAL): diferencia máx. 0.00e+00
+Aplicado: salida frente al resultado calculado -58.0 dB (debe ser muy bajo, salvo fundidos de 5 ms en los bordes)
+Clip cambiado detectado: sí
+Recarga del proyecto: toma recuperada · ediciones 1 · aplicado sí
+Nulo del plugin (todo apagado, aplicado): -187.1 dB
+Tiempo real: latencia 14400 muestras (300 ms) · 1.5 % de un núcleo
+Reproducción offline: 0.68 % de un núcleo

@@ -1,0 +1,41 @@
+levelIVO 0.1 — Analiza, nivela y limpia voces · IVO Beatz
+https://ivobeatz.com
+
+Deja la toma pareja y limpia antes de mezclar: sube o baja frases, palabras y sílabas
+que se han ido de volumen sin aplastar la expresión, y quita ruido, sangrado de cascos,
+golpes al micro, clics de boca, respiraciones de más y clipping.
+
+
+INSTALAR EN WINDOWS (opción recomendada, sin avisos)
+----------------------------------------
+1. Descomprime levelIVO-Windows-VST3.zip.
+2. Copia la carpeta levelIVO.vst3 en  C:\Program Files\Common Files\VST3
+   (Windows pide permiso de administrador: Continuar).
+Opción B: levelIVO-Windows-Instalador.exe. Si sale "Windows protegió su PC":
+Más información → Ejecutar de todas formas.
+
+INSTALAR EN MAC
+----------------------------------------
+1. Doble clic en levelIVO-Mac-Instalador.pkg.
+2. Si macOS no lo deja abrir: Ajustes del Sistema → Privacidad y seguridad →
+   "Abrir igualmente".
+3. Marca VST3 y/o Audio Unit (AU) e instala.
+
+Después, abre el DAW y vuelve a escanear plugins (aparece como IVO Beatz → levelIVO).
+
+
+CÓMO SE USA
+----------------------------------------
+1. Pon levelIVO el PRIMERO en la pista de la voz (antes de EQ, compresor, Auto-Tune...).
+2. (Opcional, recomendado) Manda el beat al sidechain de levelIVO: así quita de verdad
+   el sangrado de los cascos.
+3. Pulsa CAPTURAR y dale al play en la parte que quieras (o en toda la canción).
+4. Para el transporte: levelIVO analiza, limpia y nivela solo (unos segundos).
+5. Con REVISAR ANTES: mira la pantalla, escucha NIVEL / LIMPIEZA / FINAL y pulsa APLICAR.
+   Con AUTO APPLY se aplica directamente.
+6. Al reproducir, el resultado suena sincronizado con el proyecto, sin latencia.
+7. Si quieres, EXPORTAR WAV y arrastras el archivo al proyecto en la misma posición.
+
+Todo el procesado es local: el audio no sale de tu ordenador.
+Las capturas se guardan en Música/IVO Beatz/levelIVO/Capturas (puedes borrarlas cuando
+termines el tema). El manual completo está en MANUAL.md.

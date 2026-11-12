@@ -93,3 +93,9 @@ JUCE 8 es gratuito con licencia AGPLv3. Si vendes o repartes el plugin sin publi
 | Pro Tools | AAX | Se activa al configurar el secreto `AAX_SDK_URL` con el AAX SDK de Avid; hace falta además firmarlo con PACE/iLok |
 
 Cada plugin IVO nuevo parte de esta misma base: mismo CMake, mismos instaladores y mismas validaciones.
+
+---
+
+## levelIVO
+
+Nivelación y limpieza de voces (carpeta `levelIVO/`). Compila con el flujo **Build levelIVO** (pestaña Actions → Run workflow). Manual en `levelIVO/MANUAL.md`.
