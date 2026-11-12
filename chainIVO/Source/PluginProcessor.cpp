@@ -469,7 +469,14 @@ void ChainIvoProcessor::exportFile (const juce::File& in, const juce::File& out,
     juce::Thread::launch ([this, in, out, float32, done, state]
     {
         juce::String msg;
-        auto finish = [&] { exporting = false; juce::MessageManager::callAsync ([done, msg] { if (done) done (msg); }); };
+        // Capturas explícitas: MSVC no acepta la lambda anidada con captura por defecto
+        auto finish = [this, &msg, done]
+        {
+            exporting = false;
+            std::function<void (juce::String)> cb = done;
+            juce::String text = msg;
+            juce::MessageManager::callAsync ([cb, text] { if (cb) cb (text); });
+        };
         if (in == out) { msg = "No se puede escribir encima del original."; finish(); return; }
         juce::AudioFormatManager fm; fm.registerBasicFormats();
         std::unique_ptr<juce::AudioFormatReader> reader (fm.createReaderFor (in));
