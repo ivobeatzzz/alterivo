@@ -110,18 +110,20 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | Estado | guardar/abrir proyecto: 0 parámetros distintos, orden, LOCK, preset y A/B recuperados |
 | Exportar WAV | 24 bits o 32 bits float, misma frecuencia y canales, cola completa, alineado con el original (con INTENSITY 0 la diferencia es −300 dB) y el original sin tocar |
 | Instrumental | beat sintético con hueco en 4 kHz y graves fuertes: AUTO pone la presencia en 4.0 kHz y sube el paso alto |
-| Presets | 122 presets, todos con estilo válido; a igual volumen, la pareja más parecida difiere −19.6 dB (ninguna por debajo de −20 dB) |
+| Presets | 124 presets, todos con estilo válido; a igual volumen, la pareja más parecida difiere −19.6 dB (ninguna por debajo de −20 dB) |
 | Automatizaciones | 4 de 4 finales de frase detectados; THROW pone el remate en los silencios; SWELL sube la cola +8.4 dB al acabar la frase |
 | Pitch creativo | capa −12 st sobre 440 Hz: aparece 220 Hz a −0.6 dB y la voz sigue en 440 Hz |
 | Granular | estable (0 valores inválidos), nivel parecido a la voz |
 | Reverb IR | la cola sigue la IR cargada (0.8 s) y termina con ella |
 | Perfil personal | AUTO puso reverb 20 %, el usuario la dejó en 40 % → la siguiente propuesta sale con 27 % (aprende poco a poco) |
 | Protección | NaN en la entrada: 0 muestras no válidas en la salida |
+| Por palabra | 16 de 16 palabras detectadas; filtro en '1 de 4' → `...X...X...X...X`; distorsión en '1ª de frase' → `X.......X.......` |
+| Por sección | distorsión en 'último compás de cada 4' (8 compases, 4/4) → `...X...X` |
 | Grupo | dos instancias se ven; la segunda separa su presencia y su pre-delay (20 → 28 ms) |
 
 ## 10. Limitaciones conocidas (versión 0.1)
 
-1. 122 presets IVO (30 ad-libs, 30 coros, 20 dobles/segundas, 20 armonías, 22 efectos). La prueba automática
+1. 124 presets IVO (31 ad-libs, 30 coros, 20 dobles/segundas, 20 armonías, 23 efectos). La prueba automática
    comprueba que todos suenan distintos entre sí, pero están **sin validar de oído con voces reales**:
    es lo siguiente que hay que hacer con grabaciones del usuario.
 2. La clasificación es por reglas: con una sola voz de prueba no se puede afirmar su precisión.
@@ -149,6 +151,6 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | 2 Core y prototipo funcional | hecha y medida (falta validación con voces reales) |
 | 3 Calidad de procesamiento | en gran parte (medidas arriba); faltan escuchas comparativas |
 | 4 Inteligencia musical | tipos de voz, voz principal, beat, grupo de capas, automatizaciones por frase; faltan secciones y género automático |
-| 5 Presets y motor creativo | 122 presets diferenciados (falta escucharlos); 5 efectos creativos |
+| 5 Presets y motor creativo | 124 presets diferenciados (falta escucharlos); 5 efectos creativos + efectos por palabra y por sección |
 | 6 Producto completo | exportar WAV, skins, ayuda, manual; faltan licencias (coste) |
 | 7 QA y lanzamiento | pendiente (pruebas en cada DAW con el usuario) |

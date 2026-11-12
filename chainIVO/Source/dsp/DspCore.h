@@ -204,6 +204,7 @@ struct TempoInfo
 {
     double bpm = 120.0;
     double ppq = 0.0;       // posición en negras al inicio del bloque
+    int beatsPerBar = 4;    // numerador del compás
     bool playing = false;
 };
 } // namespace chainivo

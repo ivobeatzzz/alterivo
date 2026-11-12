@@ -34,7 +34,7 @@ ChainTile::ChainTile (ChainIvoProcessor& p, int e) : proc (p), engine (e)
     setMouseCursor (juce::MouseCursor::PointingHandCursor);
     setTooltip (u8 ("Pulsa la ficha para verla; el punto la enciende o la apaga"));
 }
-bool ChainTile::engineOn() const { return pv (proc, kOnIds[engine]) > 0.5f; }
+bool ChainTile::engineOn() const { return pv (proc, kOnIds[engine]) > 0.5f || (engine == 5 && pv (proc, pid::wordOn) > 0.5f); }
 
 void ChainTile::refresh()
 {
@@ -68,7 +68,9 @@ void ChainTile::refresh()
             a = (int) pv (proc, pid::revType) == 5 ? (proc.hasIR() ? proc.getIRName() : u8 ("sin IR: plate")) : juce::String (pv (proc, pid::revDecay), 1) + " s";
             b = pv (proc, pid::dlyMix) > 0.5f ? "delay " + choiceText (proc, pid::dlyNote) : "sin delay"; break;
         case 5:
-            h = on ? choiceText (proc, pid::creaType) : "Off"; a = on ? choiceText (proc, pid::creaNote) : "pulsa el punto"; b = on ? juce::String (juce::roundToInt (pv (proc, pid::creaAmount))) + " %" : "para activar"; break;
+            h = on ? choiceText (proc, pid::creaType) : "Off"; a = on ? choiceText (proc, pid::creaNote) : "pulsa el punto"; b = on ? juce::String (juce::roundToInt (pv (proc, pid::creaAmount))) + " %" : "para activar";
+            if (pv (proc, pid::wordOn) > 0.5f) { if (! on) h = choiceText (proc, pid::wordFx); a = u8 ("palabras: ") + choiceText (proc, pid::wordTarget); b = choiceText (proc, pid::wordFx) + " " + juce::String (juce::roundToInt (pv (proc, pid::wordAmount))) + " %"; }
+            break;
         default: break;
     }
     if (! on && engine != 5) { h = "Off"; a = "pulsa el punto"; b = "para activar"; }
@@ -130,7 +132,7 @@ void ChainTile::mouseDown (const juce::MouseEvent& e)
 // =================================================================== EngineView
 EngineView::EngineView (ChainIvoProcessor& p) : proc (p)
 {
-    histComp.assign (180, 0.0f); histDeess.assign (180, 0.0f); histHarsh.assign (180, 0.0f); histBreath.assign (180, 0.0f);
+    histComp.assign (180, 0.0f); histDeess.assign (180, 0.0f); histHarsh.assign (180, 0.0f); histBreath.assign (180, 0.0f); histWord.assign (180, 0.0f);
     addChildComponent (lockToggle); addChildComponent (autoButton); addChildComponent (soloToggle);
     soloToggle.setTooltip (u8 ("Escucha por m\xc3\xb3" "dulo: s\xc3\xb3lo suena este motor (los dem\xc3\xa1s se saltan)"));
     soloToggle.onChange = [this] (bool v) { proc.soloEngine = v ? engine : -1; };
@@ -196,13 +198,20 @@ void EngineView::buildControls()
             choice (pid::dlyType); layout.push_back ({ 430, 86, 226, 30 });
             knob ("REV MIX", pid::revMix); knob ("DECAY", pid::revDecay); knob ("PRE", pid::revPredelay); knob ("TONE", pid::revTone);
             knob ("DUCK", pid::duck); knob ("SWELL", pid::revSwell);
-            knob ("TIME", pid::dlyNote); knob ("FEEDBACK", pid::dlyFeedback); knob ("DLY MIX", pid::dlyMix); knob ("THROW", pid::dlyThrow);
+            knob ("TIME", pid::dlyNote); knob ("FEEDBK", pid::dlyFeedback); knob ("DLY MIX", pid::dlyMix); knob ("THROW", pid::dlyThrow);
             knob ("WIDTH", pid::width); knob ("DOUBLER", pid::doubler);
             row (top - 6, 6); row (top + 84, 6); break;
         case 5:
-            choice (pid::creaType); layout.push_back ({ 18, 50, 400, 32 });
-            knob ("RATE", pid::creaNote); knob ("AMOUNT", pid::creaAmount); knob ("PITCH", pid::creaPitch);
-            row (top + 40, 3, 18); break;
+        {
+            choice (pid::creaType); layout.push_back ({ 18, 44, 400, 28 });
+            knob ("RATE", pid::creaNote); knob ("AMOUNT", pid::creaAmount); knob ("PITCH", pid::creaPitch); knob ("PALABRAS", pid::wordAmount);
+            row (top + 26, 4, 18);
+            auto t = std::make_unique<ParamToggle> (u8 ("POR PALABRA"), proc.apvts, pid::wordOn);
+            addAndMakeVisible (*t); controls.push_back (std::move (t)); layout.push_back ({ 280, 100, 140, 30 });
+            choice (pid::wordTarget); layout.push_back ({ 18, 170, 400, 26 });
+            choice (pid::wordFx); layout.push_back ({ 18, 202, 400, 26 });
+            break;
+        }
         default: break;
     }
 }
@@ -217,6 +226,7 @@ void EngineView::resized()
 
 void EngineView::tick()
 {
+    push (histWord, proc.wordTargeted() ? 2.0f : (proc.wordActive() ? 1.0f : 0.0f));
     push (histComp, proc.compGr()); push (histDeess, proc.deessGr()); push (histHarsh, proc.harshGr()); push (histBreath, proc.breathGr());
     repaint (pro ? juce::Rectangle<int> (280, 44, 390, 190) : juce::Rectangle<int> (18, 44, 638, 150));
 }
@@ -242,7 +252,7 @@ void EngineView::paint (juce::Graphics& g)
             case 1: case 2: ga = { 430, 50, 226, 178 }; break;
             case 3: ga = { 290, 50, 366, 178 }; break;
             case 4: ga = { 430, 124, 226, 104 }; break;
-            case 5: ga = { 430, 96, 226, 132 }; break;
+            case 5: ga = { 430, 46, 226, 182 }; break;
             default: break;
         }
         if (! ga.isEmpty()) { screen (g, ga, 12.0f); paintGraph (g, ga.reduced (10.0f, 8.0f)); }
@@ -459,8 +469,8 @@ void EngineView::paintSpace (juce::Graphics& g, juce::Rectangle<float> r)
             g.setColour (green); g.fillRoundedRectangle (tx (t) - 2, ay (db), 4, r.getBottom() - 14 - ay (db), 2);
         }
     g.setColour (body); g.setFont (font (F::man, 12.0f));
-    g.drawText (choiceText (proc, pid::revType) + " " + juce::String (decay, 1) + u8 (" s \xc2\xb7 ") + (dlyMix > 0.001f ? "delay " + choiceText (proc, pid::dlyNote) + " " + choiceText (proc, pid::dlyType) : juce::String ("sin delay"))
-                + u8 (" \xc2\xb7 ducking ") + juce::String (juce::roundToInt (pv (proc, pid::duck))) + " %", r.withHeight (16), juce::Justification::centredRight, false);
+    g.drawFittedText (choiceText (proc, pid::revType) + " " + juce::String (decay, 1) + u8 (" s \xc2\xb7 ") + (dlyMix > 0.001f ? "delay " + choiceText (proc, pid::dlyNote) + " " + choiceText (proc, pid::dlyType) : juce::String ("sin delay"))
+                + u8 (" \xc2\xb7 ducking ") + juce::String (juce::roundToInt (pv (proc, pid::duck))) + " %", r.withHeight (16).toNearestInt(), juce::Justification::centredRight, 1, 0.6f);
     if (pv (proc, pid::dlyThrow) > 0.5f || pv (proc, pid::revSwell) > 0.5f)
         g.drawText (u8 ("Automatizaciones: ") + juce::String (proc.phraseEnds()) + u8 (" finales de frase detectados"), r.withTrimmedTop (18).withHeight (16), juce::Justification::centredRight, false);
 }
@@ -469,6 +479,23 @@ void EngineView::paintCreative (juce::Graphics& g, juce::Rectangle<float> r)
 {
     const bool on = pv (proc, pid::creaOn) > 0.5f;
     const int type = (int) pv (proc, pid::creaType);
+    if (pv (proc, pid::wordOn) > 0.5f)
+    {
+        // Carril real: gris = palabra detectada, lima = palabra (o compás) con efecto
+        auto lane = r.removeFromBottom (std::min (60.0f, r.getHeight() * 0.45f));
+        label (g, u8 ("Palabras \xc2\xb7 ") + proc.apvts.getParameter (pid::wordFx)->getCurrentValueAsText() + u8 (" en ") + proc.apvts.getParameter (pid::wordTarget)->getCurrentValueAsText()
+                  + u8 (" \xc2\xb7 ") + juce::String (proc.wordsDetected()), lane.removeFromTop (14), juce::Justification::centredLeft, dim, 8.5f);
+        const float w = lane.getWidth() / (float) histWord.size();
+        for (size_t k = 0; k < histWord.size(); ++k)
+        {
+            const float v = histWord[k];
+            if (v < 0.5f) continue;
+            g.setColour (v > 1.5f ? lime : track);
+            g.fillRect (lane.getX() + w * (float) k, lane.getY() + 6, w + 0.5f, lane.getHeight() - 12);
+        }
+        if (! on) return;
+        r.removeFromBottom (6);
+    }
     if (! on)
     {
         g.setColour (dim); g.setFont (font (F::man, 13.0f));
@@ -483,16 +510,16 @@ void EngineView::paintCreative (juce::Graphics& g, juce::Rectangle<float> r)
         bool active = true; juce::String t;
         if (type == 1) { static const int pat[4] = { 1, 0, 1, 1 }; active = pat[i] == 1; t = active ? "abre" : "cierra"; }
         else if (type == 0) { t = i < 2 ? "voz" : "repite 2"; active = true; }
-        else if (type == 3) { t = "capa " + proc.apvts.getParameter (pid::creaPitch)->getCurrentValueAsText(); active = true; }
+        else if (type == 3) { t = proc.apvts.getParameter (pid::creaPitch)->getCurrentValueAsText(); active = true; }
         else if (type == 4) { t = "granos"; active = (i % 2) == 0; }
         else { t = u8 ("al rev\xc3\xa9s"); }
         if (active) limeFill (g, c, 10.0f); else well (g, c, 10.0f);
-        g.setColour (active ? onLime : ink); g.setFont (font (F::manX, 11.0f, 0.1f)); g.drawText (t.toUpperCase(), c, juce::Justification::centred, false);
+        g.setColour (active ? onLime : ink); g.setFont (font (F::manX, 11.0f, 0.05f)); g.drawFittedText (t.toUpperCase(), c.toNearestInt().reduced (2, 0), juce::Justification::centred, 1, 0.6f);
     }
     g.setColour (body); g.setFont (font (F::man, 12.0f));
-    g.drawText (type == 3 ? u8 ("Capa afinada mezclada con la voz (la voz original no se toca)")
+    g.drawFittedText (type == 3 ? u8 ("Capa afinada mezclada con la voz (la voz original no se toca)")
                 : type == 4 ? u8 ("Nube de granos del \xc3\xbaltimo segundo \xc2\xb7 tama\xc3\xb1o seg\xc3\xban RATE (") + choiceText (proc, pid::creaNote) + ")"
-                : u8 ("Grupo de 4 divisiones de ") + choiceText (proc, pid::creaNote) + u8 (" \xc2\xb7 sincronizado al tempo del proyecto"), r.withTrimmedTop (r.getHeight() - 18), juce::Justification::centred, false);
+                : u8 ("Grupo de 4 divisiones de ") + choiceText (proc, pid::creaNote) + u8 (" \xc2\xb7 sincronizado al tempo del proyecto"), r.withTrimmedTop (r.getHeight() - 30).toNearestInt(), juce::Justification::centred, 2, 0.8f);
 }
 
 // =================================================================== TrackCard
@@ -890,6 +917,7 @@ MainView::MainView (ChainIvoProcessor& p)
     for (int e = 0; e < 6; ++e)
     {
         auto* t = tiles.add (new ChainTile (proc, e));
+        t->setComponentID ("tile" + juce::String (e));
         t->onSelect = [this, e] { selectEngine (e); };
         t->onMove = [this, e] (int d) { proc.moveEngine (e, d); layoutTiles(); };
         addAndMakeVisible (t);

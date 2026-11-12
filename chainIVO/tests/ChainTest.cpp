@@ -4,6 +4,7 @@
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <map>
 #include <limits>
+#include <numeric>
 using namespace chainivo;
 
 static std::vector<float> loadRaw (const char* path)
@@ -485,6 +486,68 @@ int main (int argc, char** argv)
         std::printf ("[guard] NaN en la entrada: bloques recuperados %d, muestras no validas en la salida despues %d (durante: %d)\n", p.dspErrors.load(), bad2, bad);
     }
 
+
+    // 18. Efectos por palabra y por sección
+    if (doAll || only == "word")
+    {
+        // 8 "palabras" de 250 ms separadas por 150 ms de silencio, en 2 frases
+        std::vector<float> w; size_t src = 0; std::vector<std::pair<int,int>> words;
+        for (int ph = 0; ph < 2; ++ph)
+        {
+            for (int k = 0; k < 8; ++k)
+            {
+                while (src < voice.size() && std::abs (voice[src]) < 0.08f) ++src;
+                const int start = (int) w.size();
+                for (int i = 0; i < (int) (0.25 * sr); ++i) { const float env = std::min (1.0f, std::min (i, (int) (0.25 * sr) - i) / 240.0f); w.push_back (src < voice.size() ? voice[src++] * env : 0.0f); }
+                words.push_back ({ start, (int) w.size() });
+                for (int i = 0; i < (int) (0.15 * sr); ++i) w.push_back (0.0f);
+            }
+            for (int i = 0; i < (int) (0.6 * sr); ++i) w.push_back (0.0f);
+        }
+        auto runWord = [&] (int target, int fx, int& detected)
+        {
+            ChainIvoProcessor p; p.prepareToPlay (sr, 256); neutral (p);
+            setP (p, pid::intensity, 100); setP (p, pid::eqOn, 0); setP (p, pid::compOn, 0); setP (p, pid::vocOn, 0); setP (p, pid::spaceOn, 0);
+            setP (p, pid::wordOn, 1); setP (p, pid::wordTarget, (float) target); setP (p, pid::wordFx, (float) fx); setP (p, pid::wordAmount, 100);
+            auto out = run (p, w, w, nullptr, 256);
+            detected = p.wordsDetected();
+            std::vector<double> diff;
+            const int L = p.getLatencySamples(); for (auto [a, b] : words) { double e = 0; for (int i = a + L; i < b + L; ++i) { const double d = out.getSample (0, i) - w[(size_t) (i - L)]; e += d * d; } diff.push_back (e); }
+            return diff;
+        };
+        int det = 0;
+        auto d = runWord (2, 2, det);   // filtro en 1 de cada 4
+        juce::String pattern; for (auto e : d) pattern << (e > 1e-3 ? "X" : ".");
+        std::printf ("[word] 16 palabras, detectadas %d | filtro en '1 de 4': %s (X = palabra con efecto)\n", det, pattern.toRawUTF8());
+        d = runWord (4, 3, det); pattern = {}; for (auto e : d) pattern << (e > 1e-3 ? "X" : ".");
+        std::printf ("[word] distorsion en '1a de frase': %s\n", pattern.toRawUTF8());
+        d = runWord (0, 0, det); double tail = 0;
+        // eco: energia en los silencios entre palabras
+        std::printf ("[word] eco en todas: diferencia media por palabra %.1f dB\n", 10 * std::log10 (std::accumulate (d.begin(), d.end(), 0.0) / d.size() + 1e-20));
+        (void) tail;
+        // Secciones: último compás de cada 4, con el transporte en marcha a 120 bpm
+        struct Head : juce::AudioPlayHead
+        {
+            double ppq = 0; juce::Optional<PositionInfo> getPosition() const override
+            { PositionInfo pi; pi.setBpm (120.0); pi.setPpqPosition (ppq); pi.setIsPlaying (true); pi.setTimeSignature (TimeSignature { 4, 4 }); return pi; }
+        } head;
+        ChainIvoProcessor p; p.prepareToPlay (sr, 512); neutral (p); p.setPlayHead (&head);
+        setP (p, pid::intensity, 100); setP (p, pid::eqOn, 0); setP (p, pid::compOn, 0); setP (p, pid::vocOn, 0); setP (p, pid::spaceOn, 0);
+        setP (p, pid::wordOn, 1); setP (p, pid::wordTarget, 5); setP (p, pid::wordFx, 3); setP (p, pid::wordAmount, 100);
+        const int bars = 8, len = (int) (bars * 2.0 * sr); std::vector<float> tone ((size_t) len); for (int i = 0; i < len; ++i) tone[(size_t) i] = 0.2f * std::sin (2 * kPi * 220.0f * i / (float) sr);
+        juce::AudioBuffer<float> out (2, len); juce::MidiBuffer midi;
+        for (int s0 = 0; s0 < len; s0 += 512)
+        {
+            const int m = std::min (512, len - s0); juce::AudioBuffer<float> blk (p.getTotalNumInputChannels(), m); blk.clear();
+            for (int i = 0; i < m; ++i) { blk.setSample (0, i, tone[(size_t) (s0 + i)]); blk.setSample (1, i, tone[(size_t) (s0 + i)]); }
+            head.ppq = (double) s0 / sr * 2.0;
+            p.processBlock (blk, midi); out.copyFrom (0, s0, blk, 0, 0, m);
+        }
+        juce::String bp;
+        for (int b = 0; b < bars; ++b) { double e = 0; const int a = (int) (b * 2.0 * sr) + 4800, z = (int) ((b + 1) * 2.0 * sr) - 4800; for (int i = a; i < z; ++i) { const double dd = out.getSample (0, i) - tone[(size_t) (i - p.getLatencySamples())]; e += dd * dd; } bp << (e > 1.0 ? "X" : "."); }
+        std::printf ("[seccion] distorsion en 'ultimo compas de cada 4', compases 1-8: %s\n", bp.toRawUTF8());
+    }
+
     // 11. Interfaz
     if (doAll || only == "ui")
     {
@@ -497,13 +560,24 @@ int main (int argc, char** argv)
             if (pro == 2) chainivo::ui::saveDarkSkin (true);
             p.setPro (pro >= 1);
             std::unique_ptr<juce::AudioProcessorEditor> ed (p.createEditor());
-            if (pro == 1) { setP (p, pid::creaOn, 1); setP (p, pid::creaType, 3); }
+            if (pro == 1) { setP (p, pid::creaOn, 1); setP (p, pid::creaType, 3); setP (p, pid::wordOn, 1); }
             ed->setSize (ChainIvoEditor::kW, ChainIvoEditor::kH);
             juce::MessageManager::getInstance()->runDispatchLoopUntil (400);
             auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);
             juce::File f (juce::String ("/tmp/claude-0/-home-claude/a71dc4c6-2070-51ff-85e0-7f07bc2eb995/scratchpad/ctest/ui_") + (pro == 2 ? "dark" : (pro ? "pro" : "auto")) + ".png");
             f.deleteFile(); juce::FileOutputStream os (f); juce::PNGImageFormat().writeImageToStream (img, os);
             std::printf ("[ui] %s guardada\n", f.getFileName().toRawUTF8());
+            if (pro == 1)
+                for (int e : { 4, 5 })
+                {
+                    std::function<juce::Component* (juce::Component*)> find = [&] (juce::Component* c) -> juce::Component*
+                    { if (c->getComponentID() == "tile" + juce::String (e)) return c; for (auto* k : c->getChildren()) if (auto* r = find (k)) return r; return nullptr; };
+                    if (auto* t = dynamic_cast<chainivo::ui::ChainTile*> (find (ed.get()))) t->onSelect();
+                    juce::MessageManager::getInstance()->runDispatchLoopUntil (300);
+                    auto im2 = ed->createComponentSnapshot (ed->getLocalBounds(), true, 2.0f);
+                    juce::File f2 (juce::String ("/tmp/claude-0/-home-claude/a71dc4c6-2070-51ff-85e0-7f07bc2eb995/scratchpad/ctest/ui_pro") + juce::String (e) + ".png");
+                    f2.deleteFile(); juce::FileOutputStream os2 (f2); juce::PNGImageFormat().writeImageToStream (im2, os2);
+                }
         }
         chainivo::ui::saveDarkSkin (false);
     }

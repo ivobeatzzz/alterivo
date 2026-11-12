@@ -65,7 +65,7 @@ private:
     std::vector<juce::Rectangle<int>> layout;
     Toggle lockToggle { "LOCK" }, soloToggle { "SOLO" };
     PillButton autoButton { "AUTO", PillButton::lime };
-    std::vector<float> histComp, histDeess, histHarsh, histBreath;
+    std::vector<float> histComp, histDeess, histHarsh, histBreath, histWord;
 };
 
 class TrackCard : public juce::Component

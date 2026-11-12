@@ -34,6 +34,7 @@ struct R
     R& stereo (float width, float doubler = 0) { r.width = width; r.doubler = doubler; return *this; }
     R& crea (CreaType t, int note, float amount) { r.creaOn = true; r.crea = t; r.creaNote = note; r.creaAmount = amount; return *this; }
     R& pitch (float st) { r.creaPitch = st; return *this; }
+    R& words (int target, int fx, float amount) { r.wordOn = true; r.wordTarget = target; r.wordFx = fx; r.wordAmount = amount; return *this; }
     R& autom (float throwAmt, float swell) { r.throwAmt = throwAmt; r.swell = swell; return *this; }
 };
 
@@ -299,6 +300,10 @@ std::vector<Recipe> makeFactory()
         .eq (1.3f, 1.0f, 1.0f).comp (C::fet, 7, 6, 2, 80).harm (H::tube, 0.3f).rev (RV::hall, 0.2f, 2.2f).crea (CR::pitch, 4, 0.55f).pitch (-12.0f).stereo (1.4f));
     p.push_back (R (V::textura, "FX Grain Cloud", "Experimental", "La voz deshecha en una nube de granos", "granular,textura,nube")
         .eq (1.8f, -1.0f, 2.5f, -2.0f).comp (C::opto, 4, 3, 10, 400).noHarm().rev (RV::hall, 0.4f, 4.0f, 30, 0.45f).crea (CR::granular, 5, 0.7f).stereo (1.9f, 0.2f));
+    p.push_back (R (V::adlib, "FX Word Echo", "Trap mel\xc3\xb3" "dico", "Eco sólo en una de cada cuatro palabras", "eco,palabras")
+        .eq (1.3f, 1.5f, 2.5f).comp (C::vca, 6, 4, 3, 100).harm (H::tape, 0.2f).rev (RV::plate, 0.16f, 1.4f).words (2, 0, 0.7f).stereo (1.4f));
+    p.push_back (R (V::efecto, "FX Section Fill", "Rage", "Stutter en el último compás de cada 8: remate de sección", "stutter,seccion,transicion")
+        .eq (1.3f, 2.0f, 2.0f).comp (C::fet, 7, 6, 2, 80).harm (H::transformer, 0.35f).rev (RV::plate, 0.14f, 1.1f).words (6, 1, 0.9f).stereo (1.4f));
     std::vector<Recipe> out;
     for (auto& r : p) out.push_back (r.r);
     return out;

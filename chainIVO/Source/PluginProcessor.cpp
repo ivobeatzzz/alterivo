@@ -130,6 +130,7 @@ void ChainIvoProcessor::readSettings (EqSettings& e, CompSettings& c, HarmSettin
 
     cr.on = p (pid::creaOn) > 0.5f; cr.type = (CreaType) (int) p (pid::creaType); cr.note = (int) p (pid::creaNote);
     cr.amount = p (pid::creaAmount) * 0.01f * I; cr.pitch = p (pid::creaPitch);
+    cr.wordOn = p (pid::wordOn) > 0.5f; cr.wordTarget = (int) p (pid::wordTarget); cr.wordFx = (int) p (pid::wordFx); cr.wordAmount = p (pid::wordAmount) * 0.01f * I;
 }
 
 EqSettings ChainIvoProcessor::eqSettingsNow() const
@@ -207,6 +208,7 @@ void ChainIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
             if (auto b = pos->getBpm()) tempo.bpm = *b;
             if (auto q = pos->getPpqPosition()) tempo.ppq = *q;
             tempo.playing = pos->getIsPlaying();
+            if (auto ts = pos->getTimeSignature()) tempo.beatsPerBar = std::max (1, ts->numerator) * 4 / std::max (1, ts->denominator);
         }
     lastBpm.store (tempo.bpm);
 

@@ -285,9 +285,11 @@ BuildResult buildChain (const Recipe& r, const AnalysisResult& a, int genreIdx)
 
     // ---------------- CREATIVE (sólo si la receta lo pide)
     set (pid::creaOn, r.creaOn ? 1.0f : 0.0f); set (pid::creaType, (float) (int) r.crea); set (pid::creaNote, (float) r.creaNote); set (pid::creaAmount, r.creaAmount * 100.0f); set (pid::creaPitch, r.creaPitch);
-    out.why[5] = r.creaOn ? T("Efecto r\xc3\xadtmico elegido por el preset") : "Apagado: nunca se activa solo";
+    set (pid::wordOn, r.wordOn ? 1.0f : 0.0f); set (pid::wordTarget, (float) r.wordTarget); set (pid::wordFx, (float) r.wordFx); set (pid::wordAmount, r.wordAmount * 100.0f);
+    out.why[5] = r.creaOn || r.wordOn ? T ("Efecto creativo elegido por el preset") + (r.wordOn ? T (", con efecto s\xc3\xb3lo en ciertas palabras o compases") : juce::String())
+                                      : "Apagado: nunca se activa solo";
 
-    out.enginesOn = 4 + (harmOn ? 1 : 0) + (r.creaOn ? 1 : 0);
+    out.enginesOn = 4 + (harmOn ? 1 : 0) + (r.creaOn || r.wordOn ? 1 : 0);
     return out;
 }
 } // namespace chainivo

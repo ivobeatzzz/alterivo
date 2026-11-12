@@ -38,6 +38,9 @@ inline constexpr const char* dlyThrow = "dlyThrow"; inline constexpr const char*
 inline constexpr const char* creaOn = "creaOn"; inline constexpr const char* creaType = "creaType";
 inline constexpr const char* creaNote = "creaNote"; inline constexpr const char* creaAmount = "creaAmount";
 inline constexpr const char* creaPitch = "creaPitch";
+// Efectos por palabra y por sección
+inline constexpr const char* wordOn = "wordOn"; inline constexpr const char* wordTarget = "wordTarget";
+inline constexpr const char* wordFx = "wordFx"; inline constexpr const char* wordAmount = "wordAmount";
 
 juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
 

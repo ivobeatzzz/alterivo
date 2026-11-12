@@ -227,8 +227,15 @@ void Segmented::paint (juce::Graphics& g)
         auto seg = juce::Rectangle<float> (inner.getX() + w * (float) i, inner.getY(), w, inner.getHeight());
         const bool on = i == selected;
         if (on) raised (g, seg.reduced (1.0f, 0.0f), seg.getHeight() * 0.5f, 0.45f);
-        const auto f = font (F::manX, fs, 0.2f);
-        const float tw = textWidth (f, names[i]) - fs * 0.2f;
+        // si el texto no cabe en su hueco, se aprieta el espaciado y luego el tamaño (nunca se corta)
+        float size = fs, track = 0.2f;
+        auto f = font (F::manX, size, track);
+        while (textWidth (f, names[i]) > seg.getWidth() - 8.0f && (track > 0.02f || size > 7.0f))
+        {
+            if (track > 0.02f) track = std::max (0.0f, track - 0.06f); else size -= 0.5f;
+            f = font (F::manX, size, track);
+        }
+        const float tw = textWidth (f, names[i]) - size * track;
         const bool withDot = on && dot && tw + 22.0f < seg.getWidth();
         const float start = seg.getCentreX() - (tw + (withDot ? 15.0f : 0.0f)) * 0.5f;
         if (withDot) logoDot (g, { start + 4.0f, seg.getCentreY() }, 3.0f, true);

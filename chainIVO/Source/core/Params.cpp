@@ -114,6 +114,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     add<APF> (l, creaAmount, "Creative Amount", NR (0.0f, 100.0f, 0.1f), 50.0f, pctAttr());
     l.add (std::make_unique<APF> (juce::ParameterID { creaPitch, 2 }, "Creative Pitch", NR (-24.0f, 24.0f, 1.0f), -12.0f,
                                   juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (float v, int) { return (v > 0 ? "+" : "") + juce::String (juce::roundToInt (v)) + " st"; })));
+    l.add (std::make_unique<APB> (juce::ParameterID { wordOn, 2 }, "Word FX On", false));
+    l.add (std::make_unique<APC> (juce::ParameterID { wordTarget, 2 }, "Word FX Target",
+                                  juce::StringArray { "Todas", "1 de 2", "1 de 4", "Fuertes", juce::String::fromUTF8 ("1\xc2\xaa frase"), "Fin 4c", "Fin 8c" }, 2));
+    l.add (std::make_unique<APC> (juce::ParameterID { wordFx, 2 }, "Word FX Effect",
+                                  juce::StringArray { "Eco", "Stutter", "Filtro", juce::String::fromUTF8 ("Distorsi\xc3\xb3n"), "Pitch" }, 0));
+    l.add (std::make_unique<APF> (juce::ParameterID { wordAmount, 2 }, "Word FX Amount", NR (0.0f, 100.0f, 0.1f), 60.0f, pctAttr()));
     return l;
 }
 
@@ -127,7 +133,7 @@ const std::array<juce::StringArray, 6>& perEngine()
         juce::StringArray { harmOn, harmType, harmDrive, harmTone, harmMix },
         juce::StringArray { vocOn, deess, deessFreq, harsh, breath },
         juce::StringArray { spaceOn, revType, revMix, revDecay, revPredelay, revTone, dlyType, dlyNote, dlyFeedback, dlyMix, duck, width, doubler, dlyThrow, revSwell },
-        juce::StringArray { creaOn, creaType, creaNote, creaAmount, creaPitch } };
+        juce::StringArray { creaOn, creaType, creaNote, creaAmount, creaPitch, wordOn, wordTarget, wordFx, wordAmount } };
     return e;
 }
 } // namespace
@@ -147,6 +153,10 @@ int engineOf (const juce::String& id)
 juce::String helpFor (const juce::String& id)
 {
     static const std::map<juce::String, juce::String> h {
+        { "wordOn", juce::String::fromUTF8 ("Efectos por palabra o por secci\xc3\xb3n: s\xc3\xb3lo suenan en las palabras (o compases) que elijas. Nunca se activan solos.") },
+        { "wordTarget", juce::String::fromUTF8 ("D\xc3\xb3nde: todas las palabras \xc2\xb7 1 de cada 2 \xc2\xb7 1 de cada 4 \xc2\xb7 las m\xc3\xa1s fuertes \xc2\xb7 la 1\xc2\xaa de cada frase \xc2\xb7 el \xc3\xbaltimo comp\xc3\xa1s de cada 4 o de cada 8 (transiciones entre secciones).") },
+        { "wordFx", juce::String::fromUTF8 ("Qu\xc3\xa9: Eco (al tempo de RATE) \xc2\xb7 Stutter (repite el principio de la palabra) \xc2\xb7 Filtro tel\xc3\xa9" "fono \xc2\xb7 Distorsi\xc3\xb3n \xc2\xb7 Pitch (capa con el tono de PITCH).") },
+        { "wordAmount", juce::String::fromUTF8 ("Cantidad del efecto en esas palabras.") },
         { "dlyThrow", juce::String::fromUTF8 ("Automatizaci\xc3\xb3n: al acabar cada frase, la \xc3\xbaltima palabra se manda al delay (remate o \"throw\"). 0 = desactivada.") },
         { "revSwell", juce::String::fromUTF8 ("Automatizaci\xc3\xb3n: la reverb crece justo al acabar cada frase y vuelve a bajar cuando entra la voz. 0 = desactivada.") },
         { "creaPitch", juce::String::fromUTF8 ("Pitch creativo: capa con otra afinaci\xc3\xb3n (s\xc3\xb3lo si eliges Pitch; nunca se activa sola).") },

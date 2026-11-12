@@ -17,11 +17,11 @@
 [reverb] Ambience (8 lineas) decay ajustado 2.0 s -> medido T60 0.60 s
 [mono] anchura 200 % + doblador 60 %: suma mono frente a estereo -1.8 dB, correlacion L/R 0.31
 [deess] tramos de 's' (79): agudos -5.8 dB | tramos de vocal (899): nivel -0.02 dB
-[cpu] ECO    2.4 % de un nucleo (latencia 31 muestras = 0.65 ms)
-[cpu] NORMAL 3.9 % de un nucleo (latencia 38 muestras = 0.79 ms)
-[cpu] HIGH   4.2 % de un nucleo (latencia 61 muestras = 1.27 ms)
-[cpu] ULTRA  6.5 % de un nucleo (latencia 65 muestras = 1.35 ms)
-[stress] 158 s con automatizacion aleatoria: 0 valores no validos, pico 0.53 (-5.4 dBFS)
+[cpu] ECO    2.5 % de un nucleo (latencia 31 muestras = 0.65 ms)
+[cpu] NORMAL 3.8 % de un nucleo (latencia 38 muestras = 0.79 ms)
+[cpu] HIGH   4.3 % de un nucleo (latencia 61 muestras = 1.27 ms)
+[cpu] ULTRA  7.1 % de un nucleo (latencia 65 muestras = 1.35 ms)
+[stress] 158 s con automatizacion aleatoria: 0 valores no validos, pico 1.78 (5.0 dBFS)
 [auto] sin principal: 33.7 s de voz, tipo Segunda voz (58 %): Suena casi todo el tiempo
        medidas: actividad 0.64, frase mediana 0.73 s, tono claro 0.85, sibilancia -25.7 dB en 5080 Hz, graves -6.9, nasal -18.7, p90 -26.5 dB
        preset: Propuesta automática | por que EQ: Paso alto en 198 Hz, graves cargados: -2.9 dB en 250 Hz.
@@ -29,7 +29,7 @@
        por que EQ: Choca con la voz principal en 4.0 kHz: baja 3.3 dB ahí sólo cuando canta la principal.
 [auto] respuesta: tipo Respuesta (100 %) | suena con principal 0.00, sin principal 0.84
 [state] parametros distintos 0 | orden igual | PRO 1 | lock COMP 1 | preset 'Ad-lib Dark Echo' | B recuperado reverb 33 %
-[presets] 122 presets IVO: Ad-libs 30 · Armonías 20 · Coros 30 · Dobles y segundas 20 · Efectos 22 · estilos sin reconocer 0
+[presets] 124 presets IVO: Ad-libs 31 · Armonías 20 · Coros 30 · Dobles y segundas 20 · Efectos 23 · estilos sin reconocer 0
 [presets] pareja mas parecida: Coro Old School / Armonía Old School (diferencia -19.6 dB a igual volumen) | parejas por debajo de -20 dB: 0
 [export] Exportado: voz (chainIVO).wav | canales 1, 48000 Hz, 32 bits | duracion 30.00 s (original 26.40 s + cola) | INTENSITY 0: diferencia con el original -300.0 dB | original intacto: si
 [beat] cargado 'beat' | por que EQ: Paso alto en 162 Hz, presencia +3.0 dB en 4.0 kHz, donde el instrumental deja hueco, el beat tiene graves fuertes: paso alto más arriba.
@@ -39,6 +39,12 @@
 [granular] 0 valores no validos | nivel -30.0 dB frente a la voz -31.5 dB
 [ir] tipo IR, IR 'ir' | cola: 50-300 ms -8.3 dB, 550-800 ms -46.3 dB, 1.2-1.45 s -200.0 dB (la IR dura 0.8 s)
 [group] la segunda instancia ve 1 capa(s), posicion 1 | pre-delay A 20 ms, B 28 ms | por que EQ (B): Paso alto en 198 Hz, graves cargados: -2.8 dB en 250 Hz, presencia +1.0 dB en 2.0 kHz, donde las otras capas vocales no se acumulan.
+[profile] AUTO puso reverb 20 %, el usuario la subio a 40 %; siguiente propuesta: 27 % | Ad-lib:  revMix +7.0
+[guard] NaN en la entrada: bloques recuperados 0, muestras no validas en la salida despues 0 (durante: 0)
+[word] 16 palabras, detectadas 16 | filtro en '1 de 4': ...X...X...X...X (X = palabra con efecto)
+[word] distorsion en '1a de frase': X.......X.......
+[word] eco en todas: diferencia media por palabra 10.0 dB
+[seccion] distorsion en 'ultimo compas de cada 4', compases 1-8: ...X...X
 [ui] ui_auto.png guardada
 [ui] ui_pro.png guardada
 [ui] ui_dark.png guardada

@@ -107,6 +107,9 @@ public:
     float harshGr() const { return vocal.harshReduction(); }
     float breathGr() const { return vocal.breathReduction(); }
     int phraseEnds() const { return space.phraseEndCount(); }
+    bool wordActive() const { return creative.wordActive(); }
+    bool wordTargeted() const { return creative.wordTargeted(); }
+    int wordsDetected() const { return creative.wordsDetected(); }
     chainivo::EqSettings eqSettingsNow() const;   // para dibujar la curva real
     double getSampleRateSafe() const { return currentSr; }
     std::atomic<float> uiScale { 1.0f };

@@ -21,7 +21,7 @@ AUTO sólo monta la cadena una vez. Al volver a abrir un proyecto nunca cambia t
 ## 2. Presets
 Pulsa el nombre del preset para abrir el buscador: texto libre (nombre, estilo, carácter: "oscuro",
 "delay", "rage"…), categorías, favoritos (estrella) y presets de usuario. Las flechas ‹ › pasan de uno
-en uno. Hay 122 presets IVO (30 ad-libs, 30 coros, 20 dobles/segundas, 20 armonías, 22 efectos).
+en uno. Hay 124 presets IVO (31 ad-libs, 30 coros, 20 dobles/segundas, 20 armonías, 23 efectos).
 Un preset IVO es una intención: al cargarlo se adapta a tu grabación (graves, eses, nivel, choque
 con la principal…). "Guardar como…" guarda una copia exacta de tu cadena; los presets IVO nunca
 se modifican. Tus presets están en Documentos/IVO Beatz/chainIVO/Presets y se pueden importar y exportar.
@@ -48,6 +48,10 @@ Los mismos motores con todos los ajustes. Pulsa una ficha para editarla.
   frase ha detectado.
 - **CREATIVE** (nunca se enciende solo): Stutter, Gate y Reverse al tempo; Pitch (capa con otra
   afinación, ±24 st) y Granular (nube de granos).
+  **POR PALABRA**: el efecto que elijas (Eco, Stutter, Filtro teléfono, Distorsión o Pitch) suena sólo en
+  las palabras que elijas: todas, 1 de cada 2, 1 de cada 4, las más fuertes o la primera de cada frase.
+  También **por sección**: en el último compás de cada 4 o de cada 8 (los remates entre secciones).
+  En la pantalla de CREATIVE se ven las palabras detectadas (gris) y las que llevan efecto (lima).
 
 ## 5. La voz principal (sidechain)
 chainIVO nunca modifica la voz principal: sólo la escucha.

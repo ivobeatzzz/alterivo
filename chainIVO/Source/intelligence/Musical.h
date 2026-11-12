@@ -53,6 +53,8 @@ struct Recipe
     bool creaOn = false; CreaType crea = CreaType::stutter; int creaNote = 4; float creaAmount = 0.5f; float creaPitch = -12.0f;
     // Automatizaciones musicales al final de cada frase
     float throwAmt = 0.0f, swell = 0.0f;
+    // Efectos por palabra / sección (sólo si el preset lo pide)
+    bool wordOn = false; int wordTarget = 2, wordFx = 0; float wordAmount = 0.6f;
 };
 
 // Receta base para un tipo de voz (cuando el usuario pide "propuesta automática" sin preset)
