@@ -124,6 +124,9 @@ class PillButton : public juce::Component, public juce::SettableTooltipClient
 public:
     enum Style { white, lime, dark };
     PillButton (juce::String t, Style s = white) : text (std::move (t)), style (s) { setMouseCursor (juce::MouseCursor::PointingHandCursor); }
+    static constexpr int pad = 10;   // margen para que la sombra redonda no se corte
+    void setVisualBounds (juce::Rectangle<int> r) { setBounds (r.expanded (pad)); }
+    bool hitTest (int x, int y) override { return getLocalBounds().reduced (pad).contains (x, y); }
     std::function<void()> onClick;
     void setText (const juce::String& t) { text = t; repaint(); }
     void setStyle (Style s) { style = s; repaint(); }

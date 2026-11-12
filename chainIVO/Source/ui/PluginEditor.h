@@ -10,6 +10,8 @@ class Chip : public juce::Component
 {
 public:
     explicit Chip (juce::String t) : text (std::move (t)) { setMouseCursor (juce::MouseCursor::PointingHandCursor); }
+    static constexpr int pad = 9;    // margen para la sombra redonda
+    bool hitTest (int x, int y) override { return getLocalBounds().reduced (pad).contains (x, y); }
     bool selected = false;
     std::function<void()> onClick;
     juce::String text;
@@ -91,6 +93,8 @@ class PresetPill : public juce::Component
 {
 public:
     explicit PresetPill (ChainIvoProcessor& p) : proc (p) { setMouseCursor (juce::MouseCursor::PointingHandCursor); }
+    static constexpr int pad = 14;   // margen para la sombra redonda
+    bool hitTest (int x, int y) override { return getLocalBounds().reduced (pad).contains (x, y); }
     std::function<void()> onOpen;
     void paint (juce::Graphics&) override;
     void mouseDown (const juce::MouseEvent&) override;

@@ -94,7 +94,7 @@ void screen (juce::Graphics& g, juce::Rectangle<float> r, float rad)
 void limeFill (juce::Graphics& g, juce::Rectangle<float> r, float rad)
 {
     const auto p = rr (r, rad);
-    juce::DropShadow (juce::Colour (0xff6eaa28).withAlpha (0.55f), 14, { 0, 5 }).drawForPath (g, p);
+    juce::DropShadow (juce::Colour (0xff6eaa28).withAlpha (0.5f), 10, { 0, 4 }).drawForPath (g, p);
     g.setGradientFill (juce::ColourGradient (limeLight, 0, r.getY(), limeDark, 0, r.getBottom(), false));
     g.fillPath (p);
     g.setColour (juce::Colours::white.withAlpha (0.6f));
@@ -233,7 +233,14 @@ void Segmented::paint (juce::Graphics& g)
     {
         auto seg = juce::Rectangle<float> (inner.getX() + w * (float) i, inner.getY(), w, inner.getHeight());
         const bool on = i == selected;
-        if (on) raised (g, seg.reduced (1.0f, 0.0f), seg.getHeight() * 0.5f, 0.45f);
+        if (on)
+        {
+            // pastilla elevada dentro del carril: sombra corta para que no toque el borde
+            const auto pr = seg.reduced (1.0f, 0.0f);
+            juce::Path pp; pp.addRoundedRectangle (pr, pr.getHeight() * 0.5f);
+            juce::DropShadow (shadow.withAlpha (0.22f), 5, { 0, 2 }).drawForPath (g, pp);
+            raised (g, pr, pr.getHeight() * 0.5f, 0.0f);
+        }
         // si el texto no cabe en su hueco, se aprieta el espaciado y luego el tamaño (nunca se corta)
         float size = fs, track = 0.2f;
         auto f = font (F::manX, size, track);
@@ -366,17 +373,17 @@ void IconButton::paint (juce::Graphics& g)
 // ------------------------------------------------------------------ PillButton
 void PillButton::paint (juce::Graphics& g)
 {
-    auto r = getLocalBounds().toFloat().reduced (3.0f);
+    auto r = getLocalBounds().toFloat().reduced ((float) pad);
     const float rad = r.getHeight() * 0.5f;
     if (style == lime) limeFill (g, r, rad);
     else if (style == dark)
     {
         juce::Path p; p.addRoundedRectangle (r, rad);
-        juce::DropShadow (juce::Colour (0xff142810).withAlpha (0.6f), 14, { 0, 5 }).drawForPath (g, p);
+        juce::DropShadow (juce::Colour (0xff142810).withAlpha (0.5f), 10, { 0, 4 }).drawForPath (g, p);
         g.setGradientFill (juce::ColourGradient (juce::Colour (0xff2a3b22), 0, r.getY(), juce::Colour (0xff15240f), 0, r.getBottom(), false));
         g.fillPath (p);
     }
-    else raised (g, r, rad, 0.5f);
+    else raised (g, r, rad, 0.4f);
     g.setColour (style == dark ? juce::Colour (0xffe8f7c8) : (style == lime ? onLime : ink));
     g.setFont (font (F::manX, 10.5f, 0.2f));
     g.drawText (text, r, juce::Justification::centred, false);

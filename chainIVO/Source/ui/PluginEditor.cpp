@@ -22,8 +22,8 @@ const juce::Rectangle<int> kTrackCard { 40, 112, 266, 398 }, kEngineCard { 326, 
 // =================================================================== Chip
 void Chip::paint (juce::Graphics& g)
 {
-    auto r = getLocalBounds().toFloat().reduced (1.0f, 2.0f);
-    if (selected) limeFill (g, r, r.getHeight() * 0.5f); else raised (g, r, r.getHeight() * 0.5f, 0.35f);
+    auto r = getLocalBounds().toFloat().reduced ((float) pad).reduced (1.0f, 2.0f);
+    if (selected) limeFill (g, r, r.getHeight() * 0.5f); else raised (g, r, r.getHeight() * 0.5f, 0.3f);
     g.setColour (selected ? onLime : body); g.setFont (font (F::man, 12.5f));
     g.drawText (text, r, juce::Justification::centred, false);
 }
@@ -223,7 +223,7 @@ void EngineView::resized()
     for (size_t i = 0; i < controls.size() && i < layout.size(); ++i) controls[i]->setBounds (layout[i]);
     lockToggle.setBounds (getWidth() - 236, 12, 100, 30);
     soloToggle.setBounds (getWidth() - 340, 12, 100, 30);
-    autoButton.setBounds (getWidth() - 112, 10, 94, 34);
+    autoButton.setVisualBounds ({ getWidth() - 112, 10, 94, 34 });
 }
 
 void EngineView::tick()
@@ -592,7 +592,7 @@ void TrackCard::resized()
     {
         float total = 0; for (auto* c : r) total += (float) c->preferredWidth(); total += gap * (float) (r.size() - 1);
         float x = ((float) getWidth() - total) * 0.5f;
-        for (auto* c : r) { c->setBounds ((int) x, (int) y, c->preferredWidth(), 32); x += (float) c->preferredWidth() + gap; }
+        for (auto* c : r) { c->setBounds (juce::Rectangle<int> ((int) x, (int) y, c->preferredWidth(), 32).expanded (Chip::pad)); x += (float) c->preferredWidth() + gap; }
         y += 34;
     }
     genreBox = { 24, 302, (float) getWidth() - 48, 40 };
@@ -773,8 +773,8 @@ void TrackCard::showGenres()
 // =================================================================== PresetPill
 void PresetPill::paint (juce::Graphics& g)
 {
-    auto r = getLocalBounds().toFloat().reduced (2.0f);
-    raised (g, r, r.getHeight() * 0.5f, 0.7f);
+    auto r = getLocalBounds().toFloat().reduced ((float) pad);
+    raised (g, r, r.getHeight() * 0.5f, 0.45f);
     logoDot (g, { r.getX() + 22.0f, r.getCentreY() }, 4.0f, true);
     const auto name = proc.getPresetName();
     juce::String sub = u8 ("pulsa para buscar \xc2\xb7 ") + juce::String ((int) proc.presets.recipes().size()) + " IVO";
@@ -805,7 +805,7 @@ void PresetPill::step (int d)
 
 void PresetPill::mouseDown (const juce::MouseEvent& e)
 {
-    const float rx = (float) getWidth() - 2.0f;
+    const float rx = (float) getWidth() - (float) pad;
     if (e.position.x > rx - 60 && e.position.x < rx - 36) step (-1);
     else if (e.position.x >= rx - 36) step (1);
     else if (onOpen) onOpen();
@@ -919,11 +919,11 @@ void PresetBrowser::resized()
     auto bottom = r.removeFromBottom (44);
     r.removeFromBottom (14);
     list.setBounds (r.reduced (6));
-    closeB.setBounds (bottom.removeFromRight (110));
+    closeB.setVisualBounds (bottom.removeFromRight (110).reduced (0, 4));
     bottom.removeFromRight (8);
-    saveB.setBounds (bottom.removeFromLeft (170)); bottom.removeFromLeft (8);
-    importB.setBounds (bottom.removeFromLeft (120)); bottom.removeFromLeft (8);
-    exportB.setBounds (bottom.removeFromLeft (120));
+    saveB.setVisualBounds (bottom.removeFromLeft (170).reduced (0, 4)); bottom.removeFromLeft (8);
+    importB.setVisualBounds (bottom.removeFromLeft (120).reduced (0, 4)); bottom.removeFromLeft (8);
+    exportB.setVisualBounds (bottom.removeFromLeft (120).reduced (0, 4));
 }
 
 void PresetBrowser::mouseDown (const juce::MouseEvent& e)
@@ -936,7 +936,7 @@ void PresetBrowser::paintListBoxItem (int row, juce::Graphics& g, int w, int h, 
     if (row < 0 || row >= (int) items.size()) return;
     const auto& it = items[(size_t) row];
     auto r = juce::Rectangle<float> (4, 3, (float) w - 8, (float) h - 6);
-    if (sel || it.name == proc.getPresetName()) raised (g, r, 12.0f, 0.35f);
+    if (sel || it.name == proc.getPresetName()) { raised (g, r, 12.0f, 0.0f); g.setColour (lime); g.drawRoundedRectangle (r.reduced (0.75f), 12.0f, 1.5f); }
     const bool fav = proc.presets.isFavourite (it.name);
     juce::Path s; s.addStar ({ r.getX() + 20, r.getCentreY() }, 5, 4.5f, 9.5f, 0.0f);
     if (fav) { g.setColour (juce::Colour (0xff8dcb34)); g.fillPath (s); g.setColour (ink); g.strokePath (s, juce::PathStrokeType (1.1f)); }
@@ -1066,7 +1066,7 @@ void MainView::resized()
     // Cabecera: todo centrado en y = 56 y con 16 px entre piezas, alineado al margen derecho (1000)
     abSwitch.setBounds (904, 34, 96, 44);
     undoRedo.setBounds (816, 34, 76, 44);
-    presetPill.setBounds (560, 30, 244, 52);
+    presetPill.setBounds (juce::Rectangle<int> (560, 30, 244, 52).expanded (PresetPill::pad));
     modeSwitch.setBounds (354, 34, 190, 44);
     trackCard.setBounds (kTrackCard);
     layoutTiles();
