@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "ui/PluginEditor.h"
 #include <cstdio>
+#include <map>
 using namespace chainivo;
 
 static std::vector<float> loadRaw (const char* path)
@@ -278,6 +279,43 @@ int main (int argc, char** argv)
         b.selectAb (1);
         std::printf ("[state] parametros distintos %d | orden %s | PRO %d | lock COMP %d | preset '%s' | B recuperado reverb %.0f %%\n", diff, oa == ob ? "igual" : "DISTINTO",
                      (int) b.isPro(), (int) b.isLocked (1), b.getPresetName().toRawUTF8(), b.apvts.getRawParameterValue (pid::revMix)->load());
+    }
+
+
+    // 12. Presets: cada uno existe, tiene estilo válido y suena distinto a todos los demás
+    if (doAll || only == "presets")
+    {
+        ChainIvoProcessor ref; const auto& recipes = ref.presets.recipes();
+        std::map<juce::String, int> cats; int badGenre = 0;
+        for (auto& pi : ref.presets.all()) if (pi.factory) ++cats[pi.category];
+        for (auto& r : recipes) if (r.genre < 0) { ++badGenre; std::printf ("   estilo no reconocido: %s\n", r.name.toRawUTF8()); }
+        std::printf ("[presets] %d presets IVO:", (int) recipes.size());
+        for (auto& [c, n] : cats) std::printf (" %s %d ·", c.toRawUTF8(), n);
+        std::printf (" estilos sin reconocer %d\n", badGenre);
+        const int len = std::min (N, (int) (8 * sr));
+        std::vector<float> seg (voice.begin(), voice.begin() + len);
+        std::vector<std::vector<float>> outs;
+        for (int i = 0; i < (int) recipes.size(); ++i)
+        {
+            ChainIvoProcessor p; p.prepareToPlay (sr, 512);
+            p.loadFactoryPreset (i); setP (p, pid::intensity, 100); setP (p, pid::gainMatch, 0);
+            auto out = run (p, seg, seg);
+            std::vector<float> m ((size_t) len);
+            double e = 0; for (int k = 0; k < len; ++k) { m[(size_t) k] = 0.5f * (out.getSample (0, k) + out.getSample (1, k)); e += m[(size_t) k] * m[(size_t) k]; }
+            const float g = (float) (1.0 / std::sqrt (e / len + 1e-20)); for (auto& v : m) v *= g;   // mismo volumen: se compara el sonido, no el nivel
+            outs.push_back (std::move (m));
+        }
+        double minD = 1e9; int ma = 0, mb = 0; int under = 0;
+        for (size_t a = 0; a < outs.size(); ++a)
+            for (size_t b = a + 1; b < outs.size(); ++b)
+            {
+                double e = 0; for (int k = 0; k < len; ++k) { const double d = outs[a][(size_t) k] - outs[b][(size_t) k]; e += d * d; }
+                const double dbv = 10 * std::log10 (e / len);
+                if (dbv < -20.0) { ++under; std::printf ("   parecidos: %s / %s %.1f dB\n", recipes[a].name.toRawUTF8(), recipes[b].name.toRawUTF8(), dbv); }
+                if (dbv < minD) { minD = dbv; ma = (int) a; mb = (int) b; }
+            }
+        std::printf ("[presets] pareja mas parecida: %s / %s (diferencia %.1f dB a igual volumen) | parejas por debajo de -20 dB: %d\n",
+                     recipes[(size_t) ma].name.toRawUTF8(), recipes[(size_t) mb].name.toRawUTF8(), minD, under);
     }
 
     // 11. Interfaz

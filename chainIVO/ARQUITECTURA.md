@@ -102,10 +102,12 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | Estabilidad | 158 s con automatización aleatoria y bloques de 1-1024 muestras: 0 valores inválidos |
 | AUTO | doble detectado (66 %), respuesta detectada (100 %); sin principal, voz continua → "segunda voz" (58 %) |
 | Estado | guardar/abrir proyecto: 0 parámetros distintos, orden, LOCK, preset y A/B recuperados |
+| Presets | 120 presets, todos con estilo válido; a igual volumen, la pareja más parecida difiere −19.7 dB (ninguna pareja por debajo de −20 dB) |
 
 ## 10. Limitaciones conocidas (versión 0.1)
 
-1. 38 presets IVO (el objetivo es 100-150). Están razonados pero **sin validar de oído con voces reales**:
+1. 120 presets IVO (30 ad-libs, 30 coros, 20 dobles/segundas, 20 armonías, 20 efectos). La prueba automática
+   comprueba que todos suenan distintos entre sí, pero están **sin validar de oído con voces reales**:
    es lo siguiente que hay que hacer con grabaciones del usuario.
 2. La clasificación es por reglas: con una sola voz de prueba no se puede afirmar su precisión.
    Hace falta un conjunto de pistas reales etiquetadas.
@@ -133,6 +135,6 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | 2 Core y prototipo funcional | hecha y medida (falta validación con voces reales) |
 | 3 Calidad de procesamiento | en gran parte (medidas arriba); faltan escuchas comparativas |
 | 4 Inteligencia musical | parcial: tipos de voz, voz principal, recetas; faltan grupos, secciones y automatizaciones |
-| 5 Presets y motor creativo | parcial: 38 presets, 3 efectos creativos |
+| 5 Presets y motor creativo | 120 presets hechos y diferenciados (falta escucharlos); 3 efectos creativos |
 | 6 Producto completo | pendiente (export, licencias, manual, skins) |
 | 7 QA y lanzamiento | pendiente (pruebas en cada DAW con el usuario) |
