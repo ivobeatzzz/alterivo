@@ -47,7 +47,7 @@ Source/
   PluginProcessor.*          AUDIO CORE + gestión de ganancia + A/B + estado + capa DAW (JUCE)
   ui/                        USER INTERFACE (Widgets, editor)
 ```
-Pendientes: Diagnostics como módulo propio y Licensing (ver limitaciones).
+Diagnostics: protección de entrada y de motores con registro (diagnostico.txt). Pendiente: Licensing (ver limitaciones).
 
 ## 4. Flujo de la señal
 
@@ -115,6 +115,8 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | Pitch creativo | capa −12 st sobre 440 Hz: aparece 220 Hz a −0.6 dB y la voz sigue en 440 Hz |
 | Granular | estable (0 valores inválidos), nivel parecido a la voz |
 | Reverb IR | la cola sigue la IR cargada (0.8 s) y termina con ella |
+| Perfil personal | AUTO puso reverb 20 %, el usuario la dejó en 40 % → la siguiente propuesta sale con 27 % (aprende poco a poco) |
+| Protección | NaN en la entrada: 0 muestras no válidas en la salida |
 | Grupo | dos instancias se ven; la segunda separa su presencia y su pre-delay (20 → 28 ms) |
 
 ## 10. Limitaciones conocidas (versión 0.1)

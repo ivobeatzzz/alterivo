@@ -164,7 +164,12 @@ struct EnvDb
 {
     float a = 0, r = 0, v = -120.0f;
     void prepare (double sr, float attMs, float relMs) { a = msToCoeff (attMs, sr); r = msToCoeff (relMs, sr); v = -120.0f; }
-    float tick (float db) { const float c = db > v ? a : r; v = db + c * (v - db); return v; }
+    float tick (float db)
+    {
+        if (! (db > -200.0f)) db = -200.0f;   // también atrapa NaN: un valor roto nunca se queda dentro
+        const float c = db > v ? a : r; v = db + c * (v - db); return v;
+    }
+    void reset() { v = -120.0f; }
 };
 
 // Medidor de pico para la interfaz (lo lee el hilo de la interfaz)

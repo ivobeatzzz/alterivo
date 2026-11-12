@@ -63,6 +63,9 @@ Sin voz principal también funciona, pero no puede distinguir doble, armonía o 
 - **Procesar un archivo**: crea "nombre (chainIVO).wav" (24 bits o 32 bits float) junto al original,
   con la cola completa y alineado. El original no se toca.
 - **Reverb IR**: carga una respuesta de impulso (WAV) para la reverb de convolución.
+- **Perfil personal** (apagado de serie): si lo enciendes, chainIVO aprende lo que sueles cambiar después de
+  AUTO (por ejemplo, más reverb en los ad-libs) y lo tiene en cuenta en las siguientes propuestas.
+  "Ver lo aprendido" lo enseña y "Reiniciar el perfil" lo borra. Nunca toca los presets IVO.
 - **Tema oscuro**: cambia la piel (se guarda en tu ordenador).
 
 ## 7. Varias capas con chainIVO
@@ -77,13 +80,18 @@ CLIP SAFE (protección suave por encima de -1 dBFS) · BYPASS · A/B · deshacer
 IN/OUT · CPU, latencia, Gain Match y correlación estéreo (1 = mono, cerca de 0 = muy abierto,
 negativo = problema de fase).
 
-## 9. Problemas comunes
+## 9. Protección
+Si al plugin le llega audio roto (valores no válidos) lo limpia antes de procesar; si algún motor fallara,
+se reinicia solo y ese bloque sale sin procesar. Se anota en Documentos/IVO Beatz/chainIVO/diagnostico.txt
+y abajo verás "recuperado".
+
+## 10. Problemas comunes
 - No aparece en el DAW: vuelve a escanear plugins. En Mac, si macOS lo bloquea: Ajustes → Privacidad
   y seguridad → "Abrir igualmente".
 - "Esperando audio…": la pista no suena o está en silencio.
 - No detecta la voz principal: revisa el enrutado del sidechain (punto 5).
 - La IR no suena: comprueba que el tipo de reverb sea "IR" y que haya una IR cargada.
 
-## 10. Límites conocidos
+## 11. Límites conocidos
 Ver ARQUITECTURA.md (presets pendientes de escuchar con voces reales, clasificación por reglas,
 sin reconocimiento automático de género, sin sistema de licencias).

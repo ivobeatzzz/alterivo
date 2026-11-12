@@ -13,6 +13,7 @@
 #include "intelligence/Musical.h"
 #include "presets/PresetLibrary.h"
 #include "intelligence/Group.h"
+#include "intelligence/Profile.h"
 
 class ChainIvoProcessor : public juce::AudioProcessor, private juce::Timer
 {
@@ -96,7 +97,9 @@ public:
     std::atomic<int> clipCount { 0 };
     std::atomic<bool> leadConnected { false };
     std::atomic<float> correlation { 1.0f };   // correlación L/R de la salida (1 = mono, 0 = muy abierto, <0 = problemas de fase)
-    std::atomic<int> soloEngine { -1 };        // escucha por módulo: sólo suena ese motor (-1 = todos)
+    std::atomic<int> soloEngine { -1 };
+    std::atomic<int> dspErrors { 0 };          // bloques en los que se detectó un valor no válido (se recuperan solos)
+    chainivo::UserProfile profile;        // escucha por módulo: sólo suena ese motor (-1 = todos)
     float eqKey() const { return eq.dynamicKey(); }
     float eqPresNow() const { return eq.currentPresGain(); }
     float compGr() const { return comp.gainReduction(); }
@@ -150,6 +153,11 @@ private:
     std::array<float, chainivo::kBands> instSpectrum {}, instPending {};
     juce::String instName, instPendingName;
     juce::File irFile;
+    std::map<juce::String, float> lastAuto;      // valores que puso AUTO (para aprender lo que el usuario cambia)
+    std::map<juce::String, int> stableTicks;
+    std::map<juce::String, float> lastSeenVal;
+    juce::StringArray learnedThisBuild;
+    int loggedErrors = 0;
     juce::SharedResourcePointer<chainivo::GroupRegistry> group;
     int groupId = 0;
     juce::String trackName;

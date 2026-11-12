@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <map>
+#include <limits>
 using namespace chainivo;
 
 static std::vector<float> loadRaw (const char* path)
@@ -458,6 +459,30 @@ int main (int argc, char** argv)
         const auto an = b.getAnalysis();
         std::printf ("[group] la segunda instancia ve %d capa(s), posicion %d | pre-delay A %.0f ms, B %.0f ms | por que EQ (B): %s\n",
                      an.groupCount, an.groupIndex, a.apvts.getRawParameterValue (pid::revPredelay)->load(), b.apvts.getRawParameterValue (pid::revPredelay)->load(), b.getExplanations()[0].toRawUTF8());
+    }
+
+
+    // 17. Perfil personal: aprende lo que el usuario cambia después de AUTO y lo aplica la próxima vez
+    if (doAll || only == "profile")
+    {
+        ChainIvoProcessor p; p.prepareToPlay (sr, 512);
+        p.profile.reset(); p.profile.setEnabled (true);
+        p.setVoiceType (0);                                            // ad-lib, propuesta AUTO
+        const float autoRev = p.apvts.getRawParameterValue (pid::revMix)->load();
+        setP (p, pid::revMix, autoRev + 20.0f);                         // el usuario sube la reverb y lo deja
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (3000);
+        p.autoPropose();
+        const float again = p.apvts.getRawParameterValue (pid::revMix)->load();
+        std::printf ("[profile] AUTO puso reverb %.0f %%, el usuario la subio a %.0f %%; siguiente propuesta: %.0f %% | %s\n", autoRev, autoRev + 20, again,
+                     p.profile.describe (voiceTypeNames()).trim().toRawUTF8());
+        p.profile.reset();
+        // Protección: un valor no válido en la entrada no rompe el plugin
+        std::vector<float> badIn (voice.begin(), voice.begin() + 48000); badIn[1000] = std::numeric_limits<float>::quiet_NaN();
+        auto out = run (p, badIn, badIn);
+        int bad = 0; for (int i = 0; i < out.getNumSamples(); ++i) if (! std::isfinite (out.getSample (0, i))) ++bad;
+        std::vector<float> after (voice.begin(), voice.begin() + 96000); auto out2 = run (p, after, after);
+        int bad2 = 0; for (int i = 0; i < out2.getNumSamples(); ++i) if (! std::isfinite (out2.getSample (0, i))) ++bad2;
+        std::printf ("[guard] NaN en la entrada: bloques recuperados %d, muestras no validas en la salida despues %d (durante: %d)\n", p.dspErrors.load(), bad2, bad);
     }
 
     // 11. Interfaz

@@ -611,6 +611,10 @@ void TrackCard::showTools()
     m.addSectionHeader ("REVERB IR (CONVOLUCI\xc3\x93N)");
     m.addItem (6, proc.hasIR() ? u8 ("Cambiar IR (ahora: ") + proc.getIRName() + ")" : u8 ("Cargar una respuesta de impulso (WAV)\xe2\x80\xa6"));
     m.addItem (7, "Quitar la IR", proc.hasIR());
+    m.addSectionHeader ("PERFIL PERSONAL");
+    m.addItem (8, u8 ("Aprender de lo que cambio despu\xc3\xa9s de AUTO"), true, proc.profile.enabled());
+    m.addItem (9, u8 ("Ver lo aprendido"));
+    m.addItem (10, u8 ("Reiniciar el perfil"));
     m.addSectionHeader ("VISTA");
     m.addItem (5, u8 ("Tema oscuro"), true, theme::dark);
     m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (localAreaToGlobal (toolsBox.toNearestInt())),
@@ -620,6 +624,9 @@ void TrackCard::showTools()
         auto& pr = safe->proc;
         if (r == 2) { pr.clearInstrumental(); return; }
         if (r == 7) { pr.clearIR(); return; }
+        if (r == 8) { pr.profile.setEnabled (! pr.profile.enabled()); return; }
+        if (r == 9) { juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::NoIcon, "Perfil personal", pr.profile.describe (voiceTypeNames())); return; }
+        if (r == 10) { pr.profile.reset(); return; }
         if (r == 6)
         {
             safe->chooser = std::make_unique<juce::FileChooser> ("Respuesta de impulso", juce::File(), "*.wav;*.aif;*.aiff");
@@ -966,7 +973,7 @@ void MainView::paint (juce::Graphics& g)
     label (g, "Quality", { 646, 548, 200, 14 }, juce::Justification::centredLeft);
     g.setColour (dim2); g.setFont (font (F::man, 12.0f));
     const float latMs = (float) proc.getLatencySamples() * 1000.0f / (float) proc.getSampleRateSafe();
-    g.drawText ("CPU " + juce::String (juce::roundToInt (proc.cpuLoad.load() * 100.0f)) + u8 (" % \xc2\xb7 ") + juce::String (latMs, 1) + u8 (" ms \xc2\xb7 GM ") + dbs (proc.gainMatchDb.load()) + u8 (" \xc2\xb7 corr. ") + juce::String (proc.correlation.load(), 2),
+    g.drawText ("CPU " + juce::String (juce::roundToInt (proc.cpuLoad.load() * 100.0f)) + u8 (" % \xc2\xb7 ") + juce::String (latMs, 1) + u8 (" ms \xc2\xb7 GM ") + dbs (proc.gainMatchDb.load()) + u8 (" \xc2\xb7 corr. ") + juce::String (proc.correlation.load(), 2) + (proc.dspErrors.load() > 0 ? u8 (" \xc2\xb7 recuperado ") + juce::String (proc.dspErrors.load()) : juce::String()),
                 juce::Rectangle<float> (646, 690, 300, 18), juce::Justification::centredLeft, false);
     drawLogo (g, { 922, 684, 78, 26 });
 }

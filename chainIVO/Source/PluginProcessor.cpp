@@ -171,6 +171,7 @@ void ChainIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
             float v = 0.0f;
             for (int c = 0; c < scBus.getNumChannels(); ++c) v += scBus.getSample (c, i);
             v /= (float) scBus.getNumChannels();
+            if (! std::isfinite (v)) v = 0.0f;
             sideMono[(size_t) i] = v; pk = std::max (pk, std::abs (v));
         }
         side = sideMono.data();
@@ -179,6 +180,11 @@ void ChainIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
 
     auto main = getBusBuffer (buffer, true, 0);
     float* ch[2] = { main.getWritePointer (0), main.getWritePointer (nch > 1 ? 1 : 0) };
+    // Entrada saneada: un valor no válido o desmesurado que mande el host no entra en la cadena
+    for (int c = 0; c < nch; ++c)
+        for (int i = 0; i < n; ++i)
+            if (! std::isfinite (ch[c][i])) ch[c][i] = 0.0f;
+            else ch[c][i] = juce::jlimit (-32.0f, 32.0f, ch[c][i]);
     inMeter.feed (ch, nch, n);
 
     // Entrada
@@ -230,6 +236,18 @@ void ChainIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
             case 4: space.process (ch, nch, n, ss, tempo); break;
             case 5: creative.process (ch, nch, n, crs, tempo); break;
             default: break;
+        }
+    }
+
+    // Protección: si algún motor diera un valor no válido, se reinician los motores y el bloque sale seco
+    {
+        bool bad = false;
+        for (int c = 0; c < nch && ! bad; ++c) for (int i = 0; i < n; ++i) if (! std::isfinite (ch[c][i])) { bad = true; break; }
+        if (bad)
+        {
+            eq.reset(); comp.reset(); harm.reset(); vocal.reset(); space.reset(); creative.reset();
+            for (int c = 0; c < nch; ++c) juce::FloatVectorOperations::copy (ch[c], dryBuf.getReadPointer (c), n);
+            dspErrors.store (dspErrors.load() + 1);
         }
     }
 
@@ -321,16 +339,31 @@ juce::String ChainIvoProcessor::getPresetName() const { return apvts.state.getPr
 void ChainIvoProcessor::applyBuild (const BuildResult& b, const juce::String& presetName)
 {
     undo.beginNewTransaction ("chainIVO AUTO");
-    for (auto& [id, value] : b.values)
+    const int type = getVoiceType();
+    const bool useProfile = profile.enabled();
+    bool profiled = false;
+    lastAuto.clear(); learnedThisBuild.clear(); stableTicks.clear(); lastSeenVal.clear();
+    for (auto [id, value] : b.values)
     {
         if (isLocked (pid::engineOf (id))) continue;   // lo bloqueado por el usuario no se toca
+        if (useProfile && UserProfile::learnable().contains (id))
+        {
+            const float off = profile.offset (type, id);
+            if (std::abs (off) >= UserProfile::threshold (id) * 0.5f) { value += off; profiled = true; }
+        }
+        if (auto* prm = apvts.getParameter (id)) value = prm->convertFrom0to1 (prm->convertTo0to1 (value));
+        lastAuto[id] = value;
         if (auto* prm = apvts.getParameter (id))
         {
             const float norm = prm->convertTo0to1 (value);
             prm->beginChangeGesture(); prm->setValueNotifyingHost (norm); prm->endChangeGesture();
         }
     }
-    for (int i = 0; i < 6; ++i) { explanations[(size_t) i] = b.why[(size_t) i]; apvts.state.setProperty (whyId (i), b.why[(size_t) i], nullptr); }
+    for (int i = 0; i < 6; ++i)
+    {
+        explanations[(size_t) i] = b.why[(size_t) i] + (profiled && i == 0 ? juce::String::fromUTF8 (" Ajustado con tu perfil personal.") : juce::String());
+        apvts.state.setProperty (whyId (i), explanations[(size_t) i], nullptr);
+    }
     enginesBuilt = b.enginesOn;
     apvts.state.setProperty (kBuilt, enginesBuilt, nullptr);
     apvts.state.setProperty (kPreset, presetName, nullptr);
@@ -525,6 +558,28 @@ void ChainIvoProcessor::timerCallback()
     {
         lastClass = classify (lastAnalysis);
         if (lastAnalysis.ready) apvts.state.setProperty (kDetected, (int) lastClass.type, nullptr);
+    }
+    // Perfil personal: lo que el usuario deja cambiado (estable 2 s) después de una propuesta de AUTO
+    if (profile.enabled() && ! lastAuto.empty())
+    {
+        for (auto& [id, autoVal] : lastAuto)
+        {
+            if (learnedThisBuild.contains (id) || ! UserProfile::learnable().contains (id)) continue;
+            const float cur = p (id.toRawUTF8());
+            const float prev = lastSeenVal.count (id) ? lastSeenVal[id] : cur;
+            lastSeenVal[id] = cur;
+            if (std::abs (cur - prev) > 1.0e-4f) { stableTicks[id] = 0; continue; }
+            if (std::abs (cur - autoVal) < UserProfile::threshold (id)) continue;
+            if (++stableTicks[id] >= 6) { profile.learn (getVoiceType(), id, cur - autoVal); learnedThisBuild.add (id); }
+        }
+    }
+    // Diagnóstico: registrar en un archivo si el audio tuvo que recuperarse
+    if (dspErrors.load() > loggedErrors)
+    {
+        loggedErrors = dspErrors.load();
+        auto log = PresetLibrary::userFolder().getParentDirectory().getChildFile ("diagnostico.txt");
+        log.appendText (juce::Time::getCurrentTime().toString (true, true) + "  bloques recuperados: " + juce::String (loggedErrors)
+                        + "  preset: " + getPresetName() + "  calidad: " + juce::String (getQuality()) + "\n");
     }
     // AUTO: la primera vez que hay análisis suficiente, se construye la cadena (una sola vez; nunca al abrir un proyecto ya hecho)
     if (! isPro() && lastAnalysis.ready && ! (bool) apvts.state.getProperty (kAutoDone, false))
