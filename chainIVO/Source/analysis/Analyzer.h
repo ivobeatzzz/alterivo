@@ -40,6 +40,10 @@ struct AnalysisResult
     float levelVsLead = 0.0f;        // dB
     int conflictBand = -1;           // banda (1.5-6 kHz) donde más se pisan
     float conflictAmount = 0.0f;     // 0..1
+
+    // Instrumental de referencia (archivo que carga el usuario; sólo se guarda su espectro, nunca el audio)
+    bool hasInstrumental = false;
+    std::array<float, kBands> instrumentalSpectrum {};
 };
 
 class Analyzer : private juce::Thread
@@ -55,6 +59,8 @@ public:
     void restart();                       // volver a analizar desde cero
     AnalysisResult getResult() const;     // hilo de la interfaz
     static float bandCentre (int b);
+    // Espectro medio (dB por banda) de un archivo: para el instrumental de referencia. Se llama fuera del audio.
+    static bool spectrumOfFile (const juce::File&, std::array<float, kBands>& out, std::atomic<bool>& cancel);
 
 private:
     void run() override;

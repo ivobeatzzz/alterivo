@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "ui/PluginEditor.h"
+#include <juce_audio_formats/juce_audio_formats.h>
 
 using namespace chainivo;
 
@@ -29,7 +30,12 @@ ChainIvoProcessor::ChainIvoProcessor()
     startTimerHz (3);
 }
 
-ChainIvoProcessor::~ChainIvoProcessor() { stopTimer(); analyzer.releaseResources(); }
+ChainIvoProcessor::~ChainIvoProcessor()
+{
+    stopTimer(); instCancel = true;
+    for (int i = 0; i < 200 && (instBusy.load() || exporting.load()); ++i) juce::Thread::sleep (20);
+    analyzer.releaseResources();
+}
 
 bool ChainIvoProcessor::isBusesLayoutSupported (const BusesLayout& l) const
 {
@@ -315,6 +321,7 @@ void ChainIvoProcessor::applyBuild (const BuildResult& b, const juce::String& pr
 
 void ChainIvoProcessor::loadFactoryPreset (int i)
 {
+    lastAnalysis.hasInstrumental = instName.isNotEmpty(); lastAnalysis.instrumentalSpectrum = instSpectrum;
     const auto& list = presets.recipes();
     if (i < 0 || i >= (int) list.size()) return;
     auto r = list[(size_t) i];
@@ -326,6 +333,7 @@ void ChainIvoProcessor::loadFactoryPreset (int i)
 
 void ChainIvoProcessor::autoPropose()
 {
+    lastAnalysis.hasInstrumental = instName.isNotEmpty(); lastAnalysis.instrumentalSpectrum = instSpectrum;
     const auto r = defaultRecipe ((VoiceType) juce::jlimit (0, (int) VoiceType::count - 1, getVoiceType()));
     applyBuild (buildChain (r, lastAnalysis, getGenre()), juce::String::fromUTF8 ("Propuesta autom\xc3\xa1tica"));
 }
@@ -357,9 +365,105 @@ void ChainIvoProcessor::reanalyse()
     apvts.state.setProperty (kDetected, -1, nullptr);
 }
 
+void ChainIvoProcessor::loadInstrumental (const juce::File& f)
+{
+    if (instBusy.exchange (true)) return;
+    instCancel = false;
+    juce::Thread::launch ([this, f]
+    {
+        std::array<float, kBands> spec {};
+        if (Analyzer::spectrumOfFile (f, spec, instCancel))
+        {
+            const juce::ScopedLock sl (instLock);
+            instPending = spec; instPendingName = f.getFileNameWithoutExtension(); instReady = true;
+        }
+        instBusy = false;
+    });
+}
+
+void ChainIvoProcessor::clearInstrumental()
+{
+    instName = {}; apvts.state.removeProperty ("instName", nullptr); apvts.state.removeProperty ("instSpec", nullptr);
+    if (! isPro()) autoPropose();
+}
+
+juce::String ChainIvoProcessor::getInstrumentalName() const { return instName; }
+
+void ChainIvoProcessor::exportFile (const juce::File& in, const juce::File& out, bool float32, std::function<void (juce::String)> done)
+{
+    if (exporting.exchange (true)) return;
+    juce::MemoryBlock state; getStateInformation (state);
+    juce::Thread::launch ([this, in, out, float32, done, state]
+    {
+        juce::String msg;
+        auto finish = [&] { exporting = false; juce::MessageManager::callAsync ([done, msg] { if (done) done (msg); }); };
+        if (in == out) { msg = "No se puede escribir encima del original."; finish(); return; }
+        juce::AudioFormatManager fm; fm.registerBasicFormats();
+        std::unique_ptr<juce::AudioFormatReader> reader (fm.createReaderFor (in));
+        if (reader == nullptr) { msg = "No se pudo leer el archivo."; finish(); return; }
+        const int fileCh = (int) juce::jlimit (1u, 2u, reader->numChannels);
+        const double fsr = reader->sampleRate;
+        // Copia de la cadena con el mismo estado; AUTO congelado para que el sonido no cambie a mitad
+        auto copy = std::make_unique<ChainIvoProcessor>();
+        copy->freezeAuto();
+        copy->setStateInformation (state.getData(), (int) state.getSize());
+        copy->setNonRealtime (true);
+        const int bs = 1024;
+        copy->prepareToPlay (fsr, bs);
+        const int lat = copy->getLatencySamples();
+        const juce::int64 len = reader->lengthInSamples;
+        const juce::int64 tail = (juce::int64) (fsr * (copy->apvts.getRawParameterValue (pid::revDecay)->load() + 2.0));   // la cola completa
+        out.deleteFile();
+        std::unique_ptr<juce::FileOutputStream> os (out.createOutputStream());
+        juce::WavAudioFormat wav;
+        std::unique_ptr<juce::AudioFormatWriter> writer (os != nullptr ? wav.createWriterFor (os.get(), fsr, (unsigned) fileCh, float32 ? 32 : 24, {}, 0) : nullptr);
+        if (writer == nullptr) { msg = "No se pudo crear el archivo de salida."; finish(); return; }
+        os.release();
+        juce::AudioBuffer<float> blk (copy->getTotalNumInputChannels(), bs), outBlk (fileCh, bs);
+        juce::MidiBuffer midi;
+        juce::int64 readPos = 0, written = 0; const juce::int64 target = len + tail;
+        while (written < target && ! instCancel.load())
+        {
+            blk.clear();
+            const int n = bs;
+            juce::AudioBuffer<float> in2 (fileCh, n); in2.clear();
+            if (readPos < len) reader->read (&in2, 0, (int) std::min<juce::int64> (n, len - readPos), readPos, true, fileCh > 1);
+            for (int c = 0; c < 2; ++c) blk.copyFrom (c, 0, in2, std::min (c, fileCh - 1), 0, n);
+            copy->processBlock (blk, midi);
+            readPos += n;
+            // quitar la latencia del principio: el archivo queda alineado con el original
+            int start = 0;
+            const juce::int64 produced = readPos - lat;
+            if (produced <= 0) continue;
+            if (produced < n) start = (int) (n - produced);
+            const int count = (int) std::min<juce::int64> (n - start, target - written);
+            for (int c = 0; c < fileCh; ++c)
+            {
+                if (fileCh == 1) { outBlk.copyFrom (0, 0, blk, 0, start, count); outBlk.addFrom (0, 0, blk, 1, start, count); outBlk.applyGain (0, 0, count, 0.5f); }
+                else outBlk.copyFrom (c, 0, blk, c, start, count);
+            }
+            writer->writeFromAudioSampleBuffer (outBlk, 0, count);
+            written += count;
+        }
+        writer.reset();
+        msg = "Exportado: " + out.getFileName();
+        finish();
+    });
+}
+
 void ChainIvoProcessor::timerCallback()
 {
+    if (instReady.exchange (false))
+    {
+        { const juce::ScopedLock sl (instLock); instSpectrum = instPending; instName = instPendingName; }
+        juce::StringArray v; for (auto x : instSpectrum) v.add (juce::String (x, 2));
+        apvts.state.setProperty ("instName", instName, nullptr);
+        apvts.state.setProperty ("instSpec", v.joinIntoString (","), nullptr);
+        if (! isPro()) autoPropose();
+    }
     lastAnalysis = analyzer.getResult();
+    lastAnalysis.hasInstrumental = instName.isNotEmpty();
+    lastAnalysis.instrumentalSpectrum = instSpectrum;
     if (lastAnalysis.activeSeconds >= 2.0f)
     {
         lastClass = classify (lastAnalysis);
@@ -475,6 +579,11 @@ void ChainIvoProcessor::setStateInformation (const void* data, int size)
     if (parts.size() == 6) for (int i = 0; i < 6; ++i) order[(size_t) i] = juce::jlimit (0, 5, parts[i].getIntValue());
     for (int i = 0; i < 6; ++i) explanations[(size_t) i] = tree.getProperty (whyId (i)).toString();
     enginesBuilt = tree.getProperty (kBuilt, 0);
+    instName = tree.getProperty ("instName").toString();
+    {
+        auto v = juce::StringArray::fromTokens (tree.getProperty ("instSpec").toString(), ",", "");
+        if (v.size() == kBands) for (int b = 0; b < kBands; ++b) instSpectrum[(size_t) b] = v[b].getFloatValue(); else instName = {};
+    }
     const int q = juce::jlimit (0, 3, (int) tree.getProperty (kQuality, (int) Quality::normal));
     if (q != quality.load()) { quality = q; if (currentSr > 0 && maxBlock > 0) rebuildForQuality(); }
 }

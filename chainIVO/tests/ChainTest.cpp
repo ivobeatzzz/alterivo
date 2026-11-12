@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "ui/PluginEditor.h"
 #include <cstdio>
+#include <juce_audio_formats/juce_audio_formats.h>
 #include <map>
 using namespace chainivo;
 
@@ -316,6 +317,49 @@ int main (int argc, char** argv)
             }
         std::printf ("[presets] pareja mas parecida: %s / %s (diferencia %.1f dB a igual volumen) | parejas por debajo de -20 dB: %d\n",
                      recipes[(size_t) ma].name.toRawUTF8(), recipes[(size_t) mb].name.toRawUTF8(), minD, under);
+    }
+
+
+    // 13. Exportar WAV e instrumental de referencia
+    if (doAll || only == "export")
+    {
+        const juce::File dir ("/tmp/claude-0/-home-claude/a71dc4c6-2070-51ff-85e0-7f07bc2eb995/scratchpad/ctest/exp");
+        dir.deleteRecursively(); dir.createDirectory();
+        auto writeWav = [&] (const juce::File& f, const std::vector<float>& x)
+        {
+            juce::WavAudioFormat w; auto os = f.createOutputStream();
+            std::unique_ptr<juce::AudioFormatWriter> wr (w.createWriterFor (os.get(), sr, 1, 32, {}, 0)); os.release();
+            juce::AudioBuffer<float> b (1, (int) x.size()); for (size_t i = 0; i < x.size(); ++i) b.setSample (0, (int) i, x[i]);
+            wr->writeFromAudioSampleBuffer (b, 0, b.getNumSamples());
+        };
+        const auto in = dir.getChildFile ("voz.wav"); writeWav (in, voice);
+        juce::MemoryBlock origBytes; in.loadFileAsData (origBytes);
+        ChainIvoProcessor p; p.prepareToPlay (sr, 512); setP (p, pid::intensity, 0); setP (p, pid::gainMatch, 0); setP (p, pid::clipSafe, 0);
+        bool done = false; juce::String msg;
+        const auto out = dir.getChildFile ("voz (chainIVO).wav");
+        p.exportFile (in, out, true, [&] (juce::String m) { done = true; msg = m; });
+        for (int i = 0; i < 600 && ! done; ++i) juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+        juce::AudioFormatManager fm; fm.registerBasicFormats();
+        std::unique_ptr<juce::AudioFormatReader> r (fm.createReaderFor (out));
+        double e = 0, ref = 0;
+        if (r)
+        {
+            juce::AudioBuffer<float> b ((int) r->numChannels, (int) r->lengthInSamples); r->read (&b, 0, b.getNumSamples(), 0, true, true);
+            for (int i = 0; i < N; ++i) { const double d = b.getSample (0, i) - voice[(size_t) i]; e += d * d; ref += (double) voice[(size_t) i] * voice[(size_t) i]; }
+            std::printf ("[export] %s | canales %d, %.0f Hz, %d bits | duracion %.2f s (original %.2f s + cola) | INTENSITY 0: diferencia con el original %.1f dB | original intacto: %s\n",
+                         msg.toRawUTF8(), (int) r->numChannels, r->sampleRate, (int) r->bitsPerSample, r->lengthInSamples / sr, N / sr, 10 * std::log10 (e / ref + 1e-30),
+                         [&] { juce::MemoryBlock now; in.loadFileAsData (now); return now == origBytes; }() ? "si" : "NO");
+        }
+        else std::printf ("[export] FALLO: %s\n", msg.toRawUTF8());
+        // Instrumental: graves muy fuertes (808) y medios llenos salvo un hueco en 4 kHz
+        std::vector<float> beat ((size_t) (20 * sr)); juce::Random rnd (1);
+        juce::dsp::IIR::Filter<float> lp, notch; lp.coefficients = juce::dsp::IIR::Coefficients<float>::makeLowPass (sr, 90.0); notch.coefficients = juce::dsp::IIR::Coefficients<float>::makeNotch (sr, 4000.0, 0.7);
+        for (size_t i = 0; i < beat.size(); ++i) { const float n = rnd.nextFloat() * 2 - 1; beat[i] = 0.2f * notch.processSample (n) + 0.8f * std::sin (2 * kPi * 50.0f * (float) i / (float) sr) + 0.3f * lp.processSample (n); }
+        const auto bf = dir.getChildFile ("beat.wav"); writeWav (bf, beat);
+        ChainIvoProcessor q; q.prepareToPlay (sr, 512);
+        q.loadInstrumental (bf);
+        for (int i = 0; i < 100 && (q.isInstrumentalBusy() || q.getInstrumentalName().isEmpty()); ++i) juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+        std::printf ("[beat] cargado '%s' | por que EQ: %s\n", q.getInstrumentalName().toRawUTF8(), q.getExplanations()[0].toRawUTF8());
     }
 
     // 11. Interfaz

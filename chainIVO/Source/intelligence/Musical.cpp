@@ -196,7 +196,21 @@ BuildResult buildChain (const Recipe& r, const AnalysisResult& a, int genreIdx)
         presDyn = 85.0f;
         why = "Choca con la voz principal en " + hz (presF) + ": baja " + juce::String (-presG, 1) + T(" dB ah\xc3\xad s\xc3\xb3lo cuando canta la principal");
     }
+    else if (a.hasInstrumental && presG > -0.5f)
+    {
+        // Sin choque con la principal: la presencia va donde el instrumental deja hueco (2-6 kHz)
+        float mean = 0; for (auto v : a.instrumentalSpectrum) mean += v; mean /= (float) kBands;
+        int best = -1; float bestV = 100.0f;
+        for (int b = 0; b < kBands; ++b) { const float f = Analyzer::bandCentre (b); if (f >= 2000.0f && f <= 6000.0f && a.instrumentalSpectrum[(size_t) b] - mean < bestV) { bestV = a.instrumentalSpectrum[(size_t) b] - mean; best = b; } }
+        if (best >= 0) { presF = Analyzer::bandCentre (best); presG = std::max (presG, 0.0f) + 1.0f; why += T (", presencia ") + db (presG) + T (" en ") + hz (presF) + T (", donde el instrumental deja hueco"); }
+    }
     else if (std::abs (presG) > 0.2f) why += ", presencia " + db (presG) + " en " + hz (presF);
+    if (a.hasInstrumental)
+    {
+        float mean = 0; for (auto v : a.instrumentalSpectrum) mean += v; mean /= (float) kBands;
+        const float lows = (a.instrumentalSpectrum[0] + a.instrumentalSpectrum[1] + a.instrumentalSpectrum[2]) / 3.0f - mean;
+        if (lows > 6.0f) { hpf *= 1.15f; why += T (", el beat tiene graves fuertes: paso alto m\xc3\xa1s arriba"); }
+    }
     float airG = r.air + g.bright * 0.5f;
     if (measured) airG += juce::jlimit (-2.0f, 2.0f, (-26.0f - a.air) * 0.25f);
     airG = juce::jlimit (-3.0f, 6.0f, airG);

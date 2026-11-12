@@ -48,6 +48,13 @@ chainIVO no modifica nunca la voz principal: sólo la escucha por sidechain para
 - Logic Pro: arriba a la derecha del plugin, "Side Chain" → elige la pista de la voz principal.
 Sin voz principal también funciona, pero no puede distinguir doble, armonía o respuesta.
 
+EL BEAT Y EXPORTAR (abajo en TU PISTA: BEAT · EXPORTAR)
+----------------------------------------
+- Cargar el beat: eliges el archivo del instrumental y AUTO deja la voz donde el beat tiene hueco.
+  Sólo se guarda su espectro en el proyecto, nunca el audio.
+- Procesar un archivo: crea "nombre (chainIVO).wav" (24 bits o 32 bits float) al lado del original,
+  con la cola de reverb completa y alineado. El original no se toca.
+
 QUALITY
 ----------------------------------------
 ECO: saturación 2x y reverb de 4 líneas (menos CPU).

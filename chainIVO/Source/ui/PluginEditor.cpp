@@ -256,6 +256,7 @@ void EngineView::paint (juce::Graphics& g)
             x -= 14.0f;
         };
         if (an.hasLead) item ("choque", conflict, true);
+        if (an.hasInstrumental) item ("beat", juce::Colour (0xffc9a85a), false);
         item (proc.leadConnected.load() ? "voz principal" : "voz principal (sin conectar)", leadLine, false);
         item (voiceTypeName ((VoiceType) proc.getVoiceType()).toLowerCase(), green, false);
     }
@@ -325,6 +326,7 @@ void EngineView::paintEq (juce::Graphics& g, juce::Rectangle<float> r)
     };
     if (an.activeSeconds >= 1.0f)
     {
+        if (an.hasInstrumental) spectrumPath (an.instrumentalSpectrum, false, juce::Colour (0xffc9a85a).withAlpha (0.8f));
         if (an.hasLead) spectrumPath (an.leadSpectrum, false, leadLine);
         spectrumPath (an.spectrum, true, green);
     }
@@ -524,7 +526,8 @@ void TrackCard::resized()
         x += (float) w + 6;
     }
     genreBox = { 24, 314, (float) getWidth() - 48, 40 };
-    reBox = { 24, 364, (float) getWidth() - 48, 22 };
+    reBox = { 24, 364, 86, 22 };
+    toolsBox = { 110, 364, (float) getWidth() - 134, 22 };
 }
 
 void TrackCard::paint (juce::Graphics& g)
@@ -567,14 +570,55 @@ void TrackCard::paint (juce::Graphics& g)
     g.drawText (gi >= 0 ? u8 (genre (gi).name) : u8 ("Sin estilo"), genreBox.reduced (16, 0), juce::Justification::centredLeft, false);
     g.setColour (dim2); g.setFont (font (F::man, 12.0f));
     g.drawText (gi >= 0 ? u8 (genre (gi).family) + u8 ("  \xe2\x96\xbe") : u8 ("elegir  \xe2\x96\xbe"), genreBox.reduced (16, 0), juce::Justification::centredRight, false);
-    g.setColour (deep); g.setFont (font (F::manX, 10.0f, 0.2f));
-    g.drawText (u8 ("\xe2\x86\xbb  ANALIZAR DE NUEVO"), reBox, juce::Justification::centredLeft, false);
+    g.setColour (deep); g.setFont (font (F::manX, 10.0f, 0.08f));
+    g.drawText (u8 ("\xe2\x86\xbb  ANALIZAR"), reBox, juce::Justification::centredLeft, false);
+    juce::String tools = proc.isExporting() ? u8 ("EXPORTANDO\xe2\x80\xa6") : (proc.isInstrumentalBusy() ? u8 ("LEYENDO BEAT\xe2\x80\xa6") : u8 ("BEAT \xc2\xb7 EXPORTAR \xe2\x96\xbe"));
+    g.drawText (tools, toolsBox, juce::Justification::centredRight, false);
 }
 
 void TrackCard::mouseDown (const juce::MouseEvent& e)
 {
     if (genreBox.contains (e.position)) showGenres();
     else if (reBox.contains (e.position)) { proc.reanalyse(); repaint(); }
+    else if (toolsBox.contains (e.position)) showTools();
+}
+
+void TrackCard::showTools()
+{
+    juce::PopupMenu m;
+    const auto inst = proc.getInstrumentalName();
+    m.addSectionHeader ("INSTRUMENTAL DE REFERENCIA");
+    m.addItem (1, inst.isEmpty() ? u8 ("Cargar el beat (WAV, AIFF, FLAC, MP3)\xe2\x80\xa6") : u8 ("Cambiar beat (ahora: ") + inst + ")", ! proc.isInstrumentalBusy());
+    m.addItem (2, "Quitar el beat", inst.isNotEmpty());
+    m.addSectionHeader (u8 ("EXPORTAR CON ESTA CADENA (el original no se toca)"));
+    m.addItem (3, u8 ("Procesar un archivo \xe2\x86\x92 WAV 24 bits\xe2\x80\xa6"), ! proc.isExporting());
+    m.addItem (4, u8 ("Procesar un archivo \xe2\x86\x92 WAV 32 bits float\xe2\x80\xa6"), ! proc.isExporting());
+    m.showMenuAsync (juce::PopupMenu::Options().withTargetScreenArea (localAreaToGlobal (toolsBox.toNearestInt())),
+                     [safe = juce::Component::SafePointer<TrackCard> (this)] (int r)
+    {
+        if (safe == nullptr || r == 0) return;
+        auto& pr = safe->proc;
+        if (r == 2) { pr.clearInstrumental(); return; }
+        if (r == 1)
+        {
+            safe->chooser = std::make_unique<juce::FileChooser> ("Instrumental de referencia", juce::File(), "*.wav;*.aif;*.aiff;*.flac;*.mp3");
+            safe->chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                                        [safe] (const juce::FileChooser& fc) { if (safe != nullptr && fc.getResult().existsAsFile()) safe->proc.loadInstrumental (fc.getResult()); });
+            return;
+        }
+        const bool f32 = r == 4;
+        safe->chooser = std::make_unique<juce::FileChooser> ("Archivo para procesar", juce::File(), "*.wav;*.aif;*.aiff;*.flac");
+        safe->chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [safe, f32] (const juce::FileChooser& fc)
+        {
+            if (safe == nullptr || ! fc.getResult().existsAsFile()) return;
+            const auto in = fc.getResult();
+            const auto out = in.getParentDirectory().getNonexistentChildFile (in.getFileNameWithoutExtension() + " (chainIVO)", ".wav", false);
+            safe->proc.exportFile (in, out, f32, [] (juce::String msg)
+            {
+                juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::NoIcon, "chainIVO", msg);
+            });
+        });
+    });
 }
 
 void TrackCard::showMore()

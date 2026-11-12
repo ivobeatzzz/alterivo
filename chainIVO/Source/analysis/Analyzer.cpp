@@ -1,4 +1,5 @@
 #include "Analyzer.h"
+#include <juce_audio_formats/juce_audio_formats.h>
 
 namespace chainivo
 {
@@ -15,6 +16,44 @@ Analyzer::Analyzer() : juce::Thread ("chainIVO analysis")
 Analyzer::~Analyzer() { stopThread (2000); }
 
 float Analyzer::bandCentre (int b) { return 63.0f * std::pow (2.0f, (float) b / 3.0f); }
+
+bool Analyzer::spectrumOfFile (const juce::File& file, std::array<float, kBands>& out, std::atomic<bool>& cancel)
+{
+    juce::AudioFormatManager fm; fm.registerBasicFormats();
+    std::unique_ptr<juce::AudioFormatReader> reader (fm.createReaderFor (file));
+    if (reader == nullptr || reader->sampleRate <= 0) return false;
+    const double fsr = reader->sampleRate;
+    const juce::int64 total = std::min<juce::int64> (reader->lengthInSamples, (juce::int64) (fsr * 360.0));   // hasta 6 minutos
+    juce::dsp::FFT f (11);
+    std::vector<float> win (kFft), buf (kFft * 2);
+    for (int i = 0; i < kFft; ++i) win[(size_t) i] = 0.5f - 0.5f * std::cos (2.0f * kPi * (float) i / (float) kFft);
+    std::array<int, kBands + 1> edge {};
+    for (int b = 0; b <= kBands; ++b) edge[(size_t) b] = juce::jlimit (1, kFft / 2, (int) std::lround (63.0 * std::pow (2.0, ((double) b - 0.5) / 3.0) * kFft / fsr));
+    std::array<double, kBands> acc {}; int frames = 0;
+    juce::AudioBuffer<float> chunk ((int) std::max (1u, reader->numChannels), kFft);
+    for (juce::int64 pos = 0; pos + kFft <= total && ! cancel.load(); pos += kFft)
+    {
+        reader->read (&chunk, 0, kFft, pos, true, true);
+        double e = 0;
+        for (int i = 0; i < kFft; ++i)
+        {
+            float m = 0; for (int c = 0; c < chunk.getNumChannels(); ++c) m += chunk.getSample (c, i);
+            m /= (float) chunk.getNumChannels(); e += (double) m * m;
+            buf[(size_t) i] = m * win[(size_t) i];
+        }
+        if (10.0 * std::log10 (e / kFft + 1e-12) < -60.0) continue;   // silencios fuera
+        std::fill (buf.begin() + kFft, buf.end(), 0.0f);
+        f.performRealOnlyForwardTransform (buf.data(), true);
+        double tot = 1e-12; std::array<double, kBands> band {};
+        for (int i = 1; i <= kFft / 2; ++i) { const double pw = (double) buf[(size_t) (2 * i)] * buf[(size_t) (2 * i)] + (double) buf[(size_t) (2 * i + 1)] * buf[(size_t) (2 * i + 1)]; buf[(size_t) i] = (float) pw; }
+        for (int b = 0; b < kBands; ++b) { for (int i = edge[(size_t) b]; i < edge[(size_t) b + 1]; ++i) band[(size_t) b] += buf[(size_t) i]; tot += band[(size_t) b]; }
+        for (int b = 0; b < kBands; ++b) acc[(size_t) b] += band[(size_t) b] / tot;
+        ++frames;
+    }
+    if (frames < 20) return false;
+    for (int b = 0; b < kBands; ++b) out[(size_t) b] = powToDb ((float) (acc[(size_t) b] / frames));
+    return true;
+}
 
 void Analyzer::prepare (double sampleRate)
 {

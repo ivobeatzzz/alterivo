@@ -79,9 +79,11 @@ public:
 private:
     void showMore();
     void showGenres();
+    void showTools();
     ChainIvoProcessor& proc;
     juce::OwnedArray<Chip> chips;
-    juce::Rectangle<float> genreBox, reBox;
+    juce::Rectangle<float> genreBox, reBox, toolsBox;
+    std::unique_ptr<juce::FileChooser> chooser;
 };
 
 class PresetPill : public juce::Component

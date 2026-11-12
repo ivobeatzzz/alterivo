@@ -58,6 +58,16 @@ public:
     void loadUserPreset (const juce::File&);
     void autoPropose();                        // propuesta automática sin preset (tipo + estilo + análisis)
     void reanalyse();
+    // Instrumental de referencia (archivo): se analiza en segundo plano; sólo se guarda su espectro
+    void loadInstrumental (const juce::File&);
+    void clearInstrumental();
+    juce::String getInstrumentalName() const;
+    bool isInstrumentalBusy() const { return instBusy.load(); }
+    // Exportar un archivo procesado con la cadena actual (WAV 24 bits o 32 bits float), en segundo plano.
+    // Nunca escribe sobre el original. done(mensaje) se llama en el hilo de la interfaz.
+    void exportFile (const juce::File& in, const juce::File& out, bool float32, std::function<void (juce::String)> done);
+    bool isExporting() const { return exporting.load(); }
+    void freezeAuto() { stopTimer(); }   // instancias de exportación: nunca reconstruyen la cadena
     bool saveUserPreset (const juce::String& name);
     std::array<int, 6> getOrder() const;
     void moveEngine (int engine, int delta);
@@ -127,6 +137,10 @@ private:
     std::array<juce::String, 6> explanations;
     int enginesBuilt = 0;
     int abSlot = 0;
+    std::atomic<bool> instBusy { false }, instReady { false }, instCancel { false }, exporting { false };
+    std::array<float, chainivo::kBands> instSpectrum {}, instPending {};
+    juce::String instName, instPendingName;
+    juce::CriticalSection instLock;
     juce::ValueTree abSlots[2];
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ChainIvoProcessor)

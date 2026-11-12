@@ -38,13 +38,14 @@ Source/
   engines/SpatialEngine.h    SPATIAL ENGINE (reverb FDN, delay, ducking, doblador, anchura M/S)
   engines/CreativeEngine.h   CREATIVE ENGINE (stutter, gate, reverse al tempo)
   analysis/Analyzer.*        ANALYSIS ENGINE (hilo propio, FIFO sin bloqueos)
+  (PluginProcessor::exportFile) RENDERING / AUDIO EXPORT ENGINE (WAV 24/32 float, en segundo plano)
   intelligence/Musical.*     MUSICAL INTELLIGENCE + CHAIN BUILDER (tipos de voz, estilos, clasificación, recetas)
   presets/PresetLibrary.*    PRESET ENGINE (presets IVO, usuario, favoritos, importar/exportar)
   core/Params.*              STATE: parámetros versionados (IDs fijos)
   PluginProcessor.*          AUDIO CORE + gestión de ganancia + A/B + estado + capa DAW (JUCE)
   ui/                        USER INTERFACE (Widgets, editor)
 ```
-Pendientes como módulos propios (fases siguientes): Automation Engine, Rendering/Export Engine,
+Pendientes como módulos propios (fases siguientes): Automation Engine,
 Diagnostics, Licensing.
 
 ## 4. Flujo de la señal
@@ -73,7 +74,10 @@ sidechain (voz principal) → sólo análisis y llave de la banda dinámica del 
 - Implementado: entrada sidechain "Voz principal" (VST3/AU). Con ella: choque de frecuencias,
   banda dinámica que sólo baja cuando canta la principal, y distinción doble/armonía/respuesta.
 - Sin sidechain funciona con lo que tiene y lo dice ("Sin voz principal no distingo...").
-- Pendiente: instrumental como referencia, instancias coordinadas entre pistas e importación de archivos.
+- Instrumental de referencia: el usuario carga el archivo del beat (BEAT · EXPORTAR). Se analiza en segundo plano
+  y sólo se guarda su espectro (nunca el audio). AUTO pone la presencia donde el beat deja hueco y sube el paso
+  alto si el beat tiene graves muy fuertes.
+- Pendiente: instancias coordinadas entre pistas.
 
 ## 7. Realtime y offline
 
@@ -88,7 +92,7 @@ VST3 (Windows y Mac) y AU (Mac), binario universal. Validación automática en c
 pluginval nivel 5 (VST3 y AU) y auval. DAW objetivo: Ableton Live, FL Studio, Logic, Cubase,
 Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usuario.
 
-## 9. Resultados de las pruebas (Linux, voz de prueba de 16.8 s, 48 kHz)
+## 9. Resultados de las pruebas (Linux, voz de prueba de 26.4 s, 48 kHz)
 
 | Prueba | Resultado |
 |---|---|
@@ -102,6 +106,8 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | Estabilidad | 158 s con automatización aleatoria y bloques de 1-1024 muestras: 0 valores inválidos |
 | AUTO | doble detectado (66 %), respuesta detectada (100 %); sin principal, voz continua → "segunda voz" (58 %) |
 | Estado | guardar/abrir proyecto: 0 parámetros distintos, orden, LOCK, preset y A/B recuperados |
+| Exportar WAV | 24 bits o 32 bits float, misma frecuencia y canales, cola completa, alineado con el original (con INTENSITY 0 la diferencia es −300 dB) y el original sin tocar |
+| Instrumental | beat sintético con hueco en 4 kHz y graves fuertes: AUTO pone la presencia en 4.0 kHz y sube el paso alto |
 | Presets | 120 presets, todos con estilo válido; a igual volumen, la pareja más parecida difiere −19.7 dB (ninguna pareja por debajo de −20 dB) |
 
 ## 10. Limitaciones conocidas (versión 0.1)
@@ -115,8 +121,7 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 4. VCA y Clean se parecen más entre sí que el resto (diferencia −26.9 dB con los mismos ajustes).
 5. HIGH y ULTRA no reducen más el aliasing que NORMAL en la prueba (−56 dB es el suelo de la medida).
    Se diferencian en filtro, reverb e interpolación.
-6. Pendiente: automatizaciones por palabra/frase, exportación WAV, instrumental como referencia,
-   reverb de convolución, más efectos creativos (granular, pitch creativo), skin oscura, licencias,
+6. Pendiente: automatizaciones por palabra/frase, reverb de convolución, más efectos creativos (granular, pitch creativo), skin oscura, licencias,
    manual completo y ayuda contextual.
 7. No se afirma que chainIVO supere a otras herramientas: no hay comparaciones a ciegas todavía.
 
