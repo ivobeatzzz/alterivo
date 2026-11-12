@@ -117,6 +117,7 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 | Reverb IR | la cola sigue la IR cargada (0.8 s) y termina con ella |
 | Perfil personal | AUTO puso reverb 20 %, el usuario la dejó en 40 % → la siguiente propuesta sale con 27 % (aprende poco a poco) |
 | Protección | NaN en la entrada: 0 muestras no válidas en la salida |
+| Frase suelta | pista con 2.6 s de voz y silencio: AUTO monta la cadena (confianza baja, lo dice); al llegar más voz la afina una vez |
 | Por palabra | 16 de 16 palabras detectadas; filtro en '1 de 4' → `...X...X...X...X`; distorsión en '1ª de frase' → `X.......X.......` |
 | Por sección | distorsión en 'último compás de cada 4' (8 compases, 4/4) → `...X...X` |
 | Grupo | dos instancias se ven; la segunda separa su presencia y su pre-delay (20 → 28 ms) |

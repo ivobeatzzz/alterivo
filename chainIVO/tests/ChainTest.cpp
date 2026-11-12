@@ -548,6 +548,26 @@ int main (int argc, char** argv)
         std::printf ("[seccion] distorsion en 'ultimo compas de cada 4', compases 1-8: %s\n", bp.toRawUTF8());
     }
 
+
+    // 19. Momento suelto: una frase de 2.5 s en su propia pista, y luego silencio
+    if (doAll || only == "short")
+    {
+        ChainIvoProcessor p; p.prepareToPlay (sr, 512);
+        std::vector<float> clip ((size_t) (12 * sr), 0.0f); size_t src = 0;
+        while (src < voice.size() && std::abs (voice[src]) < 0.05f) ++src;
+        for (int i = 0; i < (int) (2.5 * sr) && src < voice.size(); ++i) clip[(size_t) (1 * sr) + (size_t) i] = voice[src++];
+        run (p, clip, clip, nullptr, 512, true);
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (900);
+        const auto a = p.getAnalysis(); const auto c = p.getClassification();
+        std::printf ("[short] %.1f s de voz: listo %d, frase suelta %d | tipo %s (%.0f %%) | %s | cadena montada: %s\n", a.activeSeconds, (int) a.ready, (int) a.shortMaterial,
+                     voiceTypeName (c.type).toRawUTF8(), c.confidence * 100, c.reason.toRawUTF8(), p.getExplanations()[0].isNotEmpty() ? "si" : "no");
+        // Luego la pista sigue con mucha más voz (ad-libs repartidos por la canción): AUTO afina con todo
+        std::vector<float> more; for (int k = 0; k < 2; ++k) more.insert (more.end(), voice.begin(), voice.end());
+        run (p, more, more, nullptr, 512, true);
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (900);
+        std::printf ("[short] despues, con %.1f s de voz: tipo %s | por que EQ: %s\n", p.getAnalysis().activeSeconds, voiceTypeName ((VoiceType) p.getVoiceType()).toRawUTF8(), p.getExplanations()[0].toRawUTF8());
+    }
+
     // 11. Interfaz
     if (doAll || only == "ui")
     {

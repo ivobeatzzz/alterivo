@@ -147,6 +147,7 @@ Classification classify (const AnalysisResult& a)
     c.type = (VoiceType) best;
     const float margin = clamp01 ((b1 - std::max (0.0f, b2)) / 0.5f);
     c.confidence = clamp01 (0.45f + 0.35f * margin + 0.2f * b1) * clamp01 (0.4f + 0.6f * a.progress);
+    if (a.shortMaterial) c.confidence *= 0.6f;   // con una sola frase se sabe menos: se dice
 
     const juce::String pct = juce::String (juce::roundToInt (a.activity * 100.0f)) + " %";
     switch (c.type)
@@ -162,6 +163,7 @@ Classification classify (const AnalysisResult& a)
         case VoiceType::hablada:   c.reason = "Voz hablada: tono a medias"; break;
         default:                   c.reason = "Suena casi todo el tiempo"; break;
     }
+    if (a.shortMaterial) c.reason = T ("Frase suelta (") + juce::String (a.activeSeconds, 1) + T (" s de voz): si no acierta, elige el tipo o un preset");
     return c;
 }
 

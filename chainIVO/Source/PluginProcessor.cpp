@@ -371,6 +371,9 @@ void ChainIvoProcessor::applyBuild (const BuildResult& b, const juce::String& pr
     apvts.state.setProperty (kPreset, presetName, nullptr);
     // Si aún no hay análisis suficiente, AUTO volverá a adaptar esta receta cuando lo haya
     apvts.state.setProperty (kAutoDone, lastAnalysis.ready, nullptr);
+    // Con poca voz (frase suelta) la cadena es provisional: si luego llega más voz y el usuario no ha tocado nada,
+    // AUTO la afina una vez más con el análisis completo
+    apvts.state.setProperty ("autoProvisional", lastAnalysis.ready && lastAnalysis.shortMaterial, nullptr);
 }
 
 void ChainIvoProcessor::loadFactoryPreset (int i)
@@ -584,6 +587,15 @@ void ChainIvoProcessor::timerCallback()
                         + "  preset: " + getPresetName() + "  calidad: " + juce::String (getQuality()) + "\n");
     }
     // AUTO: la primera vez que hay análisis suficiente, se construye la cadena (una sola vez; nunca al abrir un proyecto ya hecho)
+    if (! isPro() && (bool) apvts.state.getProperty ("autoProvisional", false) && lastAnalysis.ready && ! lastAnalysis.shortMaterial)
+    {
+        bool untouched = ! lastAuto.empty();
+        for (auto& [id, v] : lastAuto)
+            if (auto* prm = apvts.getParameter (id))
+                if (std::abs (prm->convertFrom0to1 (prm->getValue()) - v) > 1.0e-3f * std::max (1.0f, std::abs (v))) { untouched = false; break; }
+        apvts.state.setProperty ("autoProvisional", false, nullptr);
+        if (untouched) apvts.state.setProperty (kAutoDone, false, nullptr);   // se reconstruye abajo con todo el análisis
+    }
     if (! isPro() && lastAnalysis.ready && ! (bool) apvts.state.getProperty (kAutoDone, false))
     {
         const juce::String preset = getPresetName();

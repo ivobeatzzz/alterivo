@@ -16,6 +16,7 @@ struct AnalysisResult
     float activeSeconds = 0.0f, totalSeconds = 0.0f;
     float progress = 0.0f;           // 0..1 (8 s de voz = 1)
     bool ready = false;
+    bool shortMaterial = false;      // pista con poca voz (una frase suelta): se decide con lo que hay
 
     // Pista
     float levelP50 = -40.0f, levelP90 = -30.0f, noiseFloor = -90.0f, dynamicSpread = 10.0f;
@@ -100,7 +101,7 @@ private:
         void clear() { bins.fill (0); count = 0; }
     };
     Hist allHist, activeHist;
-    int frames = 0, activeFrames = 0, voicedFrames = 0;
+    int frames = 0, activeFrames = 0, voicedFrames = 0, lastActiveFrame = -1;
     std::array<double, kBands> ltas {}, leadLtas {};
     int leadActiveFrames = 0;
     double sibSum = 0, harshSum = 0, mudSum = 0, nasalSum = 0, airSum = 0, centroidSum = 0;

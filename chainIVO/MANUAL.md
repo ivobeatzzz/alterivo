@@ -8,6 +8,15 @@ tu ordenador: el audio nunca sale de él.
 Parte de una voz cruda y ya afinada. chainIVO **no reafina ni cambia formantes**: el único efecto
 de tono es "Pitch" del motor CREATIVE, que añade una capa aparte y sólo si tú lo enciendes.
 
+## 0. Dónde se pone
+- **En la pista entera** de los ad-libs, de los coros, de los dobles... (lo normal). Procesa todo lo que suene
+  en esa pista durante la canción; los silencios no cuentan para el análisis.
+- **En una pista con un momento suelto**: si una frase concreta la pasas a otra pista, pon ahí otro chainIVO
+  con otro preset (por ejemplo un efecto) y sólo esa frase sonará distinta. Con una frase corta (1,5 s de voz o
+  más y luego silencio) AUTO decide con lo que hay; si después llega más voz y no has tocado nada, afina una vez más.
+- **Varias pistas a la vez**: cada instancia se coordina con las demás (punto 7).
+- No es para el master ni para el beat.
+
 ## 1. Empezar en 30 segundos (AUTO)
 1. Inserta chainIVO en la pista de la voz secundaria.
 2. Dale al play. "TU PISTA" muestra el análisis; con unos 8 s de voz decide qué tipo de voz es.

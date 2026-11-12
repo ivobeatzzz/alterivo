@@ -99,7 +99,7 @@ void Analyzer::run()
         if (restartRequested.exchange (false))
         {
             allHist.clear(); activeHist.clear();
-            frames = activeFrames = voicedFrames = leadActiveFrames = 0;
+            frames = activeFrames = voicedFrames = leadActiveFrames = 0; lastActiveFrame = -1;
             ltas.fill (0); leadLtas.fill (0); sibBandSum.fill (0);
             sibSum = harshSum = mudSum = nasalSum = airSum = centroidSum = 0;
             corrLR = eL = eR = eS = eM = 0;
@@ -202,7 +202,7 @@ void Analyzer::analyseFrame()
     float pitchTrack = 0.0f;
     if (active)
     {
-        ++activeFrames; activeHist.add (trackDb);
+        ++activeFrames; lastActiveFrame = frames; activeHist.add (trackDb);
         for (int b = 0; b < kBands; ++b) ltas[(size_t) b] += band[(size_t) b] / total;
         sibSum += powToDb ((float) (sib / total)); harshSum += powToDb ((float) (harsh / total));
         mudSum += powToDb ((float) (mud / total)); nasalSum += powToDb ((float) (nasal / total));
@@ -261,6 +261,11 @@ void Analyzer::publish()
     r.activeSeconds = (float) (activeFrames * hopSec);
     r.progress = juce::jlimit (0.0f, 1.0f, r.activeSeconds / 8.0f);
     r.ready = r.activeSeconds >= 6.0f;
+    // Momentos sueltos (una frase en su propia pista): con 1.5 s de voz y 3 s de silencio después, se decide con eso
+    if (! r.ready && r.activeSeconds >= 1.5f && lastActiveFrame >= 0 && (frames - lastActiveFrame) * hopSec >= 3.0)
+    {
+        r.ready = true; r.shortMaterial = true; r.progress = 1.0f;
+    }
     if (activeFrames > 0)
     {
         const double n = activeFrames;
