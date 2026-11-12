@@ -94,7 +94,7 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 |---|---|
 | INTENSITY 0 % | salida idéntica a la entrada (−300 dB) |
 | Aliasing HARMONICS (seno 7.3 kHz, drive 80 %) | ECO −35.6 dB · NORMAL −55.8 dB · HIGH −55.7 dB · ULTRA −55.7 dB |
-| Compresores (umbral −40, 4:1) | rango dinámico 26.5 → FET 15.7 · VCA 18.4 · Clean 17.6 · Opto 21.8 · Vari-Mu 21.7 dB; diferencias entre topologías de −12 a −27 dB |
+| Compresores (umbral −40, 4:1) | rango dinámico 26.5 → FET 15.7 · VCA 18.4 · Clean 17.6 · Opto 21.8 · Vari-Mu 22.2 dB; diferencias entre topologías de −10.6 a −26.9 dB |
 | Reverb (decay 2.0 s) | T60 medido: Plate 1.98 · Hall 2.03 · Chamber 1.96 s (Room y Ambience limitadas por diseño a 1.4 y 0.6 s) |
 | Mono | anchura 200 % + doblador 60 %: la suma mono pierde sólo 1.8 dB |
 | De-esser al 100 % | eses −5.8 dB; vocales −0.02 dB |
@@ -110,7 +110,7 @@ Studio One, REAPER, Bitwig. La prueba real en cada DAW la tiene que hacer el usu
 2. La clasificación es por reglas: con una sola voz de prueba no se puede afirmar su precisión.
    Hace falta un conjunto de pistas reales etiquetadas.
 3. El estilo (género) lo elige el usuario: no hay reconocimiento automático de género.
-4. Opto y Vari-Mu, y VCA y Clean, se parecen más entre sí que el resto (diferencia −26 dB).
+4. VCA y Clean se parecen más entre sí que el resto (diferencia −26.9 dB con los mismos ajustes).
 5. HIGH y ULTRA no reducen más el aliasing que NORMAL en la prueba (−56 dB es el suelo de la medida).
    Se diferencian en filtro, reverb e interpolación.
 6. Pendiente: automatizaciones por palabra/frase, exportación WAV, instrumental como referencia,

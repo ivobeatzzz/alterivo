@@ -51,7 +51,7 @@ public:
             case CompType::fet:    knee = 2.0f;  attMs = std::max (0.02f, s.attackMs * 0.25f); break;
             case CompType::opto:   knee = 12.0f; attMs = 10.0f; rmsMs = 10.0f; break;
             case CompType::vca:    knee = 1.0f;  rmsMs = 5.0f; break;
-            case CompType::varimu: knee = 15.0f; attMs = std::max (8.0f, s.attackMs); relMs = s.releaseMs * 1.5f; rmsMs = 20.0f; break;
+            case CompType::varimu: knee = 15.0f; attMs = std::max (20.0f, s.attackMs * 2.0f); relMs = s.releaseMs * 2.0f; rmsMs = 30.0f; break;
             case CompType::clean:  knee = 6.0f;  rmsMs = 3.0f; break;
         }
         const float aC = msToCoeff (attMs, sr);
@@ -106,7 +106,7 @@ public:
                 const float x = ch[c][i];
                 float y = x * g;
                 if (t == CompType::fet)    y = y - 0.035f * colour * y * y * y;
-                if (t == CompType::varimu) y = dc.tick (c, y + 0.04f * colour * y * std::abs (y));
+                if (t == CompType::varimu) y = dc.tick (c, y + 0.07f * colour * y * std::abs (y));
                 outPk = std::max (outPk, std::abs (y));
                 ch[c][i] = x + mx * (y - x);
             }
