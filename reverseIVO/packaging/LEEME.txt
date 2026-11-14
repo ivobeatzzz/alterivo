@@ -1,0 +1,42 @@
+reverseIVO 1.0 — Reverse, risers y transiciones de voz · IVO Beatz
+https://ivobeatz.com
+
+Convierte una palabra o frase de tu voz en un reverse, un riser o una transición
+que termina EXACTAMENTE en el golpe (el HIT), sincronizado con el tempo del proyecto.
+
+
+INSTALAR EN WINDOWS (opción recomendada, sin avisos)
+----------------------------------------
+1. Descomprime reverseIVO-Windows-VST3.zip.
+2. Copia la carpeta reverseIVO.vst3 en  C:\Program Files\Common Files\VST3
+   (Windows pide permiso de administrador: Continuar).
+Opción B: reverseIVO-Windows-Instalador.exe. Si sale "Windows protegió su PC":
+Más información → Ejecutar de todas formas.
+
+INSTALAR EN MAC
+----------------------------------------
+1. Doble clic en reverseIVO-Mac-Instalador.pkg.
+2. Si macOS no lo deja abrir: Ajustes del Sistema → Privacidad y seguridad →
+   "Abrir igualmente".
+3. Marca VST3 y/o Audio Unit (AU) e instala.
+
+Después, abre el DAW y vuelve a escanear plugins (aparece como IVO Beatz → reverseIVO).
+
+
+CÓMO SE USA
+----------------------------------------
+1. Pon reverseIVO en la pista de la voz (o en una pista nueva con la voz copiada).
+2. Pulsa el botón rojo (CAPTURAR) y dale al play sobre la frase que quieres usar.
+   También puedes IMPORTAR un archivo de audio.
+3. Para el transporte: reverseIVO detecta sola la primera palabra y coloca el HIT
+   donde empieza la frase (ajustado a la rejilla).
+4. Elige la duración (1/4, 1/2, 1, 2, 4 compases o libre), un preset si quieres,
+   y GENERATE. Con AUTO se regenera solo cada vez que tocas algo.
+5. Dale al play: el reverse suena justo antes del HIT y termina en el golpe, sin latencia.
+6. DRAG TO DAW: arrastra el resultado a una pista. El WAV lleva un marcador en el HIT.
+
+Todo el procesado es local: el audio no sale de tu ordenador.
+Capturas, exportaciones y presets propios se guardan en
+Música/IVO Beatz/reverseIVO (Capturas, Exports, Presets).
+
+Manual completo: MANUAL.md

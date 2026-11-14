@@ -1,0 +1,256 @@
+== Motor (RenderTest)
+
+== 44100 Hz
+  región detectada: 0.282 s → 0.783 s
+  OK   detecta el inicio de la primera palabra (0,30 s)
+  OK   detecta el final de la primera palabra (0,78 s)
+ -- default_1bar_120 (465 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 40.7 dB  · pico -2.07 dBFS · ganancia -1.6 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 4.92 en 1.9877 s (golpe 2.0000 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- extremo_2bars_140 (1135 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 43.3 dB  · pico -2.09 dBFS · ganancia -5.3 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 4.61 en 3.8263 s (golpe 3.4286 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- natural_seco_halfbar_95 (95 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 175.8 dB  · pico -2.07 dBFS · ganancia -1.0 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 6.84 en 1.0860 s (golpe 1.2632 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- libre_3333ms (804 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 36.3 dB  · pico -2.07 dBFS · ganancia 1.0 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 3.26 en 3.0904 s (golpe 3.3330 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- solo_textura_4bars_174_3x4 (1089 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 43.8 dB  · pico -2.07 dBFS · ganancia 6.1 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 3.34 en 4.1023 s (golpe 4.1379 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+
+== 48000 Hz
+  región detectada: 0.283 s → 0.785 s
+  OK   detecta el inicio de la primera palabra (0,30 s)
+  OK   detecta el final de la primera palabra (0,78 s)
+ -- default_1bar_120 (508 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 40.7 dB  · pico -2.07 dBFS · ganancia -1.4 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 3.85 en 1.9883 s (golpe 2.0000 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- extremo_2bars_140 (1311 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 43.1 dB  · pico -2.07 dBFS · ganancia -5.7 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 4.60 en 3.6089 s (golpe 3.4286 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- natural_seco_halfbar_95 (107 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 175.7 dB  · pico -2.07 dBFS · ganancia -1.1 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 6.78 en 1.1584 s (golpe 1.2632 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- libre_3333ms (829 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 36.4 dB  · pico -2.07 dBFS · ganancia 0.6 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 3.20 en 2.7359 s (golpe 3.3330 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- solo_textura_4bars_174_3x4 (1203 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 43.7 dB  · pico -2.07 dBFS · ganancia 5.9 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 3.39 en 2.7504 s (golpe 4.1379 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+
+== 96000 Hz
+  región detectada: 0.283 s → 0.785 s
+  OK   detecta el inicio de la primera palabra (0,30 s)
+  OK   detecta el final de la primera palabra (0,78 s)
+ -- default_1bar_120 (1098 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 40.5 dB  · pico -2.06 dBFS · ganancia -1.6 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 4.59 en 1.9873 s (golpe 2.0000 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- extremo_2bars_140 (2570 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 42.9 dB  · pico -2.06 dBFS · ganancia -6.1 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 5.55 en 3.8234 s (golpe 3.4286 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- natural_seco_halfbar_95 (200 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 175.8 dB  · pico -2.06 dBFS · ganancia -1.0 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 5.22 en 1.0918 s (golpe 1.2632 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- libre_3333ms (1794 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 36.3 dB  · pico -2.07 dBFS · ganancia 0.3 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 3.27 en 3.1223 s (golpe 3.3330 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+ -- solo_textura_4bars_174_3x4 (2450 ms)
+  OK   el golpe cae en la muestra exacta de la duración musical
+  OK   sin NaN ni infinitos
+  OK   no pasa de −0,3 dBFS (Clip Safe)
+     subida: 45.0 dB  · pico -2.07 dBFS · ganancia 3.7 dB
+  OK   la energía crece hacia el golpe (+6 dB o más)
+     peor salto/local: 3.53 en 3.3780 s (golpe 4.1379 s)
+  OK   sin clics (ningún salto aislado respecto a su entorno)
+  OK   llega limpio al golpe
+  OK   mismo ajuste = mismo resultado (determinista)
+  OK   se genera en menos de 4 s
+
+TODO OK (0 fallos)
+
+== Plugin completo (PluginTest)
+
+== Captura
+  OK   la captura se cierra sola al parar el transporte
+  OK   genera el reverse automÃ¡ticamente despuÃ©s de capturar
+  región 0.283–0.785 s · HIT  5.1.3 · 1 BAR · 2.000 s
+  OK   coloca el golpe en la lÃ­nea de tiempo
+  OK   1 compÃ¡s a 120 BPM = 96000 muestras exactas
+
+== Sincronía
+  golpe en ppq 16.5000 (inicio de la frase 16.5660)
+  OK   el golpe cae donde empieza la frase capturada
+  diferencia máxima con el reverse generado: 0.00e+00
+  OK   la salida es exactamente el reverse, terminando en la muestra del golpe
+  OK   silencio antes de que empiece el reverse
+
+== MIDI y escucha
+  OK   una nota MIDI dispara el reverse en la muestra exacta
+  OK   PREVIEW reproduce el reverse desde el principio
+
+== Estado
+  OK   al reabrir el proyecto se recupera la fuente y el mismo reverse
+  OK   y el golpe sigue en el mismo sitio
+
+== Smart Sync
+  OK   al cambiar el tempo del proyecto el reverse se adapta solo (1 compÃ¡s a 100 BPM)
+  OK   y al compÃ¡s (3/4)
+
+== AUTO / MANUAL
+  OK   en MANUAL el audio generado se conserva al tocar controles
+  OK   GENERATE lo regenera
+
+== Exportar
+  OK   exporta WAV 
+  OK   el WAV tiene la longitud exacta, 24 bits
+
+== Presets
+  Clean Vocal Reverse    CLEAN           502 ms  pico -2.06 dBFS
+  OK     genera bien
+  Soft Reverse           CLEAN           422 ms  pico -2.07 dBFS
+  OK     genera bien
+  Natural Reverse        CLEAN           160 ms  pico -2.05 dBFS
+  OK     genera bien
+  Crank Riser            UNDERGROUND     504 ms  pico -2.20 dBFS
+  OK     genera bien
+  Dark Vocal Rise        UNDERGROUND     520 ms  pico -2.07 dBFS
+  OK     genera bien
+  Aggressive Reverse     UNDERGROUND     563 ms  pico -2.05 dBFS
+  OK     genera bien
+  Distorted Vocal Rise   UNDERGROUND     502 ms  pico -2.07 dBFS
+  OK     genera bien
+  Dreamy Reverse         ATMOSPHERIC    1670 ms  pico -2.07 dBFS
+  OK     genera bien
+  Wide Reverse           ATMOSPHERIC     882 ms  pico -2.07 dBFS
+  OK     genera bien
+  Ambient Rise           ATMOSPHERIC    2851 ms  pico -2.07 dBFS
+  OK     genera bien
+  Long Vocal Transition  ATMOSPHERIC    1388 ms  pico -2.36 dBFS
+  OK     genera bien
+  Short Impact           TRANSITIONS     242 ms  pico -2.07 dBFS
+  OK     genera bien
+  Long Build             TRANSITIONS     741 ms  pico -2.65 dBFS
+  OK     genera bien
+  Rhythmic Build         TRANSITIONS     886 ms  pico -2.09 dBFS
+  OK     genera bien
+  Final Transition       TRANSITIONS    2663 ms  pico -2.13 dBFS
+  OK     genera bien
+
+== Interfaz
+  OK   capturas de la interfaz en /tmp/rvp
+
+TODO OK (0 fallos)

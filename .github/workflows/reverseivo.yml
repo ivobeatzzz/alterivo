@@ -1,0 +1,159 @@
+# Compila reverseIVO y crea los dos instaladores:
+#   - reverseIVO-Mac-Instalador.pkg      (elige VST3 y/o AU)
+#   - reverseIVO-Windows-Instalador.exe  (VST3)
+# En cada subida quedan en la pestaña "Actions" → último run → "Artifacts".
+# Al crear una release con etiqueta tipo v1.0.0 se publican en "Releases".
+name: Build reverseIVO
+
+# Sólo se compila a mano (pestaña Actions → Run workflow): así no se gastan minutos en cada cambio.
+# Ojo: en repositorios privados cada minuto de Mac cuenta como 10 del plan gratuito.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    working-directory: reverseIVO
+
+jobs:
+  mac:
+    runs-on: macos-15-intel   # Intel: suele tener más máquinas libres que macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+
+      - name: Configurar
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compilar
+        run: cmake --build build --config Release -j 4
+
+      - name: Validar con pluginval (VST3)
+        continue-on-error: true
+        run: |
+          curl -sL -o pv.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip -q -o pv.zip
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --timeout-ms 900000 "build/ReverseIvo_artefacts/Release/VST3/reverseIVO.vst3" > pluginval-mac.txt 2>&1; echo "EXIT $?" >> pluginval-mac.txt
+          tail -40 pluginval-mac.txt
+
+      - name: Validar el Audio Unit (auval, la prueba que usa Logic)
+        continue-on-error: true
+        run: |
+          mkdir -p ~/Library/Audio/Plug-Ins/Components
+          cp -R "build/ReverseIvo_artefacts/Release/AU/reverseIVO.component" ~/Library/Audio/Plug-Ins/Components/
+          codesign --force --deep -s - ~/Library/Audio/Plug-Ins/Components/reverseIVO.component
+          killall -9 AudioComponentRegistrar 2>/dev/null || true
+          sleep 3
+          { echo "== auval"; auval -strict -v aumf Rivo Ivob; echo "EXIT $?"; } > auval-mac.txt 2>&1
+          { echo "== pluginval AU"; ./pluginval.app/Contents/MacOS/pluginval --strictness-level 5 --validate-in-process --timeout-ms 900000 ~/Library/Audio/Plug-Ins/Components/reverseIVO.component; echo "EXIT $?"; } >> auval-mac.txt 2>&1
+          grep -E "AU VALIDATION|PASSED|FAILED|SUCCESS|EXIT" auval-mac.txt | tail -20
+
+      - name: Crear instalador .pkg
+        run: bash packaging/mac/build-pkg.sh 1.0.0
+
+      - name: Guardar en la rama "reverseivo-instalador-mac"
+        run: |
+          mkdir out && cp dist/reverseIVO-Mac-Instalador.pkg out/ && (cp pluginval-mac.txt auval-mac.txt out/ || true) && cd out
+          git init -q -b reverseivo-instalador-mac
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "reverseIVO Mac"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" reverseivo-instalador-mac
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reverseIVO-Mac-Instalador
+          path: reverseIVO/dist/reverseIVO-Mac-Instalador.pkg
+
+      - name: Publicar en Releases
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: reverseIVO/dist/reverseIVO-Mac-Instalador.pkg
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+
+      - name: Configurar
+        shell: bash
+        run: cmake -B build -A x64
+
+      - name: Compilar
+        run: cmake --build build --config Release -j 4
+
+      - name: Validar con pluginval (VST3)
+        continue-on-error: true
+        shell: bash
+        run: |
+          curl -sL -o pv.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Windows.zip
+          unzip -q -o pv.zip
+          ./pluginval.exe --strictness-level 5 --validate-in-process --timeout-ms 900000 "build/ReverseIvo_artefacts/Release/VST3/reverseIVO.vst3" > pluginval-windows.txt 2>&1; echo "EXIT $?" >> pluginval-windows.txt
+          tail -40 pluginval-windows.txt
+
+      - name: Zip del VST3 (instalación copiando la carpeta, sin ejecutar nada)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path "build\ReverseIvo_artefacts\Release\VST3\reverseIVO.vst3" -DestinationPath "dist\reverseIVO-Windows-VST3.zip" -Force
+
+      - name: Instalar Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Crear instalador .exe
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = (Get-Command iscc).Source }
+          & $iscc "packaging\windows\installer.iss"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Guardar en la rama "reverseivo-instalador-windows"
+        shell: bash
+        run: |
+          mkdir out && cp dist/reverseIVO-Windows-Instalador.exe dist/reverseIVO-Windows-VST3.zip out/ && (cp pluginval-windows.txt out/ || true) && cd out
+          git init -q -b reverseivo-instalador-windows
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "reverseIVO Windows"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" reverseivo-instalador-windows
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reverseIVO-Windows-Instalador
+          path: |
+            reverseIVO/dist/reverseIVO-Windows-Instalador.exe
+            reverseIVO/dist/reverseIVO-Windows-VST3.zip
+
+      - name: Publicar en Releases
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: reverseIVO/dist/reverseIVO-Windows-Instalador.exe
+
+  # Junta los dos instaladores en una sola carpeta para compartir
+  carpeta:
+    needs: [ mac, windows ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: reverseIVO/descargas
+          merge-multiple: true
+
+      - name: Montar la carpeta
+        run: |
+          mkdir -p "reverseIVO Instaladores"
+          cp descargas/reverseIVO-Mac-Instalador.pkg "reverseIVO Instaladores/"
+          cp descargas/reverseIVO-Windows-Instalador.exe descargas/reverseIVO-Windows-VST3.zip "reverseIVO Instaladores/"
+          cp packaging/LEEME.txt MANUAL.md "reverseIVO Instaladores/"
+          ls -la "reverseIVO Instaladores"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reverseIVO-Instaladores
+          path: reverseIVO/reverseIVO Instaladores/
