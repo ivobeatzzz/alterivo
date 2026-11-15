@@ -77,7 +77,7 @@ struct RenderSettings
     // ---- inteligentes
     bool smartEnding = true;
     float preImpact = 0.3f;       // 0..1 tensión en el último tramo
-    float tailSeconds = 0.8f;     // cola de reverb/delay después del golpe
+    float tailSeconds = 0.0f;     // 0 = el reverse termina en el golpe: nada suena encima de la palabra     // cola de reverb/delay después del golpe
     float outFadeMs = 300.0f;     // desvanecimiento final de la cola
     bool clipSafe = true;
 

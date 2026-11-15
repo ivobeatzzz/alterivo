@@ -34,7 +34,7 @@ CÓMO SE USA
    y GENERATE. Con AUTO se regenera solo cada vez que tocas algo.
 5. Escúchalo con el botón PLAY del plugin.
 6. Arrastra la onda a tu pista de reverses y suéltala al principio del compás que indica
-   (DRAG TO DAW · BAR n): el golpe cae exacto en la palabra.
+   (DRAG TO DAW · DROP AT BAR n): el reverse termina justo antes de la palabra.
    reverseIVO no suena en la pista de la voz (es una herramienta). Si quieres que suene
    ahí, enciende PLAY IN SONG en FX > SMART.
 

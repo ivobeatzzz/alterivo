@@ -13,10 +13,12 @@ AUTO y MANUAL usan el mismo motor: AUTO regenera solo a cada cambio; MANUAL espe
 5. Elige **duración**, toca **Intensity / Pitch / Character** o carga un **preset**.
 6. **GENERATE** (o automático en AUTO). Tarda de 0,2 a 4 segundos según los efectos.
 7. **Escúchalo** con el botón ▶ del plugin.
-8. **Arrastra la onda** a tu pista de reverses (por ejemplo, una pista llamada «reverseIVO»). Encima de la onda pone **DRAG TO DAW · BAR n**: suéltalo al principio de ese compás con la rejilla puesta y el golpe cae exacto en la palabra (el WAV ya lleva el silencio necesario delante). También puedes guardarlo con el botón de exportar.
+8. **Arrastra la onda** a tu pista de reverses (por ejemplo, una pista llamada «reverseIVO»). Encima de la onda pone **DRAG TO DAW · DROP AT BAR n**: suéltalo al principio de ese compás con la rejilla puesta y el golpe cae exacto en la palabra (el WAV ya lleva el silencio necesario delante). También puedes guardarlo con el botón de exportar.
 9. Repite con la siguiente frase: al pulsar grabar, el reverse anterior se borra y la nueva grabación lo sustituye.
 
 El botón ▶ del plugin sólo suena con el DAW parado (y se para solo al darle al play del DAW), así nunca se mezcla con los reverses que ya tienes en la pista.
+
+El reverse **se corta justo antes de la letra**: termina un poco antes del golpe (GAP) y después no suena nada (TAIL 0), así la palabra real entra sola y limpia. Si quieres una cola de reverb por encima, sube TAIL en FX → SMART.
 
 reverseIVO es una **herramienta**: por defecto no suena en la pista donde está (PLAY IN SONG apagado), sólo cuando lo escuchas con ▶. Así la pista de la voz queda limpia y los reverses viven en su propia pista. Si prefieres que suene directamente en la canción, enciende **PLAY IN SONG** en FX → SMART.
 

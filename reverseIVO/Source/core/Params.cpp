@@ -224,7 +224,7 @@ juce::String helpFor (const juce::String& p)
         { id::moveFilter, "El filtro se abre a lo largo del reverse." }, { id::moveWidth, "La imagen estéreo se abre hacia el golpe." },
         { id::moveTrem, "El tremolo se intensifica hacia el golpe." },
         { id::smartEnding, "Llega al golpe sin clic ni corte brusco." }, { id::preImpact, "Tensión extra justo antes del golpe." },
-        { id::tail, "Cola de reverb y delay después del golpe." }, { id::outFade, "Desvanecimiento del final de la cola." },
+        { id::tail, "Cola de reverb y delay después del golpe. 0 (por defecto) = el reverse termina justo antes de la palabra, sin nada encima." }, { id::outFade, "Desvanecimiento del final de la cola." },
         { id::clipSafe, "Limitador suave: el reverse nunca satura la salida." },
         { id::output, "Volumen del reverse. 0 dB = llega al golpe al mismo nivel que la voz. En tiempo real, no regenera." },
         { id::playInSong, "Apagado (por defecto): reverseIVO es una herramienta, no suena en la pista; lo escuchas con PLAY y lo arrastras a tu pista de reverses. Encendido: además suena aquí, sincronizado con la canción." },

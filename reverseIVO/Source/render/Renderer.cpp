@@ -113,7 +113,7 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
     const int G = s.gapIndex > 0 ? std::min (Nfull / 4, (int) std::llround (gapQuarters (s.gapIndex) * qSec * sr)) : 0;
     const int N = std::max (1, Nfull - G);   // dónde termina la subida
     const bool anyFx = s.reverbOn || s.delayOn;
-    const int T = anyFx ? std::max (0, (int) (s.tailSeconds * sr)) : (int) (0.02 * sr);
+    const int T = (anyFx || s.tailSeconds > 0.0f) ? std::max (0, (int) (s.tailSeconds * sr)) : 0;
 
     // ---------------------------------------------------------------- 1. región
     Stereo seg; seg.resize (b - a);
@@ -489,11 +489,11 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
             if (t >= Nfull + T - fadeLen && fadeLen > 0) { const float g = fadeCos ((float) (Nfull + T - 1 - t) / (float) fadeLen); l *= g; r *= g; }
             if (G > 0 && t >= N)
             {
-                // GAP limpio: la reverb y el delay también se apartan antes del golpe (−20 dB) y la cola vuelve después
-                // por detrás de la voz (−5 dB), para no emborronar la acapella
+                // GAP limpio: la reverb y el delay también se cortan antes del golpe y, si hay TAIL, la cola vuelve
+                // después por detrás de la voz (−5 dB), para no emborronar la acapella
                 const float down = fadeCos (clamp01 ((float) (t - N) / (float) std::max (1, (int) (0.006 * sr))));
-                float gg = 1.0f - 0.9f * down;
-                if (t >= Nfull) gg = lerp (0.1f, 0.56f, shapeCurve (clamp01 ((float) (t - Nfull) / (float) (0.2 * sr)), 0.4f));
+                float gg = 1.0f - down;   // silencio de verdad: la reverse se corta antes de la letra
+                if (t >= Nfull) gg = 0.56f * shapeCurve (clamp01 ((float) (t - Nfull) / (float) (0.2 * sr)), 0.4f);
                 l *= gg; r *= gg;
             }
             out.l[(size_t) t] = l; out.r[(size_t) t] = r;

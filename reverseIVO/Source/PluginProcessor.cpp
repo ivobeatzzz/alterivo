@@ -806,7 +806,7 @@ int ReverseIvoProcessor::dropBar() const
 juce::String ReverseIvoProcessor::dropText() const
 {
     const int b = dropBar();
-    return b > 0 ? juce::String::fromUTF8 ("DRAG TO DAW  \xc2\xb7  BAR ") + juce::String (b) : juce::String ("DRAG TO DAW");
+    return b > 0 ? juce::String::fromUTF8 ("DRAG TO DAW  \xc2\xb7  DROP AT BAR ") + juce::String (b) : juce::String ("DRAG TO DAW");
 }
 
 bool ReverseIvoProcessor::exportWav (const juce::File& file, juce::String& error)

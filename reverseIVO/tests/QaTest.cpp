@@ -318,6 +318,15 @@ int main (int argc, char** argv)
             const double errMs = (hitPpqFromFile - h0) * 500.0;
             std::printf ("  arrastrar: soltar en el compás %d · el golpe cae a %.3f ms de la palabra\n", bar, errMs);
             c.expect (bar > 0 && std::abs (errMs) < 0.05, "el WAV arrastrado, soltado al principio del compás que indica, cae exacto en la palabra");
+            // desde un poco antes del golpe hasta el final: silencio total (la letra real entra sola, nada encima)
+            if (rd != nullptr && hitInFile > 0)
+            {
+                const int from = (int) hitInFile - (int) (0.01 * sr), n = (int) (rd->lengthInSamples - from);
+                juce::AudioBuffer<float> b (2, n); rd->read (&b, 0, n, from, true, true);
+                const float after = std::max (b.getMagnitude (0, 0, n), b.getMagnitude (1, 0, n));
+                std::printf ("  desde 10 ms antes del golpe hasta el final del WAV: pico %.1e\n", after);
+                c.expect (after == 0.0f, "el reverse se corta antes de la letra: nada suena encima de la palabra");
+            }
             f.deleteFile();
         }
         setP (p, id::playInSong, 1.0f);   // el resto mide la reproducción sincronizada
