@@ -68,6 +68,7 @@ int main (int argc, char** argv)
     p.setRateAndBufferSizeDetails (sr, 480);
     p.prepareToPlay (sr, 480);
     setP (p, id::through, 0.0f);   // sólo el reverse en la salida (para medirlo)
+    setP (p, id::playInSong, 1.0f);   // estas pruebas miden la reproducción sincronizada en la canción
 
     // ---------------------------------------------------------------- 1. captura con transporte
     std::printf ("\n== Captura\n");
@@ -184,7 +185,8 @@ int main (int argc, char** argv)
         c.expect (p.exportWav (f, err), "exporta WAV " + err);
         juce::AudioFormatManager fm; fm.registerBasicFormats();
         std::unique_ptr<juce::AudioFormatReader> rd (fm.createReaderFor (f));
-        c.expect (rd != nullptr && rd->lengthInSamples == r->size() && rd->bitsPerSample == 24, "el WAV tiene la longitud exacta, 24 bits");
+        const juce::int64 lead = rd != nullptr ? rd->lengthInSamples - r->size() : -1;   // silencio delante hasta el compás
+        c.expect (rd != nullptr && lead >= 0 && lead < (juce::int64) (4 * 0.5 * sr) && rd->bitsPerSample == 24, "el WAV es el reverse completo desde el principio del compás, 24 bits");
     }
 
     // ---------------------------------------------------------------- 8. presets

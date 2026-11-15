@@ -214,7 +214,9 @@ void ReverseIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     const double hit = hitPpq.load();
     juce::int64 syncBase = -1;
     bool sync = false;
-    if (rOk && play && ! std::isnan (hit) && ! std::isnan (ppq0) && bpmNow > 0.0)
+    // PLAY IN SONG apagado (por defecto): reverseIVO es una herramienta, no suena en la pista al reproducir
+    const bool inSong = apvts.getRawParameterValue (id::playInSong)->load() > 0.5f;
+    if (inSong && rOk && play && ! std::isnan (hit) && ! std::isnan (ppq0) && bpmNow > 0.0)
     {
         syncBase = (juce::int64) r->hitIndex + (juce::int64) std::llround ((ppq0 - hit) * 60.0 / bpmNow * sr);
         sync = true;
@@ -466,6 +468,7 @@ bool ReverseIvoProcessor::renderOutdated() const
 {
     auto s = getSource();
     if (s == nullptr) return false;
+    if (apvts.getRawParameterValue (id::playInSong)->load() < 0.5f) return false;   // no suena en la canción: nada que esperar
     if (engine.busy()) return true;
     const auto r = getResult();
     if (r == nullptr || std::abs (r->sampleRate - sr) > 0.5) return true;
@@ -768,39 +771,73 @@ juce::File ReverseIvoProcessor::defaultExportFile() const
     juce::String name = "reverseIVO " + juce::File::createLegalFileName (presetName) + " "
                         + (bpm.load() > 0 ? juce::String (juce::roundToInt (bpm.load())) + "bpm " : juce::String())
                         + names[juce::jlimit (0, 5, st.durationIndex)];
+    if (dropBar() > 0) name << " bar" << dropBar();
     return dir.getNonexistentChildFile (name, ".wav", false);
+}
+
+// El WAV empieza al principio de un compás: delante del reverse va el silencio justo para que, soltándolo en ese
+// compás con la rejilla puesta, el golpe caiga exactamente donde empieza la palabra (aunque no esté en la rejilla).
+static int padForBar (double hit, double bpm, double bpb, int hitIndex, double sampleRate, int* bar)
+{
+    if (std::isnan (hit) || bpm <= 0.0 || bpb <= 0.0) { if (bar != nullptr) *bar = -1; return 0; }
+    const double startPpq = hit - (double) hitIndex / sampleRate * bpm / 60.0;
+    const double barStart = std::floor (startPpq / bpb + 1e-9) * bpb;
+    if (barStart < 0.0) { if (bar != nullptr) *bar = -1; return 0; }
+    if (bar != nullptr) *bar = (int) std::llround (barStart / bpb) + 1;
+    return (int) std::llround ((startPpq - barStart) * 60.0 / bpm * sampleRate);
+}
+int ReverseIvoProcessor::dropBar() const
+{
+    auto r = getResult();
+    if (r == nullptr) return -1;
+    int bar = -1;
+    padForBar (hitPpq.load(), bpm.load(), currentTempo().beatsPerBar, r->hitIndex, r->sampleRate, &bar);
+    return bar;
+}
+juce::String ReverseIvoProcessor::dropText() const
+{
+    const int b = dropBar();
+    return b > 0 ? juce::String::fromUTF8 ("DRAG TO DAW  \xc2\xb7  BAR ") + juce::String (b) : juce::String ("DRAG TO DAW");
 }
 
 bool ReverseIvoProcessor::exportWav (const juce::File& file, juce::String& error)
 {
     auto r = getResult();
     if (r == nullptr) { error = "Genera un reverse primero."; return false; }
+    const int pad = padForBar (hitPpq.load(), bpm.load(), currentTempo().beatsPerBar, r->hitIndex, r->sampleRate, nullptr);
     file.deleteFile();
     auto os = file.createOutputStream();
     if (os == nullptr) { error = "No se puede escribir en " + file.getFullPathName(); return false; }
     // marca (cue) en el golpe: algunos DAW la muestran al importar
     const auto opts = juce::AudioFormatWriterOptions().withSampleRate (r->sampleRate).withNumChannels (2).withBitsPerSample (24)
                           .withMetadata ("NumCuePoints", "1").withMetadata ("Cue0Identifier", "1")
-                          .withMetadata ("Cue0Offset", juce::String (r->hitIndex))
+                          .withMetadata ("Cue0Offset", juce::String (r->hitIndex + pad))
                           .withMetadata ("NumCueLabels", "1").withMetadata ("CueLabel0Identifier", "1").withMetadata ("CueLabel0Text", "HIT");
     juce::WavAudioFormat wav;
     std::unique_ptr<juce::OutputStream> stream (os.release());
     auto w = wav.createWriterFor (stream, opts);
     if (w == nullptr) { error = "No se pudo crear el WAV."; return false; }
-    const float* ch[2] = { r->l.data(), r->r.data() };
-    // el WAV lleva el reverse con el nivel de OUTPUT aplicado (lo que suena es lo que se exporta)
+    // el WAV lleva el reverse con el nivel de OUTPUT aplicado (lo que se escucha con PLAY es lo que se exporta)
     const float g = dsp::dbToLin (apvts.getRawParameterValue (id::output)->load());
-    if (std::abs (g - 1.0f) < 1e-4f) return w->writeFromFloatArrays (ch, 2, r->size());
     std::vector<float> l (r->l), rr (r->r);
-    // con OUTPUT subido el WAV no se recorta: los picos pasan por un limitador suave sobremuestreado (−0,3 dBFS)
-    static const dsp::Oversampler4 lim;
-    const double ceil = dsp::dbToLin (-0.6f), knee = 0.7 * ceil;
-    auto soft = [=] (double v, int) { const double a = std::abs (v * g); if (a < knee) return v * g; return (v < 0 ? -1.0 : 1.0) * (knee + (ceil - knee) * std::tanh ((a - knee) / (ceil - knee))); };
-    float pk = 0.0f; for (size_t i = 0; i < l.size(); ++i) pk = std::max (pk, std::max (std::abs (l[i]), std::abs (rr[i])));
-    if (pk * g > knee) { lim.process (l, soft); lim.process (rr, soft); }
-    else { for (auto& v : l) v *= g; for (auto& v : rr) v *= g; }
-    float pk2 = 0.0f; for (size_t i = 0; i < l.size(); ++i) pk2 = std::max (pk2, std::max (std::abs (l[i]), std::abs (rr[i])));
-    if (pk2 > dsp::dbToLin (-0.3f)) { const float k = dsp::dbToLin (-0.3f) / pk2; for (auto& v : l) v *= k; for (auto& v : rr) v *= k; }
+    if (std::abs (g - 1.0f) > 1e-4f)
+    {
+        // con OUTPUT subido el WAV no se recorta: los picos pasan por un limitador suave sobremuestreado (−0,3 dBFS)
+        static const dsp::Oversampler4 lim;
+        const double ceil = dsp::dbToLin (-0.6f), knee = 0.7 * ceil;
+        auto soft = [=] (double v, int) { const double a = std::abs (v * g); if (a < knee) return v * g; return (v < 0 ? -1.0 : 1.0) * (knee + (ceil - knee) * std::tanh ((a - knee) / (ceil - knee))); };
+        float pk = 0.0f; for (size_t i = 0; i < l.size(); ++i) pk = std::max (pk, std::max (std::abs (l[i]), std::abs (rr[i])));
+        if (pk * g > knee) { lim.process (l, soft); lim.process (rr, soft); }
+        else { for (auto& v : l) v *= g; for (auto& v : rr) v *= g; }
+        float pk2 = 0.0f; for (size_t i = 0; i < l.size(); ++i) pk2 = std::max (pk2, std::max (std::abs (l[i]), std::abs (rr[i])));
+        if (pk2 > dsp::dbToLin (-0.3f)) { const float k = dsp::dbToLin (-0.3f) / pk2; for (auto& v : l) v *= k; for (auto& v : rr) v *= k; }
+    }
+    if (pad > 0)
+    {
+        std::vector<float> z ((size_t) pad, 0.0f);
+        const float* zc[2] = { z.data(), z.data() };
+        if (! w->writeFromFloatArrays (zc, 2, pad)) { error = "No se pudo escribir el WAV."; return false; }
+    }
     const float* ch2[2] = { l.data(), rr.data() };
     return w->writeFromFloatArrays (ch2, 2, r->size());
 }

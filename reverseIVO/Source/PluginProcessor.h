@@ -80,6 +80,9 @@ public:
     void nudgeHit (double quarters);
     void setHitAtPlayhead();
     bool exportWav (const juce::File&, juce::String& error);
+    // compás donde soltar el WAV arrastrado (empieza en ese compás con silencio delante: el golpe cae en la palabra)
+    int dropBar() const;
+    juce::String dropText() const;
     juce::File exportForDrag();              // archivo temporal para arrastrar al DAW
     juce::File defaultExportFile() const;
     void loadPreset (int index);

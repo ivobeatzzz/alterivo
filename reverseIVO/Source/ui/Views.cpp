@@ -95,13 +95,15 @@ void WaveView::paint (juce::Graphics& g)
         dot (g, { hx, a.getY() + 2.0f }, 2.5f, cream);
         // aviso: la onda se arrastra al DAW (discreto; se ilumina al pasar el ratón)
         {
-            const auto pill = juce::Rectangle<float> (a.getX() + 6.0f, a.getY() + 4.0f, 118.0f, 22.0f);
+            const auto txt = proc.dropText();
+            const float tw = textWidth (font (F::manX, 8.5f, 0.22f), txt);
+            const auto pill = juce::Rectangle<float> (a.getX() + 6.0f, a.getY() + 4.0f, 40.0f + tw, 22.0f);
             g.setColour (juce::Colours::black.withAlpha (hoverWave ? 0.45f : 0.22f));
             g.fillRoundedRectangle (pill, 11.0f);
             g.setColour ((hoverWave ? accentHi : juce::Colours::white).withAlpha (hoverWave ? 0.55f : 0.10f));
             g.drawRoundedRectangle (pill.reduced (0.5f), 11.0f, 1.0f);
             drawIcon (g, Icon::drag, pill.withWidth (22.0f).reduced (5.0f).translated (4.0f, 0.0f), hoverWave ? accentHi : dim);
-            label (g, "DRAG TO DAW", pill.withTrimmedLeft (26.0f), juce::Justification::centredLeft, hoverWave ? theme::text : dim, 8.5f, 0.22f);
+            label (g, txt, pill.withTrimmedLeft (26.0f), juce::Justification::centredLeft, hoverWave ? theme::text : dim, 8.5f, 0.22f);
         }
         // cabezal
         const int pi = proc.playIndex();

@@ -132,7 +132,7 @@ MainView::MainView (ReverseIvoProcessor& p)
     fxCards[5] = { { "ENDING & TAIL", { 44, 150, 812, 212 }, nullptr,
                      { toggle ("SMART ENDING", id::smartEnding), knob ("PRE-IMPACT", id::preImpact, D), knob ("TAIL", id::tail, D), knob ("OUT FADE", id::outFade, D), toggle ("CLIP SAFE", id::clipSafe) } },
                    { "PLAYBACK", { 44, 378, 812, 212 }, nullptr,
-                     { toggle ("THROUGH", id::through), knob ("OUTPUT", id::output, D), knob ("DUCKING", id::ducking, D), knob ("RELEASE", id::duckRelease, D) } } };
+                     { toggle ("PLAY IN SONG", id::playInSong), toggle ("THROUGH", id::through), knob ("OUTPUT", id::output, D), knob ("DUCKING", id::ducking, D), knob ("RELEASE", id::duckRelease, D) } } };
     for (auto& cards : fxCards) layoutCards (cards, 0, 0);
 
     // ---------------------------------------------------------------- pie
@@ -180,15 +180,18 @@ void MainView::layoutCards (std::vector<Card>& cards, int, int)
         if (c.toggle != nullptr) c.toggle->setBounds (b.getRight() - 62, b.getY() + 14, 44, 26);
         const int n = (int) c.items.size();
         if (n == 0) continue;
+        // los interruptores llevan texto: columna más ancha que la de una perilla, y la fila entera centrada
         const int inner = b.getWidth() - 32;
-        const int colW = std::min (130, inner / n);
-        int x = b.getCentreX() - colW * n / 2;
+        int nt = 0; for (auto* it : c.items) if (dynamic_cast<Toggle*> (it) != nullptr) ++nt;
+        const int colW = std::min (130, inner / n), togW = std::min (178, std::max (colW, (inner - colW * (n - nt)) / std::max (1, nt)));
+        int x = b.getCentreX() - (colW * (n - nt) + togW * nt) / 2;
         const int ky = b.getY() + std::max (52, (b.getHeight() - 150) / 2 + 18);   // la fila queda centrada en la tarjeta
         for (auto* it : c.items)
         {
-            if (dynamic_cast<Toggle*> (it) != nullptr) it->setBounds (x + colW / 2 - 86, ky + 26, 172, 30);
+            const bool isToggle = dynamic_cast<Toggle*> (it) != nullptr;
+            if (isToggle) it->setBounds (x + 4, ky + 26, togW - 8, 30);
             else it->setBounds (x, ky, colW, 150);
-            x += colW;
+            x += isToggle ? togW : colW;
         }
     }
 }

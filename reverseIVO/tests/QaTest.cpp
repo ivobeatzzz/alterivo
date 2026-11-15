@@ -273,6 +273,7 @@ int main (int argc, char** argv)
         ReverseIvoProcessor p; PH ph; p.setPlayHead (&ph);
         p.setRateAndBufferSizeDetails (sr, 512); p.prepareToPlay (sr, 512);
         p.loadPreset (p.presets.indexOf ("Crank Riser"));
+        c.expect (p.apvts.getRawParameterValue (id::playInSong)->load() < 0.5f, "por defecto es una herramienta: no suena en la pista (PLAY IN SONG apagado)");
         p.toggleCapture(); pump (50);
         const double capPpq = 33.37;   // empieza en un sitio cualquiera (no en la rejilla)
         play (p, ph, voice.l, voice.r, capPpq, -1);
@@ -284,6 +285,34 @@ int main (int argc, char** argv)
         // ¿dónde empieza la palabra en la línea de tiempo?
         const auto reg = analysis::detectFirstWord (voice.l, voice.r, sr);
         wordPpq = capPpq + reg.start / sr * 2.0;
+        // herramienta: al reproducir la canción sólo pasa la voz, sin reverse
+        {
+            juce::MemoryBlock tmp; p.getStateInformation (tmp);
+            const double h0 = juce::AudioProcessor::getXmlFromBinary (tmp.getData(), (int) tmp.getSize())->getDoubleAttribute ("hitPpq");
+            ph.playing = true;
+            std::vector<float> z ((size_t) (sr * 6.0), 0.0f);
+            auto o = play (p, ph, z, z, h0 - 8.0, 512);
+            double e = 0; for (int i = 0; i < o.getNumSamples(); ++i) e = std::max (e, (double) std::abs (o.getSample (0, i)));
+            c.expect (e < 1e-9, "con PLAY IN SONG apagado, al reproducir el proyecto no suena el reverse en la pista");
+            ph.playing = false;
+        }
+        // el WAV arrastrado empieza en un compás: soltándolo ahí, el golpe cae en la muestra de la palabra
+        {
+            const auto f = p.exportForDrag();
+            juce::AudioFormatManager fm; fm.registerBasicFormats();
+            std::unique_ptr<juce::AudioFormatReader> rd (fm.createReaderFor (f));
+            juce::MemoryBlock tmp; p.getStateInformation (tmp);
+            const double h0 = juce::AudioProcessor::getXmlFromBinary (tmp.getData(), (int) tmp.getSize())->getDoubleAttribute ("hitPpq");
+            const int bar = p.dropBar();
+            const double barPpq = (bar - 1) * 4.0;
+            const juce::int64 hitInFile = rd != nullptr ? rd->lengthInSamples - (r->size() - r->hitIndex) : -1;
+            const double hitPpqFromFile = barPpq + (double) hitInFile / sr * 2.0;
+            const double errMs = (hitPpqFromFile - h0) * 500.0;
+            std::printf ("  arrastrar: soltar en el compás %d · el golpe cae a %.3f ms de la palabra\n", bar, errMs);
+            c.expect (bar > 0 && std::abs (errMs) < 0.05, "el WAV arrastrado, soltado al principio del compás que indica, cae exacto en la palabra");
+            f.deleteFile();
+        }
+        setP (p, id::playInSong, 1.0f);   // el resto mide la reproducción sincronizada
         p.getStateInformation (saved);
         auto xml = juce::AudioProcessor::getXmlFromBinary (saved.getData(), (int) saved.getSize());
         const double hit = xml->getDoubleAttribute ("hitPpq");

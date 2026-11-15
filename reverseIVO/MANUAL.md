@@ -12,8 +12,11 @@ AUTO y MANUAL usan el mismo motor: AUTO regenera solo a cada cambio; MANUAL espe
 4. **HIT:** se coloca donde empieza la frase, ajustado a 1/16 si cae cerca. Muévelo con **‹ ›** (1/16) o pulsa **SET** para ponerlo donde está el cursor del DAW.
 5. Elige **duración**, toca **Intensity / Pitch / Character** o carga un **preset**.
 6. **GENERATE** (o automático en AUTO). Tarda de 0,2 a 4 segundos según los efectos.
-7. **Play en el DAW:** el reverse suena justo antes del HIT y acaba en el golpe, sin latencia. Con el botón ▶ lo escuchas desde el propio plugin.
-8. **Arrastra la onda** del reverse directamente a una pista del DAW, o usa el botón de exportar (WAV 24 bits con un marcador en el HIT).
+7. **Escúchalo** con el botón ▶ del plugin.
+8. **Arrastra la onda** a tu pista de reverses (por ejemplo, una pista llamada «reverseIVO»). Encima de la onda pone **DRAG TO DAW · BAR n**: suéltalo al principio de ese compás con la rejilla puesta y el golpe cae exacto en la palabra (el WAV ya lleva el silencio necesario delante). También puedes guardarlo con el botón de exportar.
+9. Repite con la siguiente frase: graba de nuevo y la nueva grabación sustituye a la anterior.
+
+reverseIVO es una **herramienta**: por defecto no suena en la pista donde está (PLAY IN SONG apagado), sólo cuando lo escuchas con ▶. Así la pista de la voz queda limpia y los reverses viven en su propia pista. Si prefieres que suene directamente en la canción, enciende **PLAY IN SONG** en FX → SMART.
 
 También puedes dispararlo con **MIDI**: cualquier nota lo reproduce desde el principio, con la velocidad como volumen.
 
@@ -44,7 +47,7 @@ Cada pestaña dibuja su curva sobre la onda; **arrastra los puntos** de inicio, 
 - **Character:** Drive, Bitcrush, Noise (ruido que sigue a la voz), Harmonics, Sub Boost y Air.
 - **Stereo:** anchura, auto-pan y su velocidad.
 - **Movement:** cuánto crece cada efecto a lo largo de la subida (reverb, delay, drive, pan, filtro, anchura, tremolo).
-- **Smart:** Smart Ending (corta la cola al llegar al golpe), Pre-Impact (pequeño vacío antes del HIT para que pegue más), Tail, Out Fade y Clip Safe (nunca pasa de −0,3 dBFS). **Playback:** Output, Through (deja pasar el audio de la pista), **Ducking** (baja la pista justo después del HIT) y Release.
+- **Smart:** Smart Ending (corta la cola al llegar al golpe), Pre-Impact (pequeño vacío antes del HIT para que pegue más), Tail, Out Fade y Clip Safe (nunca pasa de −0,3 dBFS). **Playback:** **Play In Song** (apagado: herramienta; encendido: suena en la canción sincronizado), Output, Through (deja pasar el audio de la pista), **Ducking** (baja la cola cuando entra la voz) y Release.
 
 ## Presets
 

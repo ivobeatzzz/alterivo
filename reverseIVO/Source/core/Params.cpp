@@ -143,6 +143,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     // reproducción
     F (id::output, "Output", NR (-36.0f, 12.0f, 0.1f), 0.0f, db());
     B (id::through, "Through", true);
+    B (id::playInSong, "Play In Song", false);
     F (id::ducking, "Ducking", NR (0.0f, 1.0f, 0.01f), 0.5f, pct());
     F (id::duckRelease, "Duck Release", NR (20.0f, 1000.0f, 1.0f), 180.0f, ms());
     return { p.begin(), p.end() };
@@ -183,7 +184,7 @@ RenderSettings readSettings (const juce::AudioProcessorValueTreeState& s)
 
 bool isPlaybackParam (const juce::String& p)
 {
-    return p == id::output || p == id::through || p == id::ducking || p == id::duckRelease || p == id::genMode;
+    return p == id::output || p == id::through || p == id::playInSong || p == id::ducking || p == id::duckRelease || p == id::genMode;
 }
 
 juce::String helpFor (const juce::String& p)
@@ -226,6 +227,7 @@ juce::String helpFor (const juce::String& p)
         { id::tail, "Cola de reverb y delay después del golpe." }, { id::outFade, "Desvanecimiento del final de la cola." },
         { id::clipSafe, "Limitador suave: el reverse nunca satura la salida." },
         { id::output, "Volumen del reverse. 0 dB = llega al golpe al mismo nivel que la voz. En tiempo real, no regenera." },
+        { id::playInSong, "Apagado (por defecto): reverseIVO es una herramienta, no suena en la pista; lo escuchas con PLAY y lo arrastras a tu pista de reverses. Encendido: además suena aquí, sincronizado con la canción." },
         { id::through, "Deja pasar el audio de la pista. Apágalo para imprimir sólo el reverse en otra pista." },
         { id::ducking, "Baja la cola cuando entra la voz después del golpe." }, { id::duckRelease, "Rapidez con la que vuelve la cola." },
     };
