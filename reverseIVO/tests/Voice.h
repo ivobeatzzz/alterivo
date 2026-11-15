@@ -6,7 +6,7 @@
 namespace reverseivo
 {
 // Voz sintética: dos palabras con silencio, consonante inicial, vibrato y formantes
-inline Source makeVoice (double sr)
+inline Source makeVoice (double sr, double glide = 0.05, double am = 0.2)
 {
     Source s; s.sampleRate = sr;
     const int n = (int) (sr * 2.4);
@@ -23,8 +23,8 @@ inline Source makeVoice (double sr)
             if (t >= w.t0 && t < w.t1)
             {
                 const double u = (t - w.t0) / (w.t1 - w.t0);
-                amp = std::min (1.0, (t - w.t0) / 0.03) * std::min (1.0, (w.t1 - t) / 0.08) * (0.8 + 0.2 * std::sin (6.0 * u));
-                f0 = w.f0 * (1.0 + 0.012 * std::sin (2 * dsp::pi * 5.5 * t)) * (1.0 - 0.05 * u);
+                amp = std::min (1.0, (t - w.t0) / 0.03) * std::min (1.0, (w.t1 - t) / 0.08) * (1.0 - am + am * std::sin (6.0 * u));
+                f0 = w.f0 * (1.0 + 0.012 * std::sin (2 * dsp::pi * 5.5 * t)) * (1.0 - glide * u);
                 if (t - w.t0 < 0.05) cons = 1.0 - (t - w.t0) / 0.05;
             }
         ph += 2 * dsp::pi * f0 / sr;

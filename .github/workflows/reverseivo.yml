@@ -51,7 +51,7 @@ jobs:
           grep -E "AU VALIDATION|PASSED|FAILED|SUCCESS|EXIT" auval-mac.txt | tail -20
 
       - name: Crear instalador .pkg
-        run: bash packaging/mac/build-pkg.sh 1.0.0
+        run: bash packaging/mac/build-pkg.sh 1.0.1
 
       - name: Guardar en la rama "reverseivo-instalador-mac"
         run: |

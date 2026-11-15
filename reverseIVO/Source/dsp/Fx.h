@@ -65,7 +65,7 @@ public:
         for (int i = 0; i < 4; ++i) diff[(size_t) i].prepare ((int) (ap[i] * sr / 48000.0 * (0.6 + 0.6 * size)), 0.62f);
         pre.prepare ((int) (sr * 0.25) + 8);
         preLen = std::max (1.0, predelayMs * 0.001 * sr);
-        phase = 0;
+        phase = 0; phase2 = 0;
     }
     // procesa una muestra estéreo (wet puro)
     void tick (float inL, float inR, float& outL, float& outR)
@@ -74,12 +74,14 @@ public:
         float x = pre.read (preLen);
         for (auto& a : diff) x = a.tick (x);
         double o[8];
+        // dos fases independientes (cada una vuelve a 0 en su propio ciclo): sin saltos en el tiempo de retardo
         phase += 2.0 * pi * 0.33 / sr; if (phase > 2.0 * pi) phase -= 2.0 * pi;
+        phase2 += 2.0 * pi * 0.33 * 1.37 / sr; if (phase2 > 2.0 * pi) phase2 -= 2.0 * pi;
         for (int i = 0; i < 8; ++i)
         {
             double d = len[i];
             if (i == 2) d += 6.0 * std::sin (phase);          // modulación lenta: cola sin anillos metálicos
-            if (i == 5) d += 5.0 * std::sin (phase * 1.37 + 1.0);
+            if (i == 5) d += 5.0 * std::sin (phase2 + 1.0);
             const double y = lines[(size_t) i].read (d);
             o[i] = lp[i].lp (y, dampCoef) * gain[i];
         }
@@ -103,7 +105,7 @@ private:
     double dampCoef = 0.5;
     std::array<Allpass, 4> diff;
     DelayLine pre; double preLen = 1;
-    double phase = 0;
+    double phase = 0, phase2 = 0;
 };
 
 class TempoDelay

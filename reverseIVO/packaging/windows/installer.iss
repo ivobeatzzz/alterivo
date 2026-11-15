@@ -3,7 +3,7 @@
 ; Resultado:       dist\reverseIVO-Windows-Instalador.exe
 
 #define AppName    "reverseIVO"
-#define AppVersion "1.0.0"
+#define AppVersion "1.0.1"
 #define Publisher  "IVO Beatz"
 #define BuildDir   "..\..\build\ReverseIvo_artefacts\Release\VST3"
 

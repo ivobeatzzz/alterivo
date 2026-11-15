@@ -55,7 +55,8 @@ private:
         FFT fft (N);
         std::vector<double> win ((size_t) N);
         for (int i = 0; i < N; ++i) win[(size_t) i] = 0.5 - 0.5 * std::cos (2.0 * pi * i / N);
-        std::vector<std::complex<double>> XL ((size_t) N), XR ((size_t) N), XM ((size_t) N);
+        // L y R viajan juntos en una sola FFT compleja (z = l + i·r) y vuelven juntos en una sola inversa
+        std::vector<std::complex<double>> Z ((size_t) N), XL ((size_t) half + 1), XR ((size_t) half + 1), XM ((size_t) half + 1);
         std::vector<double> prevPhaseA ((size_t) half + 1, 0.0), phaseS ((size_t) half + 1, 0.0), mag ((size_t) half + 1), prevMag ((size_t) half + 1, 0.0);
         std::vector<double> smL ((size_t) half + 1, 0.0), smR ((size_t) half + 1, 0.0);
         std::vector<double> accL ((size_t) outLen + N, 0.0), accR ((size_t) outLen + N, 0.0), norm ((size_t) outLen + N, 0.0);
@@ -73,10 +74,16 @@ private:
             for (int i = 0; i < N; ++i)
             {
                 const double w = win[(size_t) i];
-                const double l = sample (in.l, aStart + i) * w, r = sample (in.r, aStart + i) * w;
-                XL[(size_t) i] = { l, 0.0 }; XR[(size_t) i] = { r, 0.0 }; XM[(size_t) i] = { 0.5 * (l + r), 0.0 };
+                Z[(size_t) i] = { sample (in.l, aStart + i) * w, sample (in.r, aStart + i) * w };
             }
-            fft.forward (XL); fft.forward (XR); fft.forward (XM);
+            fft.forward (Z);
+            for (int k = 0; k <= half; ++k)
+            {
+                const auto a = Z[(size_t) k], b = std::conj (Z[(size_t) ((N - k) % N)]);
+                XL[(size_t) k] = { 0.5 * (a.real() + b.real()), 0.5 * (a.imag() + b.imag()) };
+                XR[(size_t) k] = { 0.5 * (a.imag() - b.imag()), -0.5 * (a.real() - b.real()) };
+                XM[(size_t) k] = { 0.5 * (XL[(size_t) k].real() + XR[(size_t) k].real()), 0.5 * (XL[(size_t) k].imag() + XR[(size_t) k].imag()) };
+            }
             const double hopA = first ? Ha : (double) (aStart - prevStart);
 
             if (smearMode)
@@ -134,24 +141,32 @@ private:
                 for (int k = 0; k <= half; ++k)
                 {
                     const double rot = newPhaseS[(size_t) k] - phaseA[(size_t) k];
-                    const auto c = std::polar (1.0, rot);
-                    XL[(size_t) k] *= c; XR[(size_t) k] *= c;
+                    const double cr = std::cos (rot), ci = std::sin (rot);
+                    const auto l = XL[(size_t) k], r = XR[(size_t) k];
+                    XL[(size_t) k] = { l.real() * cr - l.imag() * ci, l.real() * ci + l.imag() * cr };
+                    XR[(size_t) k] = { r.real() * cr - r.imag() * ci, r.real() * ci + r.imag() * cr };
                     phaseS[(size_t) k] = newPhaseS[(size_t) k];
                     prevPhaseA[(size_t) k] = phaseA[(size_t) k];
                     prevMag[(size_t) k] = mag[(size_t) k];
                 }
             }
-            for (int k = 1; k < half; ++k) { XL[(size_t) (N - k)] = std::conj (XL[(size_t) k]); XR[(size_t) (N - k)] = std::conj (XR[(size_t) k]); }
             XL[(size_t) half] = { XL[(size_t) half].real(), 0.0 }; XR[(size_t) half] = { XR[(size_t) half].real(), 0.0 };
             XL[0] = { XL[0].real(), 0.0 }; XR[0] = { XR[0].real(), 0.0 };
-            fft.inverse (XL); fft.inverse (XR);
+            // espectro conjunto Z = L + i·R (L y R hermíticos): la parte real de la inversa es L y la imaginaria, R
+            for (int k = 0; k <= half; ++k)
+            {
+                const auto l = XL[(size_t) k], r = XR[(size_t) k];
+                Z[(size_t) k] = { l.real() - r.imag(), l.imag() + r.real() };
+                if (k > 0 && k < half) Z[(size_t) (N - k)] = { l.real() + r.imag(), -l.imag() + r.real() };
+            }
+            fft.inverse (Z);
             for (int i = 0; i < N; ++i)
             {
                 const long o = sStart + i + half;   // desplazado half para no tener índices negativos
                 if (o < 0 || o >= (long) accL.size()) continue;
                 const double w = win[(size_t) i];
-                accL[(size_t) o] += XL[(size_t) i].real() * w;
-                accR[(size_t) o] += XR[(size_t) i].real() * w;
+                accL[(size_t) o] += Z[(size_t) i].real() * w;
+                accR[(size_t) o] += Z[(size_t) i].imag() * w;
                 norm[(size_t) o] += w * w;
             }
             prevStart = aStart; first = false;

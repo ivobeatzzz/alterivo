@@ -45,7 +45,8 @@ public:
     void inverse (std::vector<std::complex<double>>& x) const
     {
         run (x, true);
-        for (auto& v : x) v /= (double) n;
+        const double k = 1.0 / (double) n;
+        for (auto& v : x) v = { v.real() * k, v.imag() * k };
     }
     int size() const { return n; }
 private:
@@ -58,9 +59,13 @@ private:
             for (int i = 0; i < n; i += len)
                 for (int j = 0; j < len / 2; ++j)
                 {
-                    auto w = tw[(size_t) (j * step)]; if (inv) w = std::conj (w);
-                    const auto u = x[(size_t) (i + j)], v = x[(size_t) (i + j + len / 2)] * w;
-                    x[(size_t) (i + j)] = u + v; x[(size_t) (i + j + len / 2)] = u - v;
+                    // multiplicación compleja a mano (std::complex comprueba infinitos y es varias veces más lenta)
+                    const auto& w = tw[(size_t) (j * step)];
+                    const double wr = w.real(), wi = inv ? -w.imag() : w.imag();
+                    auto& a = x[(size_t) (i + j)]; auto& b = x[(size_t) (i + j + len / 2)];
+                    const double br = b.real() * wr - b.imag() * wi, bi = b.real() * wi + b.imag() * wr;
+                    const double ar = a.real(), ai = a.imag();
+                    a = { ar + br, ai + bi }; b = { ar - br, ai - bi };
                 }
         }
     }

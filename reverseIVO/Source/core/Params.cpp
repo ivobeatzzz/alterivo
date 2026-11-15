@@ -22,7 +22,7 @@ static Attr db (int dec = 1)
 }
 static Attr st()
 {
-    return Attr().withStringFromValueFunction ([] (float v, int) { return (v > 0.04f ? "+" : "") + juce::String (v, 1) + " st"; })
+    return Attr().withStringFromValueFunction ([] (float v, int) { const int k = juce::roundToInt (v); return (k > 0 ? "+" : "") + juce::String (k) + " st"; })
                  .withValueFromStringFunction ([] (const juce::String& t) { return num (t); });
 }
 static Attr hz()
@@ -58,7 +58,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     B (id::smartSync, "Smart Sync", d.smartSync);
     C (id::fit, "Fit", { "STRETCH", "NATURAL" }, (int) d.fit);
     F (id::intensity, "Intensity", NR (0.0f, 1.0f, 0.01f), d.intensity, pct());
-    F (id::pitch, "Pitch", NR (-24.0f, 24.0f, 0.1f), d.pitch, st());
+    F (id::pitch, "Pitch", NR (-24.0f, 24.0f, 1.0f), d.pitch, st());
     F (id::character, "Character", NR (0.0f, 1.0f, 0.01f), d.character, pct());
     C (id::genMode, "Generate Mode", { "AUTO", "MANUAL" }, 0);
     // CUSTOMIZE · volumen
@@ -67,8 +67,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     F (id::volCurve, "Volume Curve", NR (0.0f, 1.0f, 0.01f), d.volCurve, pct());
     F (id::fadeIn, "Fade In", NR (0.0f, 1.0f, 0.01f), d.fadeIn, pct());
     // pitch
-    F (id::pitchStart, "Pitch Start", NR (-24.0f, 24.0f, 0.1f), d.pitchStart, st());
-    F (id::pitchEnd, "Pitch End", NR (-24.0f, 24.0f, 0.1f), d.pitchEnd, st());
+    F (id::pitchStart, "Pitch Start", NR (-24.0f, 24.0f, 1.0f), d.pitchStart, st());
+    F (id::pitchEnd, "Pitch End", NR (-24.0f, 24.0f, 1.0f), d.pitchEnd, st());
     F (id::pitchCurve, "Pitch Curve", NR (0.0f, 1.0f, 0.01f), d.pitchCurve, pct());
     F (id::microPitch, "Micro Pitch", NR (0.0f, 1.0f, 0.01f), d.microPitch, pct());
     // filtro
@@ -86,7 +86,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     F (id::mainWidth, "Main Width", NR (0.0f, 2.0f, 0.01f), d.mainWidth, pct());
     B (id::texOn, "Texture Layer", d.texOn);
     F (id::texLevel, "Texture Level", NR (-36.0f, 6.0f, 0.1f), d.texDb, db());
-    F (id::texPitch, "Texture Pitch", NR (-24.0f, 24.0f, 0.1f), d.texPitch, st());
+    F (id::texPitch, "Texture Pitch", NR (-24.0f, 24.0f, 1.0f), d.texPitch, st());
     F (id::texWidth, "Texture Width", NR (0.0f, 2.0f, 0.01f), d.texWidth, pct());
     F (id::texSmear, "Texture Smear", NR (0.0f, 1.0f, 0.01f), d.texSmear, pct());
     // FX · espacio
@@ -191,10 +191,10 @@ juce::String helpFor (const juce::String& p)
         { id::smartSync, "Lee el tempo del DAW: el reverse dura justo lo elegido y termina exactamente en el golpe." },
         { id::fit, "STRETCH encaja toda la región en la duración (tono intacto). NATURAL la usa a su velocidad." },
         { id::intensity, "Cuánto lavado de reverb crece hacia el golpe y lo agresiva que es la subida." },
-        { id::pitch, "Transporta todo el reverse en semitonos." },
+        { id::pitch, "Transporta todo el reverse en semitonos. -12 / +12 = una octava: sigue en el tono de la canción." },
         { id::character, "Personalidad: de limpio a sucio (saturación, armónicos y textura)." },
         { id::genMode, "AUTO genera solo al tocar un control. MANUAL espera a GENERATE. Mismo motor y calidad." },
-        { id::volStart, "Nivel al principio del reverse." }, { id::volEnd, "Nivel justo antes del golpe." },
+        { id::volStart, "Nivel al principio del reverse." }, { id::volEnd, "Nivel justo antes del golpe respecto a la voz (0 dB = igual que la voz)." },
         { id::volCurve, "Forma de la subida: más alto concentra el volumen al final." }, { id::fadeIn, "Entrada suave (porción de la duración)." },
         { id::pitchStart, "Tono al principio (se suma a PITCH)." }, { id::pitchEnd, "Tono al llegar al golpe." },
         { id::pitchCurve, "Cómo se mueve el tono del principio al final." }, { id::microPitch, "Pequeñas variaciones de tono: más orgánico." },
@@ -220,7 +220,7 @@ juce::String helpFor (const juce::String& p)
         { id::smartEnding, "Llega al golpe sin clic ni corte brusco." }, { id::preImpact, "Tensión extra justo antes del golpe." },
         { id::tail, "Cola de reverb y delay después del golpe." }, { id::outFade, "Desvanecimiento del final de la cola." },
         { id::clipSafe, "Limitador suave: el reverse nunca satura la salida." },
-        { id::output, "Volumen del reverse (en tiempo real, no regenera)." },
+        { id::output, "Volumen del reverse. 0 dB = llega al golpe al mismo nivel que la voz. En tiempo real, no regenera." },
         { id::through, "Deja pasar el audio de la pista. Apágalo para imprimir sólo el reverse en otra pista." },
         { id::ducking, "Baja la cola cuando entra la voz después del golpe." }, { id::duckRelease, "Rapidez con la que vuelve la cola." },
     };

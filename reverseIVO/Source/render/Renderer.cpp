@@ -30,9 +30,12 @@ float volumeDbAt (const RenderSettings& s, float u)
     const float shape = std::min (0.95f, 0.5f + 0.3f * s.volCurve + 0.06f * s.intensity);
     return lerp (s.volStartDb, s.volEndDb, shapeCurve (u, shape));
 }
+// La evolución de tono termina al 88 % de la subida: el último tramo antes del golpe ya está en el tono final
+// (si llegara justo en el golpe, lo que se oye al final aún estaría desafinado respecto a la canción).
+constexpr float pitchSettle = 0.88f;
 float pitchAt (const RenderSettings& s, float u)
 {
-    return s.pitch + lerp (s.pitchStart, s.pitchEnd, shapeCurve (u, s.pitchCurve));
+    return s.pitch + lerp (s.pitchStart, s.pitchEnd, shapeCurve (std::min (1.0f, u / pitchSettle), s.pitchCurve));
 }
 void filterAt (const RenderSettings& s, float u, float& hp, float& lp)
 {
@@ -60,6 +63,18 @@ void varispeed (const Stereo& in, const std::vector<double>& rate, double startP
         }
         pos += rate[(size_t) t];
     }
+}
+
+// nivel de referencia: RMS máximo (canal medio) en ventanas de 'win' muestras dentro de [a, b)
+double levelOf (const Stereo& x, int a, int b, double win)
+{
+    const int w = std::max (16, std::min (b - a, (int) win));
+    if (b - a < 16) return 0.0;
+    std::vector<double> cum ((size_t) (b - a) + 1, 0.0);
+    for (int i = a; i < b; ++i) { const double m = 0.5 * ((double) x.l[(size_t) i] + x.r[(size_t) i]); cum[(size_t) (i - a) + 1] = cum[(size_t) (i - a)] + m * m; }
+    double best = 0;
+    for (int i = 0; i + w <= b - a; i += std::max (1, w / 16)) best = std::max (best, cum[(size_t) (i + w)] - cum[(size_t) i]);
+    return std::sqrt (best / w);
 }
 
 void applyWidth (float& l, float& r, float w)
@@ -177,8 +192,9 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
     {
         const float u = (float) t / (float) N;
         float p = pitchAt (s, u);
-        if (s.microPitch > 0.0f)   // micro movimiento orgánico (dos osciladores lentos, ±25 cents)
-            p += s.microPitch * 0.25f * (float) (0.6 * std::sin (2 * pi * 0.7 * t / sr) + 0.4 * std::sin (2 * pi * 1.9 * t / sr + 1.3));
+        if (s.microPitch > 0.0f)   // micro movimiento orgánico (dos osciladores lentos, ±25 cents) que se calma antes del golpe
+            p += s.microPitch * 0.25f * (1.0f - shapeCurve (clamp01 ((u - 0.8f) / 0.12f), 0.5f))
+                 * (float) (0.6 * std::sin (2 * pi * 0.7 * t / sr) + 0.4 * std::sin (2 * pi * 1.9 * t / sr + 1.3));
         rate[(size_t) t] = std::pow (2.0, p / 12.0);
         Ls += rate[(size_t) t];
     }
@@ -246,7 +262,7 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
         const double fromHz = 1.0 / (divisionQuarters (s.cutsFrom) * qSec), toHz = 1.0 / (divisionQuarters (s.cutsTo) * qSec);
         const double tremHz = 1.0 / (divisionQuarters (s.tremDiv) * qSec);
         double ph = 0;
-        OnePole sm; const double smc = OnePole::coefFor (220.0, sr);   // bordes de los cortes suaves (sin clics)
+        OnePole sm, sm2; const double smc = OnePole::coefFor (260.0, sr);   // bordes de los cortes: dos polos, sin clics
         for (int t = 0; t < N; ++t)
         {
             const float u = (float) t / (float) N;
@@ -258,11 +274,11 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
                 ph += hz / sr; ph -= std::floor (ph);
                 g *= ph < 0.5 ? 1.0f : 1.0f - s.cutsDepth;
             }
-            float gs = (float) sm.lp (g, smc);
+            float gs = (float) sm2.lp (sm.lp (g, smc), smc);
             if (s.tremOn)
             {
                 const float d = s.tremDepth * (1.0f - s.moveTrem + s.moveTrem * u);
-                gs *= 1.0f - d * (0.5f + 0.5f * (float) std::cos (2 * pi * tremHz * t / sr));
+                gs *= 1.0f - d * (0.5f - 0.5f * (float) std::cos (2 * pi * tremHz * t / sr));   // abierto en cada tiempo de la rejilla
             }
             x.l[(size_t) t] *= gs; x.r[(size_t) t] *= gs;
         }
@@ -362,7 +378,7 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
     {
         const int endFade = std::max (8, (int) (sr * (s.ending == Ending::soft ? 0.12 : (s.ending == Ending::natural ? 0.012 : 0.0015))));
         const int trL = (int) (0.08 * sr);
-        const float trDb = s.transient * (s.ending == Ending::hard ? 7.0f : (s.ending == Ending::natural ? 4.0f : 1.5f));
+        const float trDb = s.transient * (s.ending == Ending::hard ? 6.0f : (s.ending == Ending::natural ? 4.0f : 1.5f));
         for (int t = 0; t < N; ++t)
         {
             const float u = (float) t / (float) N;
@@ -430,11 +446,18 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
             if (t >= N + T - fadeLen && fadeLen > 0) { const float g = fadeCos ((float) (N + T - 1 - t) / (float) fadeLen); l *= g; r *= g; }
             out.l[(size_t) t] = l; out.r[(size_t) t] = r;
         }
-        // nivel: pico a −2 dBFS (el volumen final se ajusta en tiempo real con OUTPUT)
+        // NIVEL: el reverse llega al golpe con el mismo nivel que la voz original (RMS de 300 ms), sea cual sea el
+        // preset, la duración o lo fuerte que se grabó la toma. Así nunca se pierde ni se dispara en la mezcla y
+        // OUTPUT 0 dB significa «al nivel de la voz».
         float pk = 0.0f;
         for (int t = 0; t < N + T; ++t) pk = std::max (pk, std::max (std::abs (out.l[(size_t) t]), std::abs (out.r[(size_t) t])));
-        float g = pk > 1e-6f ? dbToLin (-2.0f) / pk : 1.0f;
-        g = std::min (g, dbToLin (24.0f));
+        const double voiceRef = levelOf (seg, 0, seg.size(), 0.3 * sr);
+        const double arrive = levelOf (out, std::max (0, N - N / 3), N, std::min (0.3 * sr, N * 0.3));
+        // END LEVEL sigue mandando: −6 dB ahí = llega 6 dB por debajo de la voz
+        float g = (arrive > 1e-9 && voiceRef > 1e-9) ? (float) (voiceRef / arrive) * dbToLin (s.volEndDb) : (pk > 1e-6f ? dbToLin (-6.0f) / pk : 1.0f);
+        // los picos pueden entrar como mucho 4 dB en el limitador suave (Clip Safe); sin él, nunca pasan de −0,3 dBFS
+        if (pk > 1e-6f) g = std::min (g, dbToLin (s.clipSafe ? 4.0f : -0.3f) / pk);
+        g = std::min (g, dbToLin (36.0f));
         for (int t = 0; t < N + T; ++t) { out.l[(size_t) t] *= g; out.r[(size_t) t] *= g; }
         auto res = std::make_shared<Result>();
         res->gainDb = linToDb (g);
@@ -442,9 +465,21 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
         {
             // limitador suave sobremuestreado: nada pasa de −0,3 dBFS aunque OUTPUT suba (true peak aproximado)
             static const Oversampler4 os;
-            const double ceil = dbToLin (-0.3f);
-            auto soft = [ceil] (double v, int) { const double a = std::abs (v); if (a < 0.7 * ceil) return v; const double k = 0.7 * ceil; const double over = (a - k) / (ceil - k); return (v < 0 ? -1.0 : 1.0) * (k + (ceil - k) * std::tanh (over)); };
+            const double ceil = dbToLin (-0.6f);
+            if (pk * g > 0.7 * ceil)   // por debajo de la rodilla el limitador no toca nada: se salta (transparente)
+            {
+            auto soft = [ceil] (double v, int) { const double av = std::abs (v); if (av < 0.7 * ceil) return v; const double k = 0.7 * ceil; const double over = (av - k) / (ceil - k); return (v < 0 ? -1.0 : 1.0) * (k + (ceil - k) * std::tanh (over)); };
             os.process (out.l, soft); os.process (out.r, soft);
+            }
+            // el filtro de bajada puede rebotar un poco por encima: se corrige con ganancia (nunca recortando)
+            float pk2 = 0.0f;
+            for (size_t t = 0; t < out.l.size(); ++t) pk2 = std::max (pk2, std::max (std::abs (out.l[t]), std::abs (out.r[t])));
+            if (pk2 > dbToLin (-0.3f))
+            {
+                const float k = dbToLin (-0.3f) / pk2;
+                for (size_t t = 0; t < out.l.size(); ++t) { out.l[t] *= k; out.r[t] *= k; }
+                res->gainDb += linToDb (k);
+            }
         }
         res->l = std::move (out.l); res->r = std::move (out.r);
         res->hitIndex = N; res->sampleRate = sr; res->bpm = tempo.bpm; res->seconds = seconds;

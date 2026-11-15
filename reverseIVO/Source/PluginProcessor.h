@@ -114,14 +114,24 @@ private:
     void publish (ResultPtr r);
     void saveSourceAsync();
     void loadSourceFile (const juce::File&);
+    bool loadEmbeddedSource (const juce::String& base64, double scale);
+    juce::String embeddedSourceBase64();     // la voz dentro del proyecto (FLAC 24 bits)
+    void waitForRenderOffline();             // exportación offline: espera a que el reverse esté listo
+    bool renderOutdated() const;
     Tempo currentTempo() const;
     static std::vector<float> computePeaks (const Source&, int bins);
 
     Engine engine;
-    int generation = 0, publishedGeneration = -1;
+    std::atomic<int> generation { 0 }, publishedGeneration { -1 };
     std::atomic<bool> dirty { false };
     juce::uint32 dirtySince = 0;
-    double renderedBpm = 0.0, renderedBeats = 4.0;
+    std::atomic<double> renderedBpm { 0.0 }, renderedBeats { 4.0 };
+    int offlineTriedGen = -1;
+    std::mutex embedMutex;
+    const Source* embeddedFor = nullptr;
+    SourcePtr embeddedKeep;                  // mantiene viva la fuente codificada (el puntero no se reutiliza)
+    juce::String embeddedB64;
+    double embeddedScale = 1.0;
 
     // fuente y resultado (lectura del hilo de audio con try-lock: nunca espera)
     SourcePtr source;

@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Versión mínima de macOS")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Arquitecturas")
 
-project(ReverseIvo VERSION 1.0.0 LANGUAGES C CXX)
+project(ReverseIvo VERSION 1.0.1 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -112,4 +112,21 @@ if(REVERSEIVO_TESTS)
     target_compile_definitions(ReverseIvoPluginTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_ALSA=0 JUCE_JACK=0
         JUCE_USE_XRANDR=0 JUCE_USE_XINERAMA=0 JUCE_USE_XSHM=0 JUCE_USE_XRENDER=0 JUCE_USE_XCURSOR=0 JUCE_MODAL_LOOPS_PERMITTED=1)
     target_link_libraries(ReverseIvoPluginTest PRIVATE ReverseIvoFonts juce::juce_audio_utils juce::juce_dsp juce::juce_recommended_config_flags)
+
+    # Control de calidad: nivel, tono, tempo, clips y situaciones reales del DAW
+    juce_add_console_app(ReverseIvoQaTest PRODUCT_NAME "ReverseIvoQaTest")
+    target_sources(ReverseIvoQaTest PRIVATE
+        tests/QaTest.cpp
+        Source/PluginProcessor.cpp
+        Source/core/Params.cpp
+        Source/core/Engine.cpp
+        Source/render/Renderer.cpp
+        Source/presets/Presets.cpp
+        Source/ui/Widgets.cpp
+        Source/ui/Views.cpp
+        Source/ui/PluginEditor.cpp)
+    target_include_directories(ReverseIvoQaTest PRIVATE Source tests)
+    target_compile_definitions(ReverseIvoQaTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_ALSA=0 JUCE_JACK=0
+        JUCE_USE_XRANDR=0 JUCE_USE_XINERAMA=0 JUCE_USE_XSHM=0 JUCE_USE_XRENDER=0 JUCE_USE_XCURSOR=0 JUCE_MODAL_LOOPS_PERMITTED=1)
+    target_link_libraries(ReverseIvoQaTest PRIVATE ReverseIvoFonts juce::juce_audio_utils juce::juce_dsp juce::juce_recommended_config_flags)
 endif()

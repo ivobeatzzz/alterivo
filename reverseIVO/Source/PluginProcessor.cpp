@@ -56,12 +56,31 @@ static juce::File ivoFolder (const char* sub)
 }
 static constexpr double maxCaptureSeconds = 30.0;
 
+// La voz se guarda dentro del proyecto en FLAC de 24 bits. Para que al reabrirlo el reverse salga idéntico bit a bit,
+// la fuente en memoria se redondea ya a esa misma rejilla de 24 bits (−144 dB: inaudible). La escala es una potencia
+// de 2 que cubre el pico, así una toma por encima de 0 dBFS (pista en coma flotante) no se recorta nunca.
+static double embedScaleFor (const Source& s)
+{
+    float pk = 0.0f;
+    for (int i = 0; i < s.size(); ++i) pk = std::max (pk, std::max (std::abs (s.l[(size_t) i]), std::abs (s.r[(size_t) i])));
+    double scale = 1.0;
+    while (pk > scale * 0.9999 && scale < 1024.0) scale *= 2.0;
+    return scale;
+}
+static int toInt24 (float x, double scale) { return (int) juce::jlimit (-8388608.0, 8388607.0, std::round ((double) x / scale * 8388608.0)); }
+static void quantize24 (Source& s)
+{
+    const double scale = embedScaleFor (s);
+    for (auto* ch : { &s.l, &s.r })
+        for (auto& v : *ch) v = (float) (toInt24 (v, scale) / 8388608.0 * scale);
+}
+
 // Cambio de frecuencia de muestreo de la fuente con sinc antialias (fuera del hilo de audio)
 static std::shared_ptr<Source> resampled (const Source& s, double newSr)
 {
     auto out = std::make_shared<Source>();
     out->sampleRate = newSr;
-    if (std::abs (s.sampleRate - newSr) < 0.5) { out->l = s.l; out->r = s.r; return out; }
+    if (std::abs (s.sampleRate - newSr) < 0.5) { out->l = s.l; out->r = s.r; quantize24 (*out); return out; }
     static const dsp::SincReader sinc;
     const double ratio = s.sampleRate / newSr, cut = std::min (1.0, 1.0 / ratio) * 0.97;
     const int n = (int) std::floor (s.size() / ratio);
@@ -71,6 +90,7 @@ static std::shared_ptr<Source> resampled (const Source& s, double newSr)
         out->l[(size_t) i] = sinc.read (s.l.data(), s.size(), i * ratio, cut);
         out->r[(size_t) i] = sinc.read (s.r.data(), s.size(), i * ratio, cut);
     }
+    quantize24 (*out);
     return out;
 }
 
@@ -162,6 +182,8 @@ void ReverseIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
     isPlaying = play;
     if (bpmNow > 0.0) bpm = bpmNow;
     if (! std::isnan (ppq0)) lastPpq = ppq0;
+    // exportación / congelado (no tiempo real): aquí sí se puede esperar, y el reverse tiene que estar en el archivo
+    if (isNonRealtime() && renderOutdated()) waitForRenderOffline();
 
     const float* inL = nIn > 0 ? buffer.getReadPointer (0) : nullptr;
     const float* inR = nIn > 1 ? buffer.getReadPointer (1) : inL;
@@ -360,6 +382,7 @@ void ReverseIvoProcessor::stopCapture()
 
 void ReverseIvoProcessor::setSource (std::shared_ptr<Source> s, double ppqAtStart, const juce::String& name, bool keepRegion)
 {
+    quantize24 (*s);
     auto peaks = computePeaks (*s, 1200);
     {
         const juce::SpinLock::ScopedLockType l (resultLock);
@@ -372,11 +395,9 @@ void ReverseIvoProcessor::setSource (std::shared_ptr<Source> s, double ppqAtStar
     if (! keepRegion) autoRegion();
     if (! keepRegion && ! std::isnan (ppqAtStart) && bpm.load() > 0.0)
     {
-        // el golpe va donde empieza la frase capturada: el reverse entra justo en ella
-        double h = ppqAtStart + (double) regA.load() / sr * bpm.load() / 60.0;
-        const double grid = 0.25, snapped = std::round (h / grid) * grid;
-        if (std::abs (snapped - h) * 60.0 / bpm.load() < 0.045) h = snapped;   // a la semicorchea si está a < 45 ms
-        hitPpq = h;
+        // el golpe va EXACTAMENTE donde empieza la palabra en la pista (no a la rejilla): el reverse termina justo
+        // cuando entra la voz, aunque el cantante entre un poco antes o después del tiempo
+        hitPpq = ppqAtStart + (double) regA.load() / s->sampleRate * bpm.load() / 60.0;
     }
     saveSourceAsync();
     requestRender();
@@ -440,6 +461,53 @@ void ReverseIvoProcessor::requestRender()
 
 void ReverseIvoProcessor::generate() { requestRender(); }
 
+bool ReverseIvoProcessor::renderOutdated() const
+{
+    auto s = getSource();
+    if (s == nullptr) return false;
+    if (engine.busy()) return true;
+    const auto r = getResult();
+    if (r == nullptr || std::abs (r->sampleRate - sr) > 0.5) return true;
+    if (dirty.load() && apvts.getRawParameterValue (id::genMode)->load() < 0.5f) return true;   // AUTO con cambios pendientes
+    const auto st = readSettings (apvts);
+    if (st.smartSync && st.durationIndex < 5)
+    {
+        const auto t = currentTempo();
+        if (t.bpm > 0.0 && (std::abs (t.bpm - renderedBpm.load()) > 0.01 || std::abs (t.beatsPerBar - renderedBeats.load()) > 1e-6)) return true;
+    }
+    return false;
+}
+
+void ReverseIvoProcessor::waitForRenderOffline()
+{
+    // sólo en modo no tiempo real (el DAW espera a que cada bloque termine)
+    auto s = getSource();
+    if (s != nullptr && std::abs (s->sampleRate - sr) > 0.5)
+    {
+        const double k = sr / s->sampleRate;
+        auto rs = resampled (*s, sr);
+        regA = (int) (regA.load() * k); regB = (int) (regB.load() * k);
+        const juce::SpinLock::ScopedLockType l (resultLock);
+        retired.push_back ({ juce::Time::getMillisecondCounter(), source }); source = rs; srcPeaks = computePeaks (*rs, 1200);
+    }
+    if (! engine.busy())
+    {
+        // si ya se intentó con estos mismos ajustes y no salió nada (región vacía), no se repite en cada bloque
+        if (offlineTriedGen == generation.load() && ! dirty.load() && getResult() == nullptr) return;
+        requestRender();
+    }
+    const auto t0 = juce::Time::getMillisecondCounter();
+    while (juce::Time::getMillisecondCounter() - t0 < 30000)
+    {
+        const bool done = ! engine.busy();
+        if (auto r = engine.take())
+            if (r->generation >= publishedGeneration.load()) { publishedGeneration = r->generation; publish (r); }
+        if (done) break;
+        juce::Thread::sleep (3);
+    }
+    offlineTriedGen = generation.load();
+}
+
 void ReverseIvoProcessor::publish (ResultPtr r)
 {
     const juce::SpinLock::ScopedLockType l (resultLock);
@@ -460,7 +528,7 @@ void ReverseIvoProcessor::timerCallback()
     if (st.smartSync && st.durationIndex < 5 && getSource() != nullptr && ! engine.busy())
     {
         const auto t = currentTempo();
-        if (t.bpm > 0.0 && (std::abs (t.bpm - renderedBpm) > 0.01 || std::abs (t.beatsPerBar - renderedBeats) > 1e-6)) requestRender();
+        if (t.bpm > 0.0 && (std::abs (t.bpm - renderedBpm.load()) > 0.01 || std::abs (t.beatsPerBar - renderedBeats.load()) > 1e-6)) requestRender();
     }
 
     // la captura se cierra sola al parar el transporte (o al llegar al máximo)
@@ -575,6 +643,12 @@ void ReverseIvoProcessor::importFile (const juce::File& f)
     s->r.assign (b.getReadPointer (rc), b.getReadPointer (rc) + n);
     std::shared_ptr<Source> use = std::abs (s->sampleRate - sr) > 0.5 ? resampled (*s, sr) : s;
     setSource (use, std::numeric_limits<double>::quiet_NaN(), f.getFileNameWithoutExtension());
+    // archivo importado: si aún no hay golpe, va al siguiente compás desde el cursor (luego se mueve con ‹ › o SET)
+    if (std::isnan (hitPpq.load()))
+    {
+        const double bpb = currentTempo().beatsPerBar, p = lastPpq.load();
+        hitPpq = std::isnan (p) ? bpb : (std::floor (p / bpb) + 1.0) * bpb;
+    }
 }
 
 void ReverseIvoProcessor::saveSourceAsync()
@@ -613,9 +687,75 @@ void ReverseIvoProcessor::loadSourceFile (const juce::File& f)
     s->sampleRate = rd->sampleRate;
     s->l.assign (b.getReadPointer (0), b.getReadPointer (0) + n);
     s->r.assign (b.getReadPointer (1), b.getReadPointer (1) + n);
+    quantize24 (*s);
     auto peaks = computePeaks (*s, 1200);
     const juce::SpinLock::ScopedLockType l (resultLock);
+    if (source != nullptr) retired.push_back ({ juce::Time::getMillisecondCounter(), source });
     source = s; srcPeaks = std::move (peaks);
+}
+
+juce::String ReverseIvoProcessor::embeddedSourceBase64()
+{
+    auto s = getSource();
+    if (s == nullptr || s->size() == 0) return {};
+    std::lock_guard<std::mutex> g (embedMutex);
+    if (embeddedFor == s.get()) return embeddedB64;
+    juce::MemoryBlock mb;
+    {
+        juce::FlacAudioFormat flac;
+        std::unique_ptr<juce::OutputStream> os = std::make_unique<juce::MemoryOutputStream> (mb, false);
+        if (auto w = flac.createWriterFor (os, juce::AudioFormatWriterOptions().withSampleRate (s->sampleRate).withNumChannels (2).withBitsPerSample (24)))
+        {
+            // enteros exactos (alineados a la izquierda, como pide AudioFormatWriter::write)
+            const double scale = embedScaleFor (*s);
+            const int block = 16384;
+            std::vector<int> il ((size_t) block), ir ((size_t) block);
+            for (int pos = 0; pos < s->size(); pos += block)
+            {
+                const int n = std::min (block, s->size() - pos);
+                for (int i = 0; i < n; ++i) { il[(size_t) i] = toInt24 (s->l[(size_t) (pos + i)], scale) * 256; ir[(size_t) i] = toInt24 (s->r[(size_t) (pos + i)], scale) * 256; }
+                const int* ch[3] = { il.data(), ir.data(), nullptr };
+                w->write (ch, n);
+            }
+            embeddedScale = scale;
+        }
+    }
+    embeddedB64 = mb.getSize() > 0 ? mb.toBase64Encoding() : juce::String();
+    embeddedFor = s.get(); embeddedKeep = s;
+    return embeddedB64;
+}
+
+bool ReverseIvoProcessor::loadEmbeddedSource (const juce::String& b64, double scale)
+{
+    if (b64.isEmpty()) return false;
+    juce::MemoryBlock mb;
+    if (! mb.fromBase64Encoding (b64) || mb.getSize() == 0) return false;
+    juce::FlacAudioFormat flac;
+    std::unique_ptr<juce::AudioFormatReader> rd (flac.createReaderFor (new juce::MemoryInputStream (mb, false), true));
+    if (rd == nullptr || rd->lengthInSamples <= 0) return false;
+    const int n = (int) rd->lengthInSamples;
+    std::vector<int> il ((size_t) n), ir ((size_t) n);
+    int* dest[3] = { il.data(), ir.data(), nullptr };
+    if (! rd->read (dest, 2, 0, n, true)) return false;
+    auto s = std::make_shared<Source>();
+    s->sampleRate = rd->sampleRate;
+    s->l.resize ((size_t) n); s->r.resize ((size_t) n);
+    for (int i = 0; i < n; ++i)
+    {
+        s->l[(size_t) i] = (float) ((il[(size_t) i] / 256) / 8388608.0 * scale);
+        s->r[(size_t) i] = (float) ((ir[(size_t) i] / 256) / 8388608.0 * scale);
+    }
+    auto peaks = computePeaks (*s, 1200);
+    {
+        const juce::SpinLock::ScopedLockType l (resultLock);
+        if (source != nullptr) retired.push_back ({ juce::Time::getMillisecondCounter(), source });
+        source = s; srcPeaks = std::move (peaks);
+    }
+    {
+        std::lock_guard<std::mutex> g (embedMutex);   // ya está codificada: guardar el proyecto no la vuelve a comprimir
+        embeddedFor = s.get(); embeddedKeep = s; embeddedB64 = b64; embeddedScale = scale;
+    }
+    return true;
 }
 
 juce::File ReverseIvoProcessor::defaultExportFile() const
@@ -651,8 +791,15 @@ bool ReverseIvoProcessor::exportWav (const juce::File& file, juce::String& error
     const float g = dsp::dbToLin (apvts.getRawParameterValue (id::output)->load());
     if (std::abs (g - 1.0f) < 1e-4f) return w->writeFromFloatArrays (ch, 2, r->size());
     std::vector<float> l (r->l), rr (r->r);
-    for (auto& v : l) v = juce::jlimit (-1.0f, 1.0f, v * g);
-    for (auto& v : rr) v = juce::jlimit (-1.0f, 1.0f, v * g);
+    // con OUTPUT subido el WAV no se recorta: los picos pasan por un limitador suave sobremuestreado (−0,3 dBFS)
+    static const dsp::Oversampler4 lim;
+    const double ceil = dsp::dbToLin (-0.6f), knee = 0.7 * ceil;
+    auto soft = [=] (double v, int) { const double a = std::abs (v * g); if (a < knee) return v * g; return (v < 0 ? -1.0 : 1.0) * (knee + (ceil - knee) * std::tanh ((a - knee) / (ceil - knee))); };
+    float pk = 0.0f; for (size_t i = 0; i < l.size(); ++i) pk = std::max (pk, std::max (std::abs (l[i]), std::abs (rr[i])));
+    if (pk * g > knee) { lim.process (l, soft); lim.process (rr, soft); }
+    else { for (auto& v : l) v *= g; for (auto& v : rr) v *= g; }
+    float pk2 = 0.0f; for (size_t i = 0; i < l.size(); ++i) pk2 = std::max (pk2, std::max (std::abs (l[i]), std::abs (rr[i])));
+    if (pk2 > dsp::dbToLin (-0.3f)) { const float k = dsp::dbToLin (-0.3f) / pk2; for (auto& v : l) v *= k; for (auto& v : rr) v *= k; }
     const float* ch2[2] = { l.data(), rr.data() };
     return w->writeFromFloatArrays (ch2, 2, r->size());
 }
@@ -702,6 +849,15 @@ void ReverseIvoProcessor::getStateInformation (juce::MemoryBlock& dest)
     xml->setAttribute ("preset", presetName);
     xml->setAttribute ("presetCategory", presetCategory);
     xml->setAttribute ("uiScale", (double) uiScale.load());
+    // la voz va dentro del proyecto: se abre igual en otro ordenador, con «Recopilar y guardar» o si se borra la carpeta
+    const auto b64 = embeddedSourceBase64();
+    if (b64.isNotEmpty())
+    {
+        auto* e = xml->createNewChildElement ("SourceAudio");
+        e->setAttribute ("sampleRate", getSource() != nullptr ? getSource()->sampleRate : sr);
+        e->setAttribute ("scale", embeddedScale);
+        e->addTextElement (b64);
+    }
     copyXmlToBinary (*xml, dest);
 }
 
@@ -717,9 +873,11 @@ void ReverseIvoProcessor::setStateInformation (const void* data, int size)
     hitPpq = xml->hasAttribute ("hitPpq") ? xml->getDoubleAttribute ("hitPpq") : std::numeric_limits<double>::quiet_NaN();
     sourcePpq = xml->hasAttribute ("sourcePpq") ? xml->getDoubleAttribute ("sourcePpq") : std::numeric_limits<double>::quiet_NaN();
     const juce::File f (xml->getStringAttribute ("sourceFile"));
-    if (f.existsAsFile())
+    bool loaded = false;
+    if (auto* e = xml->getChildByName ("SourceAudio")) loaded = loadEmbeddedSource (e->getAllSubText().trim(), e->getDoubleAttribute ("scale", 1.0));
+    if (! loaded && f.existsAsFile()) { loadSourceFile (f); loaded = getSource() != nullptr; }
+    if (loaded)
     {
-        loadSourceFile (f);
         sourceFile = f;
         regA = xml->getIntAttribute ("regA"); regB = xml->getIntAttribute ("regB");
         auto s = getSource();
@@ -728,8 +886,10 @@ void ReverseIvoProcessor::setStateInformation (const void* data, int size)
             const double k = sr / s->sampleRate;
             auto rs = resampled (*s, sr);
             regA = (int) (regA.load() * k); regB = (int) (regB.load() * k);
+            auto pk = computePeaks (*rs, 1200);
             const juce::SpinLock::ScopedLockType l (resultLock);
-            source = rs; srcPeaks = computePeaks (*rs, 1200);
+            retired.push_back ({ juce::Time::getMillisecondCounter(), source });
+            source = rs; srcPeaks = std::move (pk);
         }
         requestRender();
     }

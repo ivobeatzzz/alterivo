@@ -55,10 +55,19 @@ Cada pestaña dibuja su curva sobre la onda; **arrastra los puntos** de inicio, 
 
 Los tuyos se guardan con **Guardar** en el menú de presets (Música/IVO Beatz/reverseIVO/Presets).
 
+## Nivel, tono y tempo (lo que hace solo)
+
+- **Nivel:** el reverse llega al golpe con el **mismo volumen que la voz**, en cualquier preset y duración (medido: todos los presets dentro de 2 dB). OUTPUT 0 dB = al nivel de la voz; END LEVEL lo sube o baja respecto a ella. Nunca pasa de −0,3 dBFS.
+- **Tono:** PITCH va en semitonos enteros. Las subidas de tono terminan antes del golpe, así lo último que suena ya está en el tono de la canción. Para no salirte de la tonalidad usa 0, −12 o +12.
+- **Tempo:** la duración, el tremolo, los cortes, el stutter y el delay van clavados al tempo del proyecto. El golpe cae en la muestra exacta donde empieza la palabra.
+- **Proyecto:** la voz capturada se guarda **dentro del proyecto**. Lo abres en otro ordenador o con «Recopilar y guardar» y suena igual.
+- **Exportar el tema:** al exportar o congelar la pista, reverseIVO espera a que el reverse esté generado, así nunca falta en el archivo.
+
 ## Consejos
 
 - Para un riser de 2 o 4 compases, usa una frase entera, no sólo una palabra.
 - Si el final suena blando, sube **Transient** o pon **Ending: Hard**.
 - Si se come la mezcla, baja **Reverse Wash** y la mezcla de la reverb, o usa el paso alto.
+- Ponlo el **primero** de la cadena de la voz, antes del EQ y el compresor.
 - **Ducking** en 30–50 % hace hueco al golpe sin tocar la pista original.
 - El proyecto guarda la captura, la región, el HIT y todos los ajustes.
