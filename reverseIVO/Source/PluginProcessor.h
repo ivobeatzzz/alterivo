@@ -167,6 +167,7 @@ private:
     std::atomic<int> sigNum { 4 }, sigDen { 4 };
     std::atomic<float> outPeak { 0.0f };
     double sr = 48000.0;
+    bool prepared = false;
 
     std::shared_ptr<std::atomic<bool>> alive = std::make_shared<std::atomic<bool>> (true);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ReverseIvoProcessor)

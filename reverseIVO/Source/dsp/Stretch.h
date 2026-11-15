@@ -7,6 +7,7 @@
 #pragma once
 #include "Dsp.h"
 #include <random>
+#include <atomic>
 
 namespace reverseivo::dsp
 {
@@ -21,7 +22,7 @@ class Stretcher
 {
 public:
     // Devuelve la entrada estirada a outLen muestras (tono intacto)
-    static Stereo stretch (const Stereo& in, int outLen, double sampleRate)
+    static Stereo stretch (const Stereo& in, int outLen, double sampleRate, const std::atomic<bool>* cancel = nullptr)
     {
         Stereo out; out.resize (outLen);
         const int inLen = in.size();
@@ -33,22 +34,22 @@ public:
             return out;
         }
         const int N = sampleRate > 64000.0 ? 4096 : 2048, Hs = N / 4;
-        process (in, out, N, Hs, ratio, false, 0.0f);
+        process (in, out, N, Hs, ratio, false, 0.0f, 7, cancel);
         return out;
     }
 
     // Textura: espectro difuminado (amount 0..1) con fases aleatorias, independiente en L y R (muy abierto)
-    static Stereo smear (const Stereo& in, int outLen, double sampleRate, float amount, uint32_t seed = 7)
+    static Stereo smear (const Stereo& in, int outLen, double sampleRate, float amount, uint32_t seed = 7, const std::atomic<bool>* cancel = nullptr)
     {
         Stereo out; out.resize (outLen);
         if (in.size() == 0 || outLen <= 0) return out;
         const int N = sampleRate > 64000.0 ? 8192 : 4096, Hs = N / 4;
-        process (in, out, N, Hs, (double) outLen / (double) in.size(), true, amount, seed);
+        process (in, out, N, Hs, (double) outLen / (double) in.size(), true, amount, seed, cancel);
         return out;
     }
 
 private:
-    static void process (const Stereo& in, Stereo& out, int N, int Hs, double ratio, bool smearMode, float smearAmt, uint32_t seed = 7)
+    static void process (const Stereo& in, Stereo& out, int N, int Hs, double ratio, bool smearMode, float smearAmt, uint32_t seed, const std::atomic<bool>* cancel)
     {
         const int inLen = in.size(), outLen = out.size(), half = N / 2;
         const double Ha = (double) Hs / ratio;
@@ -69,6 +70,8 @@ private:
         const double smearCoef = 1.0 - 0.92 * (double) smearAmt;   // cuánto se renueva el espectro en cada trama
         for (int f = 0; f < frames; ++f)
         {
+            // se puede cancelar a mitad (nuevo ajuste o se cierra el plugin): el hilo nunca tarda en pararse
+            if (cancel != nullptr && (f & 7) == 0 && cancel->load (std::memory_order_relaxed)) return;
             const long aStart = (long) std::llround (f * Ha) - half;   // trama de análisis centrada en f·Ha
             const long sStart = (long) f * Hs - half;                  // trama de síntesis centrada en f·Hs
             for (int i = 0; i < N; ++i)

@@ -1,4 +1,4 @@
-reverseIVO 1.0.1 — Reverse, risers y transiciones de voz · IVO Beatz
+reverseIVO 1.0 — Reverse, risers y transiciones de voz · IVO Beatz
 https://ivobeatz.com
 
 Convierte una palabra o frase de tu voz en un reverse, un riser o una transición

@@ -44,6 +44,9 @@ public:
     juce::Font getTextButtonFont (juce::TextButton&, int) override;
     juce::Font getAlertWindowMessageFont() override;
     juce::Font getAlertWindowTitleFont() override;
+private:
+    // fuentes y caché de sombras: se crean con el editor y se liberan cuando se cierra el último
+    std::shared_ptr<void> holdFonts, holdShadows;
 };
 
 // Conmutador: carril hundido, pastilla elevada con el punto en la opción activa

@@ -132,7 +132,8 @@ void ReverseIvoProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     fifo.prepare ((int) (sr * 2.0) + samplesPerBlock * 4);
     lastIdx = -1; ramp = 0.0f; duckEnv = 0.0f;
     // la fuente se adapta a la nueva frecuencia y el reverse se vuelve a generar
-    if (srChanged)
+    juce::ignoreUnused (srChanged);
+    prepared = true;
     {
         SourcePtr s; { const juce::SpinLock::ScopedLockType l (resultLock); s = source; }
         if (s != nullptr && std::abs (s->sampleRate - sr) > 0.5)
@@ -881,7 +882,8 @@ void ReverseIvoProcessor::setStateInformation (const void* data, int size)
         sourceFile = f;
         regA = xml->getIntAttribute ("regA"); regB = xml->getIntAttribute ("regB");
         auto s = getSource();
-        if (s != nullptr && std::abs (s->sampleRate - sr) > 0.5)
+        // sólo si el DAW ya dijo su frecuencia (si no, prepareToPlay lo hará con la frecuencia real)
+        if (prepared && s != nullptr && std::abs (s->sampleRate - sr) > 0.5)
         {
             const double k = sr / s->sampleRate;
             auto rs = resampled (*s, sr);

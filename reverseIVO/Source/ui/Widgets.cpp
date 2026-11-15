@@ -19,7 +19,9 @@ Fonts::Fonts()
 
 juce::Font font (F face, float size, float tracking)
 {
-    static juce::SharedResourcePointer<Fonts> f;
+    // sin «static»: un puntero estático sobrevive a la descarga de JUCE cuando el DAW cierra el último reverseIVO
+    // y al volver a abrirlo apuntaría a memoria liberada (cierre del DAW). El editor mantiene vivas las fuentes.
+    const juce::SharedResourcePointer<Fonts> f;
     juce::Typeface::Ptr tf;
     switch (face)
     {
@@ -40,14 +42,13 @@ static juce::Path rr (juce::Rectangle<float> r, float rad) { juce::Path p; p.add
 // ------------------------------------------------------------------ sombras con caché (misma técnica que chainIVO)
 namespace
 {
-struct ShadowCache : juce::DeletedAtShutdown
+struct ShadowCache
 {
     struct Entry { juce::Image img; juce::uint32 lastUse = 0; };
     std::unordered_map<juce::uint64, Entry> map;
     juce::uint32 clock = 0;
     size_t pixels = 0;
 };
-ShadowCache& shadowCache() { static ShadowCache* c = new ShadowCache(); return *c; }
 juce::uint64 shapeKey (const juce::Path& p, juce::Point<float> origin, int radius)
 {
     juce::uint64 h = 1469598103934665603ull;
@@ -68,7 +69,8 @@ void cachedShadow (juce::Graphics& g, const juce::Path& path, juce::Colour colou
     if (radius <= 0 || path.isEmpty()) return;
     const auto area = (path.getBounds().getSmallestIntegerContainer() + offset).expanded (radius + 1);
     if (area.getWidth() <= 2 || area.getHeight() <= 2 || ! g.getClipBounds().intersects (area)) return;
-    auto& c = shadowCache();
+    const juce::SharedResourcePointer<ShadowCache> cache;   // compartida mientras haya un editor abierto
+    auto& c = *cache;
     const auto key = shapeKey (path, area.getPosition().toFloat() - offset.toFloat(), radius);
     auto it = c.map.find (key);
     if (it == c.map.end())
@@ -258,6 +260,8 @@ void drawIcon (juce::Graphics& g, Icon i, juce::Rectangle<float> r, juce::Colour
 
 // ------------------------------------------------------------------ LookAndFeel
 LookAndFeel::LookAndFeel()
+    : holdFonts (std::make_shared<juce::SharedResourcePointer<Fonts>>()),
+      holdShadows (std::make_shared<juce::SharedResourcePointer<ShadowCache>>())
 {
     setColour (juce::PopupMenu::backgroundColourId, juce::Colour (0xff151a13));
     setColour (juce::PopupMenu::textColourId, text);

@@ -11,7 +11,7 @@ class Engine : private juce::Thread
 {
 public:
     Engine() : juce::Thread ("reverseIVO engine") { startThread (juce::Thread::Priority::low); }
-    ~Engine() override { cancel = true; signalThreadShouldExit(); notify(); stopThread (4000); }
+    ~Engine() override { cancel = true; signalThreadShouldExit(); notify(); stopThread (15000); }   // se cancela en milisegundos; nunca se mata el hilo
 
     struct Job
     {

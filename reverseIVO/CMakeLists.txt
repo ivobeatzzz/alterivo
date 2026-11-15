@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13" CACHE STRING "Versión mínima de macOS")
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Arquitecturas")
 
-project(ReverseIvo VERSION 1.0.1 LANGUAGES C CXX)
+project(ReverseIvo VERSION 1.0.2 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -129,4 +129,21 @@ if(REVERSEIVO_TESTS)
     target_compile_definitions(ReverseIvoQaTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_ALSA=0 JUCE_JACK=0
         JUCE_USE_XRANDR=0 JUCE_USE_XINERAMA=0 JUCE_USE_XSHM=0 JUCE_USE_XRENDER=0 JUCE_USE_XCURSOR=0 JUCE_MODAL_LOOPS_PERMITTED=1)
     target_link_libraries(ReverseIvoQaTest PRIVATE ReverseIvoFonts juce::juce_audio_utils juce::juce_dsp juce::juce_recommended_config_flags)
+
+    # Estabilidad: abrir/cerrar, varias instancias, cerrar mientras genera (mejor con -fsanitize=address)
+    juce_add_console_app(ReverseIvoStressTest PRODUCT_NAME "ReverseIvoStressTest")
+    target_sources(ReverseIvoStressTest PRIVATE
+        tests/StressTest.cpp
+        Source/PluginProcessor.cpp
+        Source/core/Params.cpp
+        Source/core/Engine.cpp
+        Source/render/Renderer.cpp
+        Source/presets/Presets.cpp
+        Source/ui/Widgets.cpp
+        Source/ui/Views.cpp
+        Source/ui/PluginEditor.cpp)
+    target_include_directories(ReverseIvoStressTest PRIVATE Source tests)
+    target_compile_definitions(ReverseIvoStressTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_ALSA=0 JUCE_JACK=0
+        JUCE_USE_XRANDR=0 JUCE_USE_XINERAMA=0 JUCE_USE_XSHM=0 JUCE_USE_XRENDER=0 JUCE_USE_XCURSOR=0 JUCE_MODAL_LOOPS_PERMITTED=1)
+    target_link_libraries(ReverseIvoStressTest PRIVATE ReverseIvoFonts juce::juce_audio_utils juce::juce_dsp juce::juce_recommended_config_flags)
 endif()

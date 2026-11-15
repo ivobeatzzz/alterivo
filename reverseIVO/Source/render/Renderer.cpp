@@ -204,7 +204,8 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
         if (s.fit == Fit::stretch)
         {
             const int target = std::max (8, (int) std::llround (Ls));
-            const Stereo st = Stretcher::stretch (mat, target, sr);
+            const Stereo st = Stretcher::stretch (mat, target, sr, cancel);
+            if (cancelled (cancel)) return nullptr;
             varispeed (st, rate, 0.0, main);
         }
         else
@@ -221,7 +222,8 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
         std::vector<double> rt ((size_t) N); double Lt = 0;
         const double tp = std::pow (2.0, s.texPitch / 12.0);
         for (int t = 0; t < N; ++t) { rt[(size_t) t] = rate[(size_t) t] * tp; Lt += rt[(size_t) t]; }
-        const Stereo sm = Stretcher::smear (mat, std::max (8, (int) std::llround (Lt)), sr, s.texSmear);
+        const Stereo sm = Stretcher::smear (mat, std::max (8, (int) std::llround (Lt)), sr, s.texSmear, 7, cancel);
+        if (cancelled (cancel)) return nullptr;
         Stereo tex; varispeed (sm, rt, 0.0, tex);
         const float g = dbToLin (s.texDb);
         Svf fl, fr;
