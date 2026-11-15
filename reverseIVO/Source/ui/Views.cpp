@@ -93,6 +93,16 @@ void WaveView::paint (juce::Graphics& g)
         g.setColour (cream);
         g.fillRoundedRectangle (juce::Rectangle<float> (hx - 0.75f, a.getY() + 2.0f, 1.5f, a.getHeight() - 4.0f), 0.75f);
         dot (g, { hx, a.getY() + 2.0f }, 2.5f, cream);
+        // aviso: la onda se arrastra al DAW (discreto; se ilumina al pasar el ratón)
+        {
+            const auto pill = juce::Rectangle<float> (a.getX() + 6.0f, a.getY() + 4.0f, 118.0f, 22.0f);
+            g.setColour (juce::Colours::black.withAlpha (hoverWave ? 0.45f : 0.22f));
+            g.fillRoundedRectangle (pill, 11.0f);
+            g.setColour ((hoverWave ? accentHi : juce::Colours::white).withAlpha (hoverWave ? 0.55f : 0.10f));
+            g.drawRoundedRectangle (pill.reduced (0.5f), 11.0f, 1.0f);
+            drawIcon (g, Icon::drag, pill.withWidth (22.0f).reduced (5.0f).translated (4.0f, 0.0f), hoverWave ? accentHi : dim);
+            label (g, "DRAG TO DAW", pill.withTrimmedLeft (26.0f), juce::Justification::centredLeft, hoverWave ? theme::text : dim, 8.5f, 0.22f);
+        }
         // cabezal
         const int pi = proc.playIndex();
         if (pi >= 0 && pi < R.size())
@@ -141,13 +151,18 @@ void WaveView::paint (juce::Graphics& g)
 
 void WaveView::mouseMove (const juce::MouseEvent& e)
 {
+    const bool hw = proc.getResult() != nullptr && waveArea().contains (e.position);
+    if (hw != hoverWave) { hoverWave = hw; repaint(); }
+    if (hw) { setMouseCursor (juce::MouseCursor::DraggingHandCursor); return; }
     if (! stripArea().expanded (0, 6).contains (e.position) || proc.getSource() == nullptr) { setMouseCursor (juce::MouseCursor::NormalCursor); return; }
     const bool nearEdge = std::abs (e.position.x - xForSource (proc.regionStart())) < 6.0f || std::abs (e.position.x - xForSource (proc.regionEnd())) < 6.0f;
     setMouseCursor (nearEdge ? juce::MouseCursor::LeftRightResizeCursor : juce::MouseCursor::IBeamCursor);
 }
+void WaveView::mouseExit (const juce::MouseEvent&) { if (hoverWave) { hoverWave = false; repaint(); } }
 void WaveView::mouseDown (const juce::MouseEvent& e)
 {
-    drag = 0;
+    drag = 0; dragSent = false;
+    if (proc.getResult() != nullptr && waveArea().contains (e.position)) { drag = 4; return; }
     if (! stripArea().expanded (0, 6).contains (e.position) || proc.getSource() == nullptr) return;
     if (std::abs (e.position.x - xForSource (proc.regionStart())) < 6.0f) drag = 1;
     else if (std::abs (e.position.x - xForSource (proc.regionEnd())) < 6.0f) drag = 2;
@@ -155,6 +170,12 @@ void WaveView::mouseDown (const juce::MouseEvent& e)
 }
 void WaveView::mouseDrag (const juce::MouseEvent& e)
 {
+    if (drag == 4)
+    {
+        // en cuanto se mueve el ratón, el reverse pasa a ser un archivo que se suelta en la pista del DAW
+        if (! dragSent && e.getDistanceFromDragStart() > 5 && onDragOut) { dragSent = true; onDragOut(); }
+        return;
+    }
     const int s = sampleForX (e.position.x);
     if (drag == 1) proc.setRegion (std::min (s, proc.regionEnd() - 1), proc.regionEnd());
     else if (drag == 2) proc.setRegion (proc.regionStart(), std::max (s, proc.regionStart() + 1));

@@ -106,8 +106,12 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
     if (b - a < (int) (sr * 0.01)) return nullptr;
 
     const double seconds = s.durationSeconds (tempo.bpm, tempo.beatsPerBar);
-    const int N = std::max (1, (int) std::llround (seconds * sr));
     const double qSec = 60.0 / tempo.bpmOr120();   // una negra en segundos
+    const int Nfull = std::max (1, (int) std::llround (seconds * sr));   // del inicio al golpe
+    // GAP: la subida termina un poco antes del golpe (a tempo) y de ahí al golpe hay silencio: la palabra real entra
+    // limpia, sin que se oiga su primera letra dos veces. El golpe sigue en su sitio exacto.
+    const int G = s.gapIndex > 0 ? std::min (Nfull / 4, (int) std::llround (gapQuarters (s.gapIndex) * qSec * sr)) : 0;
+    const int N = std::max (1, Nfull - G);   // dónde termina la subida
     const bool anyFx = s.reverbOn || s.delayOn;
     const int T = anyFx ? std::max (0, (int) (s.tailSeconds * sr)) : (int) (0.02 * sr);
 
@@ -124,6 +128,15 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
         if (b - a - 1 - i < edge) g = std::min (g, fadeCos ((float) (b - a - 1 - i) / edge));
         seg.l[(size_t) i] = (float) (src.l[(size_t) (a + i)] - mL) * g;
         seg.r[(size_t) i] = (float) (src.r[(size_t) (a + i)] - mR) * g;
+    }
+
+    // La voz «seca» de la subida: con GAP, su primera consonante se suaviza (al invertirla quedaría justo antes de la
+    // palabra real y se oiría dos veces). VOICE decide cuánta palabra invertida hay frente a la reverb invertida.
+    std::vector<float> dryG ((size_t) seg.size(), 1.0f);
+    if (s.gapIndex > 0)
+    {
+        const int L = std::min (seg.size() / 2, (int) (0.09 * sr));
+        for (int i = 0; i < L; ++i) dryG[(size_t) i] = 0.15f + 0.85f * fadeCos ((float) i / (float) L);
     }
 
     // ---------------------------------------------------------------- 2. lavado (reverb antes de invertir)
@@ -151,11 +164,16 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
             const float xl = i < seg.size() ? seg.l[(size_t) i] : 0.0f, xr = i < seg.size() ? seg.r[(size_t) i] : 0.0f;
             // fundido largo al final de la cola: al invertirla, la subida empieza de la nada
             const float tf = fadeCos ((float) (mat.size() - 1 - i) / (float) (tail * 0.3f));
-            mat.l[(size_t) i] = xl * (1.0f - 0.35f * washAmt) + wet.l[(size_t) i] * match * 1.4f * washAmt * tf;
-            mat.r[(size_t) i] = xr * (1.0f - 0.35f * washAmt) + wet.r[(size_t) i] * match * 1.4f * washAmt * tf;
+            const float dg = (i < seg.size() ? dryG[(size_t) i] : 0.0f) * (1.0f - 0.35f * washAmt) * (0.25f + 1.5f * s.voice);
+            mat.l[(size_t) i] = xl * dg + wet.l[(size_t) i] * match * 1.4f * washAmt * tf;
+            mat.r[(size_t) i] = xr * dg + wet.r[(size_t) i] * match * 1.4f * washAmt * tf;
         }
     }
-    else mat = seg;
+    else
+    {
+        mat = seg;
+        for (int i = 0; i < mat.size(); ++i) { mat.l[(size_t) i] *= dryG[(size_t) i]; mat.r[(size_t) i] *= dryG[(size_t) i]; }
+    }
     if (cancelled (cancel)) return nullptr;
 
     // ---------------------------------------------------------------- 3. inversión
@@ -264,7 +282,7 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
         const double fromHz = 1.0 / (divisionQuarters (s.cutsFrom) * qSec), toHz = 1.0 / (divisionQuarters (s.cutsTo) * qSec);
         const double tremHz = 1.0 / (divisionQuarters (s.tremDiv) * qSec);
         double ph = 0;
-        OnePole sm, sm2; const double smc = OnePole::coefFor (260.0, sr);   // bordes de los cortes: dos polos, sin clics
+        OnePole sm, sm2; const double smc = OnePole::coefFor (170.0, sr);   // bordes de los cortes: dos polos, sin clics
         for (int t = 0; t < N; ++t)
         {
             const float u = (float) t / (float) N;
@@ -396,12 +414,12 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
     if (cancelled (cancel)) return nullptr;
 
     // ---------------------------------------------------------------- 10. delay, reverb y cola
-    Stereo out; out.resize (N + T);
+    Stereo out; out.resize (Nfull + T);
     for (int t = 0; t < N; ++t) { out.l[(size_t) t] = x.l[(size_t) t]; out.r[(size_t) t] = x.r[(size_t) t]; }
     if (s.delayOn)
     {
         TempoDelay dl; dl.prepare (sr, divisionQuarters (s.delayDiv) * qSec);
-        for (int t = 0; t < N + T; ++t)
+        for (int t = 0; t < Nfull + T; ++t)
         {
             const float u = std::min (1.0f, (float) t / (float) N);
             const float fb = std::min (0.92f, s.delayFb * (1.0f - s.moveDelay + s.moveDelay * shapeCurve (u, 0.6f)));
@@ -413,7 +431,7 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
     if (s.reverbOn)
     {
         Reverb rv; rv.prepare (sr, s.revSize, s.revDecay, s.revPredelay, s.revDamp);
-        for (int t = 0; t < N + T; ++t)
+        for (int t = 0; t < Nfull + T; ++t)
         {
             const float u = std::min (1.0f, (float) t / (float) N);
             const float mix = s.revMix * (1.0f - s.moveReverb + s.moveReverb * shapeCurve (u, 0.7f));
@@ -429,7 +447,7 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
     {
         const double panHz = 1.0 / (divisionQuarters (s.panDiv) * qSec);
         const int fadeLen = std::min (T, (int) (s.outFadeMs * 0.001 * sr));
-        for (int t = 0; t < N + T; ++t)
+        for (int t = 0; t < Nfull + T; ++t)
         {
             const float u = std::min (1.0f, (float) t / (float) N);
             float l = out.l[(size_t) t], r = out.r[(size_t) t];
@@ -445,14 +463,23 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
                 const float gl = std::cos (ang) * 1.41421356f, gr = std::sin (ang) * 1.41421356f;
                 l *= gl; r *= gr;
             }
-            if (t >= N + T - fadeLen && fadeLen > 0) { const float g = fadeCos ((float) (N + T - 1 - t) / (float) fadeLen); l *= g; r *= g; }
+            if (t >= Nfull + T - fadeLen && fadeLen > 0) { const float g = fadeCos ((float) (Nfull + T - 1 - t) / (float) fadeLen); l *= g; r *= g; }
+            if (G > 0 && t >= N)
+            {
+                // GAP limpio: la reverb y el delay también se apartan antes del golpe (−20 dB) y la cola vuelve después
+                // por detrás de la voz (−5 dB), para no emborronar la acapella
+                const float down = fadeCos (clamp01 ((float) (t - N) / (float) std::max (1, (int) (0.006 * sr))));
+                float gg = 1.0f - 0.9f * down;
+                if (t >= Nfull) gg = lerp (0.1f, 0.56f, shapeCurve (clamp01 ((float) (t - Nfull) / (float) (0.2 * sr)), 0.4f));
+                l *= gg; r *= gg;
+            }
             out.l[(size_t) t] = l; out.r[(size_t) t] = r;
         }
         // NIVEL: el reverse llega al golpe con el mismo nivel que la voz original (RMS de 300 ms), sea cual sea el
         // preset, la duración o lo fuerte que se grabó la toma. Así nunca se pierde ni se dispara en la mezcla y
         // OUTPUT 0 dB significa «al nivel de la voz».
         float pk = 0.0f;
-        for (int t = 0; t < N + T; ++t) pk = std::max (pk, std::max (std::abs (out.l[(size_t) t]), std::abs (out.r[(size_t) t])));
+        for (int t = 0; t < Nfull + T; ++t) pk = std::max (pk, std::max (std::abs (out.l[(size_t) t]), std::abs (out.r[(size_t) t])));
         const double voiceRef = levelOf (seg, 0, seg.size(), 0.3 * sr);
         const double arrive = levelOf (out, std::max (0, N - N / 3), N, std::min (0.3 * sr, N * 0.3));
         // END LEVEL sigue mandando: −6 dB ahí = llega 6 dB por debajo de la voz
@@ -460,7 +487,7 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
         // los picos pueden entrar como mucho 4 dB en el limitador suave (Clip Safe); sin él, nunca pasan de −0,3 dBFS
         if (pk > 1e-6f) g = std::min (g, dbToLin (s.clipSafe ? 4.0f : -0.3f) / pk);
         g = std::min (g, dbToLin (36.0f));
-        for (int t = 0; t < N + T; ++t) { out.l[(size_t) t] *= g; out.r[(size_t) t] *= g; }
+        for (int t = 0; t < Nfull + T; ++t) { out.l[(size_t) t] *= g; out.r[(size_t) t] *= g; }
         auto res = std::make_shared<Result>();
         res->gainDb = linToDb (g);
         if (s.clipSafe)
@@ -484,7 +511,7 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
             }
         }
         res->l = std::move (out.l); res->r = std::move (out.r);
-        res->hitIndex = N; res->sampleRate = sr; res->bpm = tempo.bpm; res->seconds = seconds;
+        res->hitIndex = Nfull; res->sampleRate = sr; res->bpm = tempo.bpm; res->seconds = seconds;
         const int bins = 1200, tot = res->size();
         res->peaks.assign ((size_t) bins, 0.0f);
         for (int t = 0; t < tot; ++t)

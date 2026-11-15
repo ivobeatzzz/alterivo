@@ -52,7 +52,15 @@ static double worstClick (const Result& r, int from, int to)
     for (int i = std::max (from, w + 2); i < std::min (to, n - w); ++i)
     {
         const double loc = std::sqrt ((cum[(size_t) (i + w)] - cum[(size_t) (i - w)]) / (2.0 * w)) + 1e-6;
-        if (dd[(size_t) i] > 2e-3 && dd[(size_t) i] / loc > worst) { worst = dd[(size_t) i] / loc; worstAt = i; }
+        if (dd[(size_t) i] > 2e-3 && dd[(size_t) i] / loc > worst)
+        {
+            // un clic es AISLADO: si a 2–15 ms hay otro salto parecido, es la forma de onda de la voz (cada periodo)
+            const int a2 = (int) (0.002 * r.sampleRate), b2 = (int) (0.015 * r.sampleRate);
+            bool periodic = false;
+            for (int k = a2; k <= b2 && ! periodic; ++k)
+                periodic = (i - k > 0 && dd[(size_t) (i - k)] > 0.5 * dd[(size_t) i]) || (i + k < n && dd[(size_t) (i + k)] > 0.5 * dd[(size_t) i]);
+            if (! periodic) { worst = dd[(size_t) i] / loc; worstAt = i; }
+        }
     }
     return worst;
 }

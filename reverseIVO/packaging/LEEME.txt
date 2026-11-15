@@ -33,7 +33,7 @@ CÓMO SE USA
 4. Elige la duración (1/4, 1/2, 1, 2, 4 compases o libre), un preset si quieres,
    y GENERATE. Con AUTO se regenera solo cada vez que tocas algo.
 5. Dale al play: el reverse suena justo antes del HIT y termina en el golpe, sin latencia.
-6. DRAG TO DAW: arrastra el resultado a una pista. El WAV lleva un marcador en el HIT.
+6. Arrastra la onda del reverse a una pista del DAW (o expórtalo con el botón de la flecha).
 
 Todo el procesado es local: el audio no sale de tu ordenador.
 Capturas, exportaciones y presets propios se guardan en

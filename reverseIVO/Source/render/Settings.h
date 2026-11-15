@@ -11,6 +11,11 @@ enum class Ending { soft = 0, natural = 1, hard = 2 };     // cómo llega al gol
 enum class Division { d16 = 0, d8t, d8, d8d, d4t, d4, d4d, d2, d1 };
 
 // Divisiones musicales en negras (1/16 = 0.25 negras…)
+inline double gapQuarters (int g)
+{
+    static const double q[] = { 0.0, 1.0 / 16.0, 1.0 / 8.0, 0.25, 0.5 };
+    return q[g < 0 ? 0 : (g > 4 ? 4 : g)];
+}
 inline double divisionQuarters (int d)
 {
     static const double q[] = { 0.25, 1.0 / 3.0, 0.5, 0.75, 2.0 / 3.0, 1.0, 1.5, 2.0, 4.0 };
@@ -43,6 +48,8 @@ struct RenderSettings
     float filterCurve = 0.5f;
     // ---- transitorio
     Ending ending = Ending::natural;
+    int gapIndex = 2;             // silencio antes del golpe: 0 OFF · 1 1/64 · 2 1/32 · 3 1/16 · 4 1/8 (la voz entra limpia)
+    float voice = 0.4f;           // cuánto de la voz invertida hay en la subida (el resto es el lavado de reverb)
     float transient = 0.4f;       // 0..1 fuerza del ataque final
     // ---- capas
     bool mainOn = true;  float mainDb = 0.0f;  float mainWidth = 1.0f;
@@ -70,7 +77,7 @@ struct RenderSettings
     // ---- inteligentes
     bool smartEnding = true;
     float preImpact = 0.3f;       // 0..1 tensión en el último tramo
-    float tailSeconds = 1.5f;     // cola de reverb/delay después del golpe
+    float tailSeconds = 0.8f;     // cola de reverb/delay después del golpe
     float outFadeMs = 300.0f;     // desvanecimiento final de la cola
     bool clipSafe = true;
 

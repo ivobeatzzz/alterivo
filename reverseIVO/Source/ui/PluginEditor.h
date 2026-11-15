@@ -83,7 +83,6 @@ private:
     std::vector<Card> fxCards[6];
 
     // pie
-    PillButton dragOut { "DRAG TO DAW", PillButton::dark };
     RoundButton exportBtn { Icon::download };
     ParamChoice genMode;
 

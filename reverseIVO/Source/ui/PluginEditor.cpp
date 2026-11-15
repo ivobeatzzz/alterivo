@@ -89,14 +89,21 @@ MainView::MainView (ReverseIvoProcessor& p)
         auto e = std::make_unique<ParamChoice> (proc.apvts, id::ending, &proc.undo, 10.0f);
         ending = e.get();
         addChildComponent (*e);
-        e->setBounds (kW / 2 - 160, 566, 320, 34);
+        e->setBounds (186, 566, 270, 34);
         laneItems[0].push_back (e.get());
         owned.push_back (std::move (e));
+        auto gp = std::make_unique<ParamChoice> (proc.apvts, id::gap, &proc.undo, 10.0f);
+        addChildComponent (*gp);
+        gp->setBounds (548, 566, 290, 34);
+        gp->setTooltip (helpFor (id::gap));
+        laneItems[0].push_back (gp.get());
+        owned.push_back (std::move (gp));
     }
     row (1, { knob ("START", id::pitchStart), knob ("END", id::pitchEnd), knob ("CURVE", id::pitchCurve), knob ("MICRO", id::microPitch), knob ("PITCH", id::pitch) });
     row (2, { knob ("HP START", id::hpStart), knob ("HP END", id::hpEnd), knob ("LP START", id::lpStart), knob ("LP END", id::lpEnd), knob ("RESONANCE", id::resonance), knob ("CURVE", id::filterCurve) });
-    laneCards[3].push_back ({ "MAIN LAYER", { 44, 396, 300, 200 }, toggle ("", id::mainOn), { knob ("LEVEL", id::mainLevel, 80.0f), knob ("WIDTH", id::mainWidth, 80.0f) } });
-    laneCards[3].push_back ({ "TEXTURE LAYER", { 360, 396, 496, 200 }, toggle ("", id::texOn),
+    laneCards[3].push_back ({ "MAIN LAYER", { 44, 396, 360, 200 }, toggle ("", id::mainOn),
+                              { knob ("LEVEL", id::mainLevel, 80.0f), knob ("VOICE", id::voice, 80.0f), knob ("WIDTH", id::mainWidth, 80.0f) } });
+    laneCards[3].push_back ({ "TEXTURE LAYER", { 418, 396, 438, 200 }, toggle ("", id::texOn),
                               { knob ("LEVEL", id::texLevel, 80.0f), knob ("PITCH", id::texPitch, 80.0f), knob ("WIDTH", id::texWidth, 80.0f), knob ("SMEAR", id::texSmear, 80.0f) } });
     layoutCards (laneCards[3], 0, 0);
     for (auto& c : laneCards[3]) { laneItems[3].push_back (c.toggle); for (auto* i : c.items) laneItems[3].push_back (i); }
@@ -129,17 +136,14 @@ MainView::MainView (ReverseIvoProcessor& p)
     for (auto& cards : fxCards) layoutCards (cards, 0, 0);
 
     // ---------------------------------------------------------------- pie
-    for (auto* c : std::initializer_list<juce::Component*> { &dragOut, &exportBtn, &genMode }) addAndMakeVisible (c);
-    dragOut.hasIcon = false;
-    dragOut.setBounds (32, 657, 178, 56);
-    dragOut.setTooltip (u8 ("Arrastra el reverse a una pista del DAW. Su inicio cae en la rejilla: d\xc3\xa9jalo al principio del comp\xc3\xa1s y el golpe queda en su sitio."));
-    dragOut.onDragOut = [this]
+    for (auto* c : std::initializer_list<juce::Component*> { &exportBtn, &genMode }) addAndMakeVisible (c);
+    // el reverse se arrastra al DAW cogiéndolo directamente de la onda
+    wave.onDragOut = [this]
     {
         const auto f = proc.exportForDrag();
         if (f.existsAsFile()) juce::DragAndDropContainer::performExternalDragDropOfFiles ({ f.getFullPathName() }, false, this);
     };
-    dragOut.onClick = [this] { openExport(); };
-    exportBtn.setBounds (212, 665, 40, 40);
+    exportBtn.setBounds (32, 665, 40, 40);
     exportBtn.setTooltip ("Exportar WAV (24 bits, con marca en el golpe).");
     exportBtn.onClick = [this] { openExport(); };
     genMode.setBounds (kW / 2 - 80, 669, 160, 30);
@@ -257,7 +261,11 @@ void MainView::paint (juce::Graphics& g)
         label (g, hints[lane], { 64.0f, 154.0f, 300.0f, 14.0f }, juce::Justification::centredLeft, dim, 9.5f, 0.24f);
         if (lane < 3) label (g, "DRAG THE POINTS", { 480.0f, 154.0f, 300.0f, 14.0f }, juce::Justification::centredRight, faint, 9.0f, 0.2f);
         if (lane == 3) paintCards (g, laneCards[3]);
-        if (lane == 0) label (g, "ENDING", { kW / 2.0f - 300.0f, 566.0f, 130.0f, 34.0f }, juce::Justification::centredRight, dim, 9.5f, 0.24f);
+        if (lane == 0)
+        {
+            label (g, "ENDING", { 60.0f, 566.0f, 116.0f, 34.0f }, juce::Justification::centredRight, dim, 9.5f, 0.24f);
+            label (g, "GAP", { 470.0f, 566.0f, 68.0f, 34.0f }, juce::Justification::centredRight, dim, 9.5f, 0.24f);
+        }
     }
     else paintCards (g, fxCards[fxPage]);
 

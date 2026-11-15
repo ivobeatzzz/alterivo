@@ -10,7 +10,7 @@ Reverses, risers y transiciones vocales que terminan **exactamente en el golpe**
 | **AUTO / MANUAL** | Mismo motor: AUTO regenera solo a cada cambio. |
 | **SMART SYNC** | La duración sigue al tempo y al compás; si cambia el BPM se regenera. |
 | **PRESETS** | 15 de fábrica (Clean, Underground, Atmospheric, Transitions) y los tuyos. |
-| **EXPORT** | WAV 24 bits con marcador en el HIT, o arrastrar directamente al DAW. |
+| **EXPORT** | Arrastra la onda directamente a una pista del DAW, o WAV 24 bits con marcador en el HIT. |
 | **MIDI** | Cualquier nota dispara el reverse (velocidad = volumen). |
 
 Sin latencia: el resultado se calcula en segundo plano y suena alineado con la posición del proyecto.

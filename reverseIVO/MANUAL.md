@@ -13,7 +13,7 @@ AUTO y MANUAL usan el mismo motor: AUTO regenera solo a cada cambio; MANUAL espe
 5. Elige **duración**, toca **Intensity / Pitch / Character** o carga un **preset**.
 6. **GENERATE** (o automático en AUTO). Tarda de 0,2 a 4 segundos según los efectos.
 7. **Play en el DAW:** el reverse suena justo antes del HIT y acaba en el golpe, sin latencia. Con el botón ▶ lo escuchas desde el propio plugin.
-8. **DRAG TO DAW** o **exportar** (WAV 24 bits con un marcador en el HIT).
+8. **Arrastra la onda** del reverse directamente a una pista del DAW, o usa el botón de exportar (WAV 24 bits con un marcador en el HIT).
 
 También puedes dispararlo con **MIDI**: cualquier nota lo reproduce desde el principio, con la velocidad como volumen.
 
@@ -32,10 +32,10 @@ También puedes dispararlo con **MIDI**: cualquier nota lo reproduce desde el pr
 
 Cada pestaña dibuja su curva sobre la onda; **arrastra los puntos** de inicio, final y curvatura.
 
-- **Volume:** volumen inicial y final, curva, fade-in y **Transient** (cuánto se conserva el ataque del final). **Ending:** Soft, Natural o Hard.
+- **Volume:** volumen inicial y final, curva, fade-in y **Transient** (cuánto se conserva el ataque del final). **Ending:** Soft, Natural o Hard. **Gap:** el reverse termina un poco antes del golpe (OFF, 1/64, 1/32, 1/16, 1/8; por defecto 1/32) para que la palabra real entre limpia y su primera letra no se oiga dos veces. Con OFF termina pegado a la palabra, como un reverse clásico.
 - **Pitch:** tono inicial y final y su curva (el clásico riser que sube de tono), más **Micro Pitch** (ligera desafinación que da anchura).
 - **Filter:** paso alto y paso bajo con su evolución, resonancia y curva.
-- **Layers:** capa principal (nivel, anchura) y capa de textura (nivel, tono, anchura y *smear*, que la convierte en un pad).
+- **Layers:** capa principal (nivel, **Voice** y anchura) y capa de textura (nivel, tono, anchura y *smear*, que la convierte en un pad). **Voice** es cuánta palabra invertida lleva la subida: menos = más reverb invertida y menos letra, no emborrona la acapella.
 
 ## FX
 
@@ -66,6 +66,7 @@ Los tuyos se guardan con **Guardar** en el menú de presets (Música/IVO Beatz/r
 ## Consejos
 
 - Para un riser de 2 o 4 compases, usa una frase entera, no sólo una palabra.
+- Si se oye la primera letra dos veces, sube **Gap** a 1/16 o baja **Voice**.
 - Si el final suena blando, sube **Transient** o pon **Ending: Hard**.
 - Si se come la mezcla, baja **Reverse Wash** y la mezcla de la reverb, o usa el paso alto.
 - Ponlo el **primero** de la cadena de la voz, antes del EQ y el compresor.

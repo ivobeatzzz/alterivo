@@ -80,6 +80,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     F (id::filterCurve, "Filter Curve", NR (0.0f, 1.0f, 0.01f), d.filterCurve, pct());
     // transitorio y capas
     C (id::ending, "Ending", { "SOFT", "NATURAL", "HARD" }, (int) d.ending);
+    C (id::gap, "Gap", { "OFF", "1/64", "1/32", "1/16", "1/8" }, d.gapIndex);
+    F (id::voice, "Voice", NR (0.0f, 1.0f, 0.01f), d.voice, pct());
     F (id::transient, "Transient", NR (0.0f, 1.0f, 0.01f), d.transient, pct());
     B (id::mainOn, "Main Layer", d.mainOn);
     F (id::mainLevel, "Main Level", NR (-24.0f, 6.0f, 0.1f), d.mainDb, db());
@@ -141,7 +143,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout createLayout()
     // reproducción
     F (id::output, "Output", NR (-36.0f, 12.0f, 0.1f), 0.0f, db());
     B (id::through, "Through", true);
-    F (id::ducking, "Ducking", NR (0.0f, 1.0f, 0.01f), 0.0f, pct());
+    F (id::ducking, "Ducking", NR (0.0f, 1.0f, 0.01f), 0.5f, pct());
     F (id::duckRelease, "Duck Release", NR (20.0f, 1000.0f, 1.0f), 180.0f, ms());
     return { p.begin(), p.end() };
 }
@@ -159,6 +161,7 @@ RenderSettings readSettings (const juce::AudioProcessorValueTreeState& s)
     r.hpStart = f (id::hpStart); r.hpEnd = f (id::hpEnd); r.lpStart = f (id::lpStart); r.lpEnd = f (id::lpEnd);
     r.resonance = f (id::resonance); r.filterCurve = f (id::filterCurve);
     r.ending = (Ending) c (id::ending); r.transient = f (id::transient);
+    r.gapIndex = c (id::gap); r.voice = f (id::voice);
     r.mainOn = b (id::mainOn); r.mainDb = f (id::mainLevel); r.mainWidth = f (id::mainWidth);
     r.texOn = b (id::texOn); r.texDb = f (id::texLevel); r.texPitch = f (id::texPitch); r.texWidth = f (id::texWidth); r.texSmear = f (id::texSmear);
     r.wash = f (id::wash);
@@ -194,7 +197,9 @@ juce::String helpFor (const juce::String& p)
         { id::pitch, "Transporta todo el reverse en semitonos. -12 / +12 = una octava: sigue en el tono de la canción." },
         { id::character, "Personalidad: de limpio a sucio (saturación, armónicos y textura)." },
         { id::genMode, "AUTO genera solo al tocar un control. MANUAL espera a GENERATE. Mismo motor y calidad." },
-        { id::volStart, "Nivel al principio del reverse." }, { id::volEnd, "Nivel justo antes del golpe respecto a la voz (0 dB = igual que la voz)." },
+        { id::volStart, "Nivel al principio del reverse." },
+        { id::gap, "Hueco antes del golpe: el reverse termina un poco antes y la voz entra limpia, sin oír la primera letra dos veces." },
+        { id::voice, "Cuánta voz invertida lleva la subida. Menos = más reverb invertida y menos palabra (no emborrona la acapella)." }, { id::volEnd, "Nivel justo antes del golpe respecto a la voz (0 dB = igual que la voz)." },
         { id::volCurve, "Forma de la subida: más alto concentra el volumen al final." }, { id::fadeIn, "Entrada suave (porción de la duración)." },
         { id::pitchStart, "Tono al principio (se suma a PITCH)." }, { id::pitchEnd, "Tono al llegar al golpe." },
         { id::pitchCurve, "Cómo se mueve el tono del principio al final." }, { id::microPitch, "Pequeñas variaciones de tono: más orgánico." },

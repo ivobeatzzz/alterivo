@@ -77,7 +77,15 @@ static double worstClick (const Result& r)
     for (int i = w + 2; i < n - w; ++i)
     {
         const double loc = std::sqrt ((cum[(size_t) (i + w)] - cum[(size_t) (i - w)]) / (2.0 * w)) + 1e-6;
-        if (dd[(size_t) i] > 2e-3 && dd[(size_t) i] / loc > worst) { worst = dd[(size_t) i] / loc; worstAt = i; }
+        if (dd[(size_t) i] > 2e-3 && dd[(size_t) i] / loc > worst)
+        {
+            // un clic es AISLADO: si a 2–15 ms hay otro salto parecido, es la forma de onda de la voz (cada periodo)
+            const int a = (int) (0.002 * r.sampleRate), b = (int) (0.015 * r.sampleRate);
+            bool periodic = false;
+            for (int k = a; k <= b && ! periodic; ++k)
+                periodic = (i - k > 0 && dd[(size_t) (i - k)] > 0.5 * dd[(size_t) i]) || (i + k < n && dd[(size_t) (i + k)] > 0.5 * dd[(size_t) i]);
+            if (! periodic) { worst = dd[(size_t) i] / loc; worstAt = i; }
+        }
     }
     return worst;
 }
@@ -186,6 +194,14 @@ int main (int argc, char** argv)
                 c.expect (std::abs (diff) <= 2.0, tag + "llega al golpe al nivel de la voz (±2 dB): " + juce::String (diff, 1) + " dB");
                 c.expect (! tuned || std::abs (cents) <= 35.0, tag + "en el tono de la voz al llegar al golpe: " + juce::String (cents, 0) + " cents");
                 c.expect (topMs > -400.0 && topMs < 30.0, tag + "la subida culmina en el golpe: " + juce::String (topMs, 0) + " ms");
+                // GAP: justo antes del golpe la subida ya se ha apartado (la voz real entra limpia)
+                const int G = (int) std::llround (gapQuarters (st.gapIndex) * 60.0 / bpm * sr);
+                if (G > 0)
+                {
+                    const double inGap = maxRms (m, N - G / 2, N, sr, 0.004);
+                    std::printf ("  %-22s %5.0f %6.1f | hueco antes del golpe %.1f dB por debajo de la llegada\n", "", bpm, sr / 1000.0, db (arrive) - db (inGap));
+                    c.expect (db (arrive) - db (inGap) >= 12.0, tag + "hueco limpio antes del golpe (la palabra no se oye dos veces)");
+                }
                 c.expect (st.crush > 0.001f || wc < 7.0, tag + "sin clics (" + juce::String (wc, 1) + " en " + juce::String (worstAt / sr, 3) + " s)");
             }
         }

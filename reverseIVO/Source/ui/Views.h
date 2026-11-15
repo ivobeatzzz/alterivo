@@ -17,7 +17,9 @@ public:
     void mouseDrag (const juce::MouseEvent&) override;
     void mouseUp (const juce::MouseEvent&) override;
     void mouseDoubleClick (const juce::MouseEvent&) override;
+    void mouseExit (const juce::MouseEvent&) override;
     void tick();   // 30 Hz: sólo repinta si cambió algo visible
+    std::function<void()> onDragOut;   // arrastrar la onda fuera del plugin = soltar el WAV en el DAW
     static constexpr float stripH = 22.0f;
 private:
     juce::Rectangle<float> waveArea() const { return getLocalBounds().toFloat().withTrimmedBottom (stripH + 8.0f); }
@@ -25,7 +27,8 @@ private:
     float xForSource (int sample) const;
     int sampleForX (float x) const;
     ReverseIvoProcessor& proc;
-    int drag = 0;   // 1 inicio, 2 fin, 3 nueva región
+    int drag = 0;   // 1 inicio, 2 fin, 3 nueva región, 4 arrastrar el reverse al DAW
+    bool hoverWave = false, dragSent = false;
     int dragAnchor = 0;
     int lastPlay = -2, lastSrcPlay = -2, lastGen = -1, lastA = -1, lastB = -1;
     const void* lastSource = nullptr;

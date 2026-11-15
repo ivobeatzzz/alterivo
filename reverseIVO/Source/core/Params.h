@@ -23,6 +23,7 @@ inline constexpr const char* pitchCurve = "pitchCurve"; inline constexpr const c
 inline constexpr const char* hpStart = "hpStart";     inline constexpr const char* hpEnd = "hpEnd";
 inline constexpr const char* lpStart = "lpStart";     inline constexpr const char* lpEnd = "lpEnd";
 inline constexpr const char* resonance = "resonance"; inline constexpr const char* filterCurve = "filterCurve";
+inline constexpr const char* gap = "gap";            inline constexpr const char* voice = "voice";
 inline constexpr const char* ending = "ending";       inline constexpr const char* transient = "transient";
 inline constexpr const char* mainOn = "mainOn";       inline constexpr const char* mainLevel = "mainLevel"; inline constexpr const char* mainWidth = "mainWidth";
 inline constexpr const char* texOn = "texOn";         inline constexpr const char* texLevel = "texLevel";
