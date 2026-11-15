@@ -177,7 +177,11 @@ int main (int argc, char** argv)
                 diffs.push_back (diff);
                 // tono en el tramo final del reverse (la voz invertida, antes del golpe)
                 const bool tuned = std::abs (st.pitch - std::round (st.pitch)) < 1e-3 && std::abs (st.pitchEnd - std::round (st.pitchEnd)) < 1e-3;
-                const double rf = f0 (m, N - (int) (0.16 * sr), N - (int) (0.04 * sr), sr);
+                // el tono se mide con la voz invertida presente (VOICE 100 %): con sólo reverb no hay altura clara que medir
+                RenderSettings sv = st; sv.voice = 1.0f; sv.gapIndex = 0;
+                const auto rv = render (src, reg.start, reg.end, sv, t);
+                const auto mv = mid (rv->l, rv->r);
+                const double rf = f0 (mv, N - (int) (0.16 * sr), N - (int) (0.04 * sr), sr);
                 const double cents = rf > 0 ? centsToKey (rf * std::pow (2.0, -(st.pitch + st.pitchEnd) / 12.0), voiceF0) : 999;
                 // dónde culmina la subida (máximo de 20 ms) respecto al golpe
                 int top = 0; maxRms (m, 0, N, sr, 0.02, &top);
@@ -193,7 +197,8 @@ int main (int argc, char** argv)
                 c.expect (pk <= dsp::dbToLin (-0.25f), tag + "pico <= -0,3 dBFS");
                 c.expect (std::abs (diff) <= 2.0, tag + "llega al golpe al nivel de la voz (±2 dB): " + juce::String (diff, 1) + " dB");
                 c.expect (! tuned || std::abs (cents) <= 35.0, tag + "en el tono de la voz al llegar al golpe: " + juce::String (cents, 0) + " cents");
-                c.expect (topMs > -400.0 && topMs < 30.0, tag + "la subida culmina en el golpe: " + juce::String (topMs, 0) + " ms");
+                const double allowMs = std::max (400.0, 0.05 * N / sr * 1000.0);   // 5 % de la duración en subidas largas
+                c.expect (topMs > -allowMs && topMs < 30.0, tag + "la subida culmina en el golpe: " + juce::String (topMs, 0) + " ms");
                 // GAP: justo antes del golpe la subida ya se ha apartado (la voz real entra limpia)
                 const int G = (int) std::llround (gapQuarters (st.gapIndex) * 60.0 / bpm * sr);
                 if (G > 0)
@@ -305,7 +310,10 @@ int main (int argc, char** argv)
             const double h0 = juce::AudioProcessor::getXmlFromBinary (tmp.getData(), (int) tmp.getSize())->getDoubleAttribute ("hitPpq");
             const int bar = p.dropBar();
             const double barPpq = (bar - 1) * 4.0;
-            const juce::int64 hitInFile = rd != nullptr ? rd->lengthInSamples - (r->size() - r->hitIndex) : -1;
+            const juce::int64 hitInFile = rd != nullptr ? rd->metadataValues.getValue ("Cue0Offset", "-1").getLargeIntValue() : -1;
+            const double bars = rd != nullptr ? (double) rd->lengthInSamples / (4 * 0.5 * sr) : 0.0;
+            std::printf ("  el WAV dura %.4f compases · tempo en el chunk acid: %s BPM\n", bars, rd != nullptr ? rd->metadataValues.getValue ("acid tempo", "-").toRawUTF8() : "-");
+            c.expect (std::abs (bars - std::round (bars)) < 1e-3, "el WAV dura compases enteros (el DAW no lo estira con el warp)");
             const double hitPpqFromFile = barPpq + (double) hitInFile / sr * 2.0;
             const double errMs = (hitPpqFromFile - h0) * 500.0;
             std::printf ("  arrastrar: soltar en el compás %d · el golpe cae a %.3f ms de la palabra\n", bar, errMs);

@@ -14,7 +14,9 @@ AUTO y MANUAL usan el mismo motor: AUTO regenera solo a cada cambio; MANUAL espe
 6. **GENERATE** (o automático en AUTO). Tarda de 0,2 a 4 segundos según los efectos.
 7. **Escúchalo** con el botón ▶ del plugin.
 8. **Arrastra la onda** a tu pista de reverses (por ejemplo, una pista llamada «reverseIVO»). Encima de la onda pone **DRAG TO DAW · BAR n**: suéltalo al principio de ese compás con la rejilla puesta y el golpe cae exacto en la palabra (el WAV ya lleva el silencio necesario delante). También puedes guardarlo con el botón de exportar.
-9. Repite con la siguiente frase: graba de nuevo y la nueva grabación sustituye a la anterior.
+9. Repite con la siguiente frase: al pulsar grabar, el reverse anterior se borra y la nueva grabación lo sustituye.
+
+El botón ▶ del plugin sólo suena con el DAW parado (y se para solo al darle al play del DAW), así nunca se mezcla con los reverses que ya tienes en la pista.
 
 reverseIVO es una **herramienta**: por defecto no suena en la pista donde está (PLAY IN SONG apagado), sólo cuando lo escuchas con ▶. Así la pista de la voz queda limpia y los reverses viven en su propia pista. Si prefieres que suene directamente en la canción, enciende **PLAY IN SONG** en FX → SMART.
 
@@ -38,7 +40,7 @@ Cada pestaña dibuja su curva sobre la onda; **arrastra los puntos** de inicio, 
 - **Volume:** volumen inicial y final, curva, fade-in y **Transient** (cuánto se conserva el ataque del final). **Ending:** Soft, Natural o Hard. **Gap:** el reverse termina un poco antes del golpe (OFF, 1/64, 1/32, 1/16, 1/8; por defecto 1/32) para que la palabra real entre limpia y su primera letra no se oiga dos veces. Con OFF termina pegado a la palabra, como un reverse clásico.
 - **Pitch:** tono inicial y final y su curva (el clásico riser que sube de tono), más **Micro Pitch** (ligera desafinación que da anchura).
 - **Filter:** paso alto y paso bajo con su evolución, resonancia y curva.
-- **Layers:** capa principal (nivel, **Voice** y anchura) y capa de textura (nivel, tono, anchura y *smear*, que la convierte en un pad). **Voice** es cuánta palabra invertida lleva la subida: menos = más reverb invertida y menos letra, no emborrona la acapella.
+- **Layers:** capa principal (nivel, **Voice** y anchura) y capa de textura (nivel, tono, anchura y *smear*, que la convierte en un pad). **Voice** es cuánta palabra invertida lleva la subida: por defecto 0 % = sólo reverb invertida, sin letras al revés (no emborrona la acapella); súbelo si quieres oír la palabra invertida.
 
 ## FX
 

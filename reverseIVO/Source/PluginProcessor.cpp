@@ -180,6 +180,8 @@ void ReverseIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
             if (auto q = pos->getPpqPosition()) ppq0 = *q;
             if (auto ts = pos->getTimeSignature()) { sigNum = ts->numerator; sigDen = ts->denominator; }
         }
+    // al arrancar el DAW, la escucha del plugin se para: nunca suenan a la vez el reverse ya puesto en la pista y el del plugin
+    if (play && ! isPlaying.load()) { previewing = false; srcPreviewing = false; }
     isPlaying = play;
     if (bpmNow > 0.0) bpm = bpmNow;
     if (! std::isnan (ppq0)) lastPpq = ppq0;
@@ -331,6 +333,13 @@ void ReverseIvoProcessor::toggleCapture()
     }
     capSeconds = 0.0;
     stopSeenMs = 0;
+    // grabar de nuevo borra el reverse anterior al momento (ya no suena ni se puede arrastrar por error)
+    {
+        const juce::SpinLock::ScopedLockType l (resultLock);
+        if (current != nullptr) retired.push_back ({ juce::Time::getMillisecondCounter(), current });
+        current = nullptr;
+    }
+    previewing = false;
     capturing = true;
 }
 
@@ -565,7 +574,7 @@ void ReverseIvoProcessor::setPreview (bool p)
 {
     previewPos = 0;
     if (p) srcPreviewing = false;
-    previewing = p && getResult() != nullptr;
+    previewing = p && getResult() != nullptr && ! isPlaying.load();   // con el DAW sonando no se mezcla con la canción
 }
 void ReverseIvoProcessor::setSourcePreview (bool p)
 {
@@ -804,7 +813,17 @@ bool ReverseIvoProcessor::exportWav (const juce::File& file, juce::String& error
 {
     auto r = getResult();
     if (r == nullptr) { error = "Genera un reverse primero."; return false; }
-    const int pad = padForBar (hitPpq.load(), bpm.load(), currentTempo().beatsPerBar, r->hitIndex, r->sampleRate, nullptr);
+    const double bpb = currentTempo().beatsPerBar, bpmNow = bpm.load();
+    const int pad = padForBar (hitPpq.load(), bpmNow, bpb, r->hitIndex, r->sampleRate, nullptr);
+    // también termina en un compás entero: con la duración exacta en compases (y el tempo en el chunk 'acid'),
+    // Ableton/FL lo ponen a 1:1 aunque tengan el warp automático activado, sin estirarlo ni moverlo
+    int tailPad = 0, bars = 0;
+    if (pad > 0 || (! std::isnan (hitPpq.load()) && bpmNow > 0.0))
+    {
+        const double barSamples = bpb * 60.0 / bpmNow * r->sampleRate;
+        bars = std::max (1, (int) std::ceil ((pad + r->size()) / barSamples - 1e-9));
+        tailPad = std::max (0, (int) std::llround (bars * barSamples) - pad - r->size());
+    }
     file.deleteFile();
     auto os = file.createOutputStream();
     if (os == nullptr) { error = "No se puede escribir en " + file.getFullPathName(); return false; }
@@ -813,9 +832,16 @@ bool ReverseIvoProcessor::exportWav (const juce::File& file, juce::String& error
                           .withMetadata ("NumCuePoints", "1").withMetadata ("Cue0Identifier", "1")
                           .withMetadata ("Cue0Offset", juce::String (r->hitIndex + pad))
                           .withMetadata ("NumCueLabels", "1").withMetadata ("CueLabel0Identifier", "1").withMetadata ("CueLabel0Text", "HIT");
+    auto opts2 = opts;
+    if (bars > 0)
+        opts2 = opts.withMetadata (juce::WavAudioFormat::acidStretch, "1").withMetadata (juce::WavAudioFormat::acidizerFlag, "1")
+                    .withMetadata (juce::WavAudioFormat::acidBeats, juce::String (juce::roundToInt (bars * sigNum.load())))
+                    .withMetadata (juce::WavAudioFormat::acidNumerator, juce::String (sigNum.load()))
+                    .withMetadata (juce::WavAudioFormat::acidDenominator, juce::String (sigDen.load()))
+                    .withMetadata (juce::WavAudioFormat::acidTempo, juce::String (bpmNow, 4));
     juce::WavAudioFormat wav;
     std::unique_ptr<juce::OutputStream> stream (os.release());
-    auto w = wav.createWriterFor (stream, opts);
+    auto w = wav.createWriterFor (stream, opts2);
     if (w == nullptr) { error = "No se pudo crear el WAV."; return false; }
     // el WAV lleva el reverse con el nivel de OUTPUT aplicado (lo que se escucha con PLAY es lo que se exporta)
     const float g = dsp::dbToLin (apvts.getRawParameterValue (id::output)->load());
@@ -839,7 +865,14 @@ bool ReverseIvoProcessor::exportWav (const juce::File& file, juce::String& error
         if (! w->writeFromFloatArrays (zc, 2, pad)) { error = "No se pudo escribir el WAV."; return false; }
     }
     const float* ch2[2] = { l.data(), rr.data() };
-    return w->writeFromFloatArrays (ch2, 2, r->size());
+    if (! w->writeFromFloatArrays (ch2, 2, r->size())) return false;
+    if (tailPad > 0)
+    {
+        std::vector<float> z ((size_t) tailPad, 0.0f);
+        const float* zc[2] = { z.data(), z.data() };
+        return w->writeFromFloatArrays (zc, 2, tailPad);
+    }
+    return true;
 }
 
 juce::File ReverseIvoProcessor::exportForDrag()

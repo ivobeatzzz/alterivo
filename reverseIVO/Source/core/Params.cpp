@@ -200,7 +200,7 @@ juce::String helpFor (const juce::String& p)
         { id::genMode, "AUTO genera solo al tocar un control. MANUAL espera a GENERATE. Mismo motor y calidad." },
         { id::volStart, "Nivel al principio del reverse." },
         { id::gap, "Hueco antes del golpe: el reverse termina un poco antes y la voz entra limpia, sin oír la primera letra dos veces." },
-        { id::voice, "Cuánta voz invertida lleva la subida. Menos = más reverb invertida y menos palabra (no emborrona la acapella)." }, { id::volEnd, "Nivel justo antes del golpe respecto a la voz (0 dB = igual que la voz)." },
+        { id::voice, "Cuánta voz invertida lleva la subida. 0 % = sólo reverb invertida, sin letras al revés (no emborrona la acapella). Súbelo para oír la palabra invertida." }, { id::volEnd, "Nivel justo antes del golpe respecto a la voz (0 dB = igual que la voz)." },
         { id::volCurve, "Forma de la subida: más alto concentra el volumen al final." }, { id::fadeIn, "Entrada suave (porción de la duración)." },
         { id::pitchStart, "Tono al principio (se suma a PITCH)." }, { id::pitchEnd, "Tono al llegar al golpe." },
         { id::pitchCurve, "Cómo se mueve el tono del principio al final." }, { id::microPitch, "Pequeñas variaciones de tono: más orgánico." },

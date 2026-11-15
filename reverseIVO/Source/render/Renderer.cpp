@@ -164,9 +164,14 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
             const float xl = i < seg.size() ? seg.l[(size_t) i] : 0.0f, xr = i < seg.size() ? seg.r[(size_t) i] : 0.0f;
             // fundido largo al final de la cola: al invertirla, la subida empieza de la nada
             const float tf = fadeCos ((float) (mat.size() - 1 - i) / (float) (tail * 0.3f));
-            const float dg = (i < seg.size() ? dryG[(size_t) i] : 0.0f) * (1.0f - 0.35f * washAmt) * (0.25f + 1.5f * s.voice);
-            mat.l[(size_t) i] = xl * dg + wet.l[(size_t) i] * match * 1.4f * washAmt * tf;
-            mat.r[(size_t) i] = xr * dg + wet.r[(size_t) i] * match * 1.4f * washAmt * tf;
+            // VOICE 0 = sólo reverb invertida (subida limpia, sin letras al revés); más VOICE = más palabra invertida
+            const float dg = (i < seg.size() ? dryG[(size_t) i] : 0.0f) * (1.0f - 0.35f * washAmt) * 1.75f
+                             * std::max (s.voice, clamp01 (1.0f - washAmt / 0.15f));   // casi sin lavado: la voz es lo único que hay
+            // con GAP, las primeras reflexiones (las que aún suenan a palabra) entran suaves: al invertir quedarían
+            // justo antes del golpe y se reconocería la letra
+            const float early = s.gapIndex > 0 ? 0.2f + 0.8f * fadeCos ((float) i / (float) (0.07 * sr)) : 1.0f;
+            mat.l[(size_t) i] = xl * dg + wet.l[(size_t) i] * match * 1.4f * washAmt * tf * early;
+            mat.r[(size_t) i] = xr * dg + wet.r[(size_t) i] * match * 1.4f * washAmt * tf * early;
         }
     }
     else
@@ -255,6 +260,24 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
     }
     if (cancelled (cancel)) return nullptr;
     Stereo& x = main;   // a partir de aquí se trabaja sobre la mezcla de capas
+
+    // SUBIDA SIEMPRE HACIA EL GOLPE: una reverb invertida tiene su máximo donde terminaba la palabra (antes del final)
+    // y luego baja. Se rellena ese valle: la envolvente ya no puede bajar, así la subida culmina en el golpe.
+    {
+        std::vector<float> env ((size_t) N);
+        const double c = OnePole::coefFor (12.0, sr);
+        double z = 0;
+        for (int t = 0; t < N; ++t) { z += c * (0.5 * (std::abs (x.l[(size_t) t]) + std::abs (x.r[(size_t) t])) - z); env[(size_t) t] = (float) z; }
+        z = 0;
+        for (int t = N - 1; t >= 0; --t) { z += c * (env[(size_t) t] - z); env[(size_t) t] = (float) z; }
+        float run = 0.0f;
+        for (int t = 0; t < N; ++t)
+        {
+            run = std::max (run, env[(size_t) t]);
+            const float g = env[(size_t) t] > 1e-9f ? std::min (dbToLin (15.0f), run / env[(size_t) t]) : 1.0f;
+            x.l[(size_t) t] *= g; x.r[(size_t) t] *= g;
+        }
+    }
 
     // ---------------------------------------------------------------- 6. ritmo
     if (s.stutterOn && s.stutterLen > 0.0f)
@@ -484,8 +507,8 @@ std::shared_ptr<Result> render (const Source& src, int a, int b, const RenderSet
         const double arrive = levelOf (out, std::max (0, N - N / 3), N, std::min (0.3 * sr, N * 0.3));
         // END LEVEL sigue mandando: −6 dB ahí = llega 6 dB por debajo de la voz
         float g = (arrive > 1e-9 && voiceRef > 1e-9) ? (float) (voiceRef / arrive) * dbToLin (s.volEndDb) : (pk > 1e-6f ? dbToLin (-6.0f) / pk : 1.0f);
-        // los picos pueden entrar como mucho 4 dB en el limitador suave (Clip Safe); sin él, nunca pasan de −0,3 dBFS
-        if (pk > 1e-6f) g = std::min (g, dbToLin (s.clipSafe ? 4.0f : -0.3f) / pk);
+        // los picos pueden entrar como mucho 6 dB en el limitador suave (Clip Safe); sin él, nunca pasan de −0,3 dBFS
+        if (pk > 1e-6f) g = std::min (g, dbToLin (s.clipSafe ? 6.0f : -0.3f) / pk);
         g = std::min (g, dbToLin (36.0f));
         for (int t = 0; t < Nfull + T; ++t) { out.l[(size_t) t] *= g; out.r[(size_t) t] *= g; }
         auto res = std::make_shared<Result>();

@@ -49,7 +49,7 @@ struct RenderSettings
     // ---- transitorio
     Ending ending = Ending::natural;
     int gapIndex = 2;             // silencio antes del golpe: 0 OFF · 1 1/64 · 2 1/32 · 3 1/16 · 4 1/8 (la voz entra limpia)
-    float voice = 0.4f;           // cuánto de la voz invertida hay en la subida (el resto es el lavado de reverb)
+    float voice = 0.0f;           // cuánto de la voz invertida hay en la subida (el resto es el lavado de reverb)
     float transient = 0.4f;       // 0..1 fuerza del ataque final
     // ---- capas
     bool mainOn = true;  float mainDb = 0.0f;  float mainWidth = 1.0f;

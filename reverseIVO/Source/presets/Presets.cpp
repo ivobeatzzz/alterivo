@@ -19,7 +19,7 @@ std::vector<Preset> makeFactory()
                                               { moveReverb, 0.3f }, { volStart, -20.0f }, { preImpact, 0.2f } }),
         P ("CLEAN", "Soft Reverse", { { duration, 2 }, { intensity, 0.3f }, { wash, 0.55f }, { character, 0.0f }, { ending, 0 }, { transient, 0.15f },
                                        { volStart, -24.0f }, { volCurve, 0.3f }, { lpStart, 4000.0f }, { lpEnd, 9000.0f }, { revMix, 0.2f }, { preImpact, 0.1f } }),
-        P ("CLEAN", "Natural Reverse", { { duration, 1 }, { fit, 1 }, { intensity, 0.35f }, { wash, 0.2f }, { reverbOn, 0 }, { character, 0.0f },
+        P ("CLEAN", "Natural Reverse", { { duration, 1 }, { fit, 1 }, { intensity, 0.35f }, { wash, 0.5f }, { voice, 0.3f }, { reverbOn, 0 }, { character, 0.0f },
                                           { volStart, -12.0f }, { volCurve, 0.25f }, { preImpact, 0.0f }, { tail, 0.3f } }),
         // ---------------------------------------------------------------- UNDERGROUND
         P ("UNDERGROUND", "Crank Riser", { { duration, 2 }, { intensity, 0.85f }, { character, 0.6f }, { drive, 0.35f }, { cutsOn, 1 }, { cutsFrom, 5 }, { cutsTo, 0 },
@@ -46,7 +46,7 @@ std::vector<Preset> makeFactory()
         P ("ATMOSPHERIC", "Long Vocal Transition", { { duration, 4 }, { intensity, 0.7f }, { wash, 0.7f }, { pitchStart, -12.0f }, { pitchEnd, 0.0f },
                                                       { pitchCurve, 0.75f }, { moveFilter, 0.5f }, { preImpact, 0.5f }, { tail, 3.0f }, { revMix, 0.25f } }),
         // ---------------------------------------------------------------- TRANSITIONS
-        P ("TRANSITIONS", "Short Impact", { { duration, 0 }, { intensity, 0.8f }, { wash, 0.35f }, { ending, 2 }, { transient, 0.9f }, { preImpact, 0.7f },
+        P ("TRANSITIONS", "Short Impact", { { duration, 0 }, { intensity, 0.8f }, { wash, 0.45f }, { ending, 2 }, { transient, 0.7f }, { preImpact, 0.5f },
                                              { tail, 0.6f }, { revDecay, 1.2f }, { volStart, -14.0f } }),
         P ("TRANSITIONS", "Long Build", { { duration, 3 }, { intensity, 0.9f }, { pitchStart, -7.0f }, { pitchEnd, 0.0f }, { moveFilter, 0.6f }, { lpStart, 900.0f },
                                            { preImpact, 0.7f }, { moveReverb, 0.8f }, { noise, 0.2f }, { harmonics, 0.3f } }),

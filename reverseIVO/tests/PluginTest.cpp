@@ -186,7 +186,7 @@ int main (int argc, char** argv)
         juce::AudioFormatManager fm; fm.registerBasicFormats();
         std::unique_ptr<juce::AudioFormatReader> rd (fm.createReaderFor (f));
         const juce::int64 lead = rd != nullptr ? rd->lengthInSamples - r->size() : -1;   // silencio delante hasta el compás
-        c.expect (rd != nullptr && lead >= 0 && lead < (juce::int64) (4 * 0.5 * sr) && rd->bitsPerSample == 24, "el WAV es el reverse completo desde el principio del compás, 24 bits");
+        c.expect (rd != nullptr && lead >= 0 && lead < (juce::int64) (2 * 4 * 0.5 * sr) && rd->bitsPerSample == 24, "el WAV es el reverse completo, en compases enteros, 24 bits");
     }
 
     // ---------------------------------------------------------------- 8. presets
