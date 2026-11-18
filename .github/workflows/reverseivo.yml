@@ -19,7 +19,7 @@ defaults:
 
 jobs:
   mac:
-    runs-on: macos-15-intel   # Intel: suele tener más máquinas libres que macos-latest
+    runs-on: macos-15   # Apple Silicon (compila universal: también funciona en Mac Intel)
     steps:
       - uses: actions/checkout@v4
 
