@@ -7,7 +7,7 @@ AUTO y MANUAL usan el mismo motor: AUTO regenera solo a cada cambio; MANUAL espe
 ## Flujo de trabajo
 
 1. **Inserta reverseIVO** en la pista de la voz (o en una pista nueva con la voz).
-2. **Captura:** pulsa el botón rojo y dale al play sobre la frase. Al parar el transporte la captura se cierra sola. También puedes **importar** un WAV/AIFF/MP3/FLAC con el botón de la flecha.
+2. **Captura:** pulsa el botón rojo y dale al play sobre la frase. Mientras graba, la voz que entra **se dibuja en directo** en la pantalla. Al parar el transporte la captura se cierra sola. También puedes **importar** un WAV/AIFF/MP3/FLAC con el botón de la flecha.
 3. **Región automática:** reverseIVO detecta la primera palabra (o frase corta) y la marca en la tira **SRC** de abajo. Arrastra los bordes para elegir otra parte.
 4. **HIT:** se coloca donde empieza la frase, ajustado a 1/16 si cae cerca. Muévelo con **‹ ›** (1/16) o pulsa **SET** para ponerlo donde está el cursor del DAW.
 5. Elige **duración**, toca **Intensity / Pitch / Character** o carga un **preset**.

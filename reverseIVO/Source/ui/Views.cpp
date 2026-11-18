@@ -36,7 +36,44 @@ void WaveView::paint (juce::Graphics& g)
     const auto a = waveArea();
     auto res = proc.getResult();
     auto src = proc.getSource();
-    if (src == nullptr)
+    const bool rec = proc.isCapturing();
+    if (rec)
+    {
+        // GRABANDO: la voz que entra se dibuja en directo (crece hacia la derecha y se va encogiendo si es larga)
+        const auto peaks = proc.livePeaks();
+        const int bins = (int) peaks.size();
+        const int shown = std::max (bins, 1600);   // al menos 8 s de ancho
+        const float cy = a.getCentreY(), half = a.getHeight() * 0.5f - 6.0f;
+        float pk = 0.05f; for (float v : peaks) pk = std::max (pk, v);
+        g.setColour (juce::Colours::white.withAlpha (0.06f));
+        g.fillRect (juce::Rectangle<float> (a.getX(), cy, a.getWidth(), 1.0f));
+        if (bins > 1)
+        {
+            juce::Path p;
+            std::vector<juce::Point<float>> top;
+            const int step = std::max (1, shown / (int) a.getWidth());
+            for (int k = 0; k < bins; k += step)
+            {
+                float v = 0.0f; for (int j = k; j < std::min (bins, k + step); ++j) v = std::max (v, peaks[(size_t) j]);
+                top.push_back ({ a.getX() + (float) k / (float) shown * a.getWidth(), cy - std::max (0.6f, v / pk * half) });
+            }
+            p.startNewSubPath (top.front().x, cy);
+            for (auto& q : top) p.lineTo (q);
+            p.lineTo (top.back().x, cy);
+            for (auto it = top.rbegin(); it != top.rend(); ++it) p.lineTo (it->x, 2.0f * cy - it->y);
+            p.closeSubPath();
+            g.setColour (accentHi.withAlpha (0.85f)); g.fillPath (p);
+            const float x = top.back().x;   // cabezal de grabación
+            g.setColour (theme::rec); g.fillRect (juce::Rectangle<float> (x - 0.75f, a.getY() + 4.0f, 1.5f, a.getHeight() - 8.0f));
+        }
+        if (! proc.captureRolling())   // aún no suena nada: se indica qué hacer (los segundos ya salen arriba)
+        {
+            const bool blink = (juce::Time::getMillisecondCounter() / 500) % 2 == 0;
+            dot (g, { a.getCentreX() - 118.0f, cy }, 4.0f, theme::rec.withAlpha (blink ? 1.0f : 0.35f));
+            label (g, u8 ("DALE AL PLAY EN EL DAW"), { a.getCentreX() - 104.0f, cy - 9.0f, 260.0f, 18.0f }, juce::Justification::centredLeft, theme::text, 10.0f, 0.24f);
+        }
+    }
+    else if (src == nullptr)
     {
         label (g, "CAPTURE OR IMPORT A VOCAL", a.withTrimmedBottom (a.getHeight() * 0.5f - 4.0f).withTrimmedTop (a.getHeight() * 0.5f - 22.0f),
                juce::Justification::centred, theme::text, 12.0f, 0.24f);
@@ -48,7 +85,7 @@ void WaveView::paint (juce::Graphics& g)
     g.setColour (juce::Colours::white.withAlpha (0.06f));
     g.fillRect (juce::Rectangle<float> (a.getX(), a.getCentreY(), a.getWidth(), 1.0f));
 
-    if (res != nullptr && res->size() > 0)
+    if (! rec && res != nullptr && res->size() > 0)
     {
         const auto& R = *res;
         const int bins = (int) R.peaks.size();
@@ -114,7 +151,7 @@ void WaveView::paint (juce::Graphics& g)
             g.fillRect (juce::Rectangle<float> (px - 0.5f, a.getY(), 1.0f, a.getHeight()));
         }
     }
-    else if (src != nullptr)
+    else if (! rec && src != nullptr)
     {
         g.setColour (soft); g.setFont (font (F::man, 13.0f));
         g.drawText (proc.isGenerating() ? u8 ("Generando\xe2\x80\xa6") : u8 ("Pulsa GENERATE"), a, juce::Justification::centred, false);
@@ -195,6 +232,7 @@ void WaveView::tick()
     auto r = proc.getResult();
     auto s = proc.getSource();
     const int gen = r != nullptr ? r->generation : -1;
+    if (proc.isCapturing() || wasRec) { wasRec = proc.isCapturing(); repaint(); return; }   // en directo mientras graba
     const int pi = proc.playIndex(), sp = proc.sourcePlayIndex();
     if (pi != lastPlay || sp != lastSrcPlay || gen != lastGen || proc.regionStart() != lastA || proc.regionEnd() != lastB || s.get() != lastSource)
     {

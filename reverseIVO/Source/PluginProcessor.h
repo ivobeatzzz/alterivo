@@ -66,6 +66,10 @@ public:
     // ---- acciones (hilo de mensajes)
     void toggleCapture();
     bool isCapturing() const { return capturing.load(); }
+    double captureSeconds() const { return capSeconds.load(); }
+    bool captureRolling() const;            // ¿el DAW ya está reproduciendo durante la grabación?
+    // picos de lo que se está grabando (uno cada 5 ms), para verlo en directo
+    std::vector<float> livePeaks() const;
     double capturedSeconds() const { return capSeconds.load(); }
     void importFile (const juce::File&);
     void generate();                         // GENERATE (en AUTO también se llama solo)
@@ -155,7 +159,9 @@ private:
     std::vector<float> capL, capR;
     double capPpq = std::numeric_limits<double>::quiet_NaN();
     bool capSawPlay = false;
-    std::mutex capMutex;
+    std::vector<float> livePeaksBuf;
+    float liveAcc = 0.0f; int liveCount = 0;
+    mutable std::mutex capMutex;
     juce::uint32 stopSeenMs = 0;
 
     // reproducción

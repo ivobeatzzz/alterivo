@@ -28,7 +28,7 @@ private:
     int sampleForX (float x) const;
     ReverseIvoProcessor& proc;
     int drag = 0;   // 1 inicio, 2 fin, 3 nueva región, 4 arrastrar el reverse al DAW
-    bool hoverWave = false, dragSent = false;
+    bool hoverWave = false, dragSent = false, wasRec = false;
     int dragAnchor = 0;
     int lastPlay = -2, lastSrcPlay = -2, lastGen = -1, lastA = -1, lastB = -1;
     const void* lastSource = nullptr;

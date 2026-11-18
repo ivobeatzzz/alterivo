@@ -237,6 +237,21 @@ int main (int argc, char** argv)
             juce::File f (outDir + "/ui-" + v.name + ".png"); f.deleteFile();
             juce::FileOutputStream os (f); juce::PNGImageFormat().writeImageToStream (img, os);
         }
+        // grabando: la voz se ve en directo
+        e->getView().showView (0, 0);
+        p.toggleCapture(); pump (50);
+        ph.playing = true;
+        std::vector<float> half (voice.l.begin(), voice.l.begin() + (long) (voice.l.size() * 0.75)), halfR (voice.r.begin(), voice.r.begin() + (long) (voice.r.size() * 0.75));
+        play (p, ph, half, halfR, 40.0);
+        pump (200);
+        const bool liveOk = p.isCapturing() && p.livePeaks().size() > 300;
+        {
+            auto img = ed->createComponentSnapshot (ed->getLocalBounds(), true, 1.0f);
+            juce::File f (outDir + "/ui-recording.png"); f.deleteFile();
+            juce::FileOutputStream os (f); juce::PNGImageFormat().writeImageToStream (img, os);
+        }
+        c.expect (liveOk, "mientras graba, la forma de onda se ve en directo (" + juce::String ((int) p.livePeaks().size()) + " puntos)");
+        p.toggleCapture();
         c.expect (true, "capturas de la interfaz en " + outDir);
     }
 

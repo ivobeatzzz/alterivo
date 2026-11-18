@@ -4,7 +4,7 @@
   región detectada: 0.282 s → 0.783 s
   OK   detecta el inicio de la primera palabra (0,30 s)
   OK   detecta el final de la primera palabra (0,78 s)
- -- default_1bar_120 (377 ms)
+ -- default_1bar_120 (318 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -15,7 +15,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- extremo_2bars_140 (615 ms)
+ -- extremo_2bars_140 (692 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -37,7 +37,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- libre_3333ms (460 ms)
+ -- libre_3333ms (537 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -48,7 +48,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- solo_textura_4bars_174_3x4 (601 ms)
+ -- solo_textura_4bars_174_3x4 (679 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -64,7 +64,7 @@
   región detectada: 0.283 s → 0.785 s
   OK   detecta el inicio de la primera palabra (0,30 s)
   OK   detecta el final de la primera palabra (0,78 s)
- -- default_1bar_120 (291 ms)
+ -- default_1bar_120 (336 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -75,7 +75,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- extremo_2bars_140 (721 ms)
+ -- extremo_2bars_140 (777 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -86,7 +86,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- natural_seco_halfbar_95 (69 ms)
+ -- natural_seco_halfbar_95 (95 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -97,7 +97,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- libre_3333ms (446 ms)
+ -- libre_3333ms (684 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -108,7 +108,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- solo_textura_4bars_174_3x4 (701 ms)
+ -- solo_textura_4bars_174_3x4 (752 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -124,7 +124,7 @@
   región detectada: 0.283 s → 0.785 s
   OK   detecta el inicio de la primera palabra (0,30 s)
   OK   detecta el final de la primera palabra (0,78 s)
- -- default_1bar_120 (585 ms)
+ -- default_1bar_120 (740 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -135,7 +135,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- extremo_2bars_140 (1498 ms)
+ -- extremo_2bars_140 (1533 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -146,7 +146,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- natural_seco_halfbar_95 (138 ms)
+ -- natural_seco_halfbar_95 (191 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -157,7 +157,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- libre_3333ms (748 ms)
+ -- libre_3333ms (1055 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -168,7 +168,7 @@
   OK   llega limpio al golpe
   OK   mismo ajuste = mismo resultado (determinista)
   OK   se genera en menos de 4 s
- -- solo_textura_4bars_174_3x4 (1271 ms)
+ -- solo_textura_4bars_174_3x4 (1453 ms)
   OK   el golpe cae en la muestra exacta de la duración musical
   OK   sin NaN ni infinitos
   OK   no pasa de −0,3 dBFS (Clip Safe)
@@ -219,38 +219,39 @@ TODO OK (0 fallos)
   OK   el WAV es el reverse completo, en compases enteros, 24 bits
 
 == Presets
-  Clean Vocal Reverse    CLEAN           360 ms  pico -0.60 dBFS
+  Clean Vocal Reverse    CLEAN           365 ms  pico -0.60 dBFS
   OK     genera bien
-  Soft Reverse           CLEAN           262 ms  pico -0.60 dBFS
+  Soft Reverse           CLEAN           263 ms  pico -0.60 dBFS
   OK     genera bien
-  Natural Reverse        CLEAN           140 ms  pico -0.72 dBFS
+  Natural Reverse        CLEAN           160 ms  pico -0.72 dBFS
   OK     genera bien
-  Crank Riser            UNDERGROUND     360 ms  pico -0.76 dBFS
+  Crank Riser            UNDERGROUND     346 ms  pico -0.76 dBFS
   OK     genera bien
-  Dark Vocal Rise        UNDERGROUND     261 ms  pico -0.62 dBFS
+  Dark Vocal Rise        UNDERGROUND     345 ms  pico -0.62 dBFS
   OK     genera bien
-  Aggressive Reverse     UNDERGROUND     362 ms  pico -0.64 dBFS
+  Aggressive Reverse     UNDERGROUND     500 ms  pico -0.64 dBFS
   OK     genera bien
-  Distorted Vocal Rise   UNDERGROUND     262 ms  pico -0.71 dBFS
+  Distorted Vocal Rise   UNDERGROUND     323 ms  pico -0.71 dBFS
   OK     genera bien
-  Dreamy Reverse         ATMOSPHERIC     947 ms  pico -0.79 dBFS
+  Dreamy Reverse         ATMOSPHERIC    1106 ms  pico -0.79 dBFS
   OK     genera bien
-  Wide Reverse           ATMOSPHERIC     383 ms  pico -0.59 dBFS
+  Wide Reverse           ATMOSPHERIC     623 ms  pico -0.59 dBFS
   OK     genera bien
-  Ambient Rise           ATMOSPHERIC    1490 ms  pico -1.04 dBFS
+  Ambient Rise           ATMOSPHERIC    1957 ms  pico -1.04 dBFS
   OK     genera bien
-  Long Vocal Transition  ATMOSPHERIC     786 ms  pico -1.76 dBFS
+  Long Vocal Transition  ATMOSPHERIC     965 ms  pico -1.76 dBFS
   OK     genera bien
-  Short Impact           TRANSITIONS     161 ms  pico -0.60 dBFS
+  Short Impact           TRANSITIONS     221 ms  pico -0.60 dBFS
   OK     genera bien
-  Long Build             TRANSITIONS     502 ms  pico -0.91 dBFS
+  Long Build             TRANSITIONS     601 ms  pico -0.91 dBFS
   OK     genera bien
-  Rhythmic Build         TRANSITIONS     561 ms  pico -0.60 dBFS
+  Rhythmic Build         TRANSITIONS     665 ms  pico -0.60 dBFS
   OK     genera bien
-  Final Transition       TRANSITIONS    1426 ms  pico -1.31 dBFS
+  Final Transition       TRANSITIONS    1668 ms  pico -1.31 dBFS
   OK     genera bien
 
 == Interfaz
+  OK   mientras graba, la forma de onda se ve en directo (360 puntos)
   OK   capturas de la interfaz en /tmp/rvp
 
 TODO OK (0 fallos)
@@ -259,7 +260,7 @@ TODO OK (0 fallos)
 
 == Presets × tempos × frecuencias de muestreo
   preset                   bpm    kHz |  voz dB   llega     dif |  tono c cumbre |   pico    ms
-  Clean Vocal Reverse      128   44.1 |   -10.1   -10.4    -0.3 |      -9   -124 |  -0.61   323
+  Clean Vocal Reverse      128   44.1 |   -10.1   -10.4    -0.3 |      -9   -124 |  -0.61   293
   OK    Clean Vocal Reverse 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Clean Vocal Reverse 128 BPM 44.1 kHz: sin NaN
   OK    Clean Vocal Reverse 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -269,7 +270,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Clean Vocal Reverse 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Clean Vocal Reverse 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Soft Reverse             128   44.1 |   -10.1   -10.3    -0.2 |      -7   -146 |  -0.65   238
+  Soft Reverse             128   44.1 |   -10.1   -10.3    -0.2 |      -7   -146 |  -0.65   243
   OK    Soft Reverse 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Soft Reverse 128 BPM 44.1 kHz: sin NaN
   OK    Soft Reverse 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -279,7 +280,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Soft Reverse 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Soft Reverse 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Natural Reverse          128   44.1 |   -10.1   -10.7    -0.5 |      -8   -109 |  -0.73   116
+  Natural Reverse          128   44.1 |   -10.1   -10.7    -0.5 |      -8   -109 |  -0.73   120
   OK    Natural Reverse 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Natural Reverse 128 BPM 44.1 kHz: sin NaN
   OK    Natural Reverse 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -289,7 +290,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.3 dB por debajo de la llegada
   OK    Natural Reverse 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Natural Reverse 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Crank Riser              128   44.1 |   -10.1   -10.3    -0.2 |      -7   -159 |  -0.80   283
+  Crank Riser              128   44.1 |   -10.1   -10.3    -0.2 |      -7   -159 |  -0.80   275
   OK    Crank Riser 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Crank Riser 128 BPM 44.1 kHz: sin NaN
   OK    Crank Riser 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -299,7 +300,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Crank Riser 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Crank Riser 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Dark Vocal Rise          128   44.1 |   -10.1   -10.3    -0.2 |     -13   -107 |  -0.70   268
+  Dark Vocal Rise          128   44.1 |   -10.1   -10.3    -0.2 |     -13   -107 |  -0.70   252
   OK    Dark Vocal Rise 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Dark Vocal Rise 128 BPM 44.1 kHz: sin NaN
   OK    Dark Vocal Rise 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -309,7 +310,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Dark Vocal Rise 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dark Vocal Rise 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Aggressive Reverse       128   44.1 |   -10.1   -10.6    -0.5 |      -7    -99 |  -0.30   322
+  Aggressive Reverse       128   44.1 |   -10.1   -10.6    -0.5 |      -7    -99 |  -0.30   429
   OK    Aggressive Reverse 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Aggressive Reverse 128 BPM 44.1 kHz: sin NaN
   OK    Aggressive Reverse 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -319,7 +320,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.4 dB por debajo de la llegada
   OK    Aggressive Reverse 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Aggressive Reverse 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Distorted Vocal Rise     128   44.1 |   -10.1   -10.3    -0.2 |     -13    -92 |  -0.75   246
+  Distorted Vocal Rise     128   44.1 |   -10.1   -10.3    -0.2 |     -13    -92 |  -0.75   274
   OK    Distorted Vocal Rise 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Distorted Vocal Rise 128 BPM 44.1 kHz: sin NaN
   OK    Distorted Vocal Rise 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -329,7 +330,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Distorted Vocal Rise 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Distorted Vocal Rise 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Dreamy Reverse           128   44.1 |   -10.1   -10.3    -0.1 |      -3   -178 |  -0.94   649
+  Dreamy Reverse           128   44.1 |   -10.1   -10.3    -0.1 |      -3   -178 |  -0.94   986
   OK    Dreamy Reverse 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Dreamy Reverse 128 BPM 44.1 kHz: sin NaN
   OK    Dreamy Reverse 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -339,7 +340,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Dreamy Reverse 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dreamy Reverse 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Wide Reverse             128   44.1 |   -10.1   -10.9    -0.8 |      -8   -116 |  -0.60   364
+  Wide Reverse             128   44.1 |   -10.1   -10.9    -0.8 |      -8   -116 |  -0.60   422
   OK    Wide Reverse 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Wide Reverse 128 BPM 44.1 kHz: sin NaN
   OK    Wide Reverse 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -349,7 +350,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.1 dB por debajo de la llegada
   OK    Wide Reverse 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Wide Reverse 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Ambient Rise             128   44.1 |   -10.1   -10.2    -0.0 |     -24   -286 |  -0.99  1059
+  Ambient Rise             128   44.1 |   -10.1   -10.2    -0.0 |     -24   -286 |  -0.99  1595
   OK    Ambient Rise 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Ambient Rise 128 BPM 44.1 kHz: sin NaN
   OK    Ambient Rise 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -359,7 +360,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Ambient Rise 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Ambient Rise 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Long Vocal Transition    128   44.1 |   -10.1   -10.2    -0.0 |     -16   -204 |  -2.14   749
+  Long Vocal Transition    128   44.1 |   -10.1   -10.2    -0.0 |     -16   -204 |  -2.14  1032
   OK    Long Vocal Transition 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Long Vocal Transition 128 BPM 44.1 kHz: sin NaN
   OK    Long Vocal Transition 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -369,7 +370,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Long Vocal Transition 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Vocal Transition 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Short Impact             128   44.1 |   -10.1   -11.5    -1.4 |     -12    -75 |  -0.60   165
+  Short Impact             128   44.1 |   -10.1   -11.5    -1.4 |     -12    -75 |  -0.60   138
   OK    Short Impact 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Short Impact 128 BPM 44.1 kHz: sin NaN
   OK    Short Impact 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -389,7 +390,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Long Build 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Build 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Rhythmic Build           128   44.1 |   -10.1   -10.4    -0.3 |     -15    -88 |  -0.69   450
+  Rhythmic Build           128   44.1 |   -10.1   -10.4    -0.3 |     -15    -88 |  -0.69   570
   OK    Rhythmic Build 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Rhythmic Build 128 BPM 44.1 kHz: sin NaN
   OK    Rhythmic Build 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -399,7 +400,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Rhythmic Build 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Rhythmic Build 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Final Transition         128   44.1 |   -10.1   -10.1    +0.0 |     -15   -189 |  -1.53  1224
+  Final Transition         128   44.1 |   -10.1   -10.1    +0.0 |     -15   -189 |  -1.53  1310
   OK    Final Transition 128 BPM 44.1 kHz: duración exacta a tempo
   OK    Final Transition 128 BPM 44.1 kHz: sin NaN
   OK    Final Transition 128 BPM 44.1 kHz: pico <= -0,3 dBFS
@@ -409,7 +410,7 @@ TODO OK (0 fallos)
                            128   44.1 | hueco antes del golpe 169.9 dB por debajo de la llegada
   OK    Final Transition 128 BPM 44.1 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Final Transition 128 BPM 44.1 kHz: sin clics (0.0 en 0.000 s)
-  Clean Vocal Reverse       84   48.0 |   -10.1   -10.4    -0.2 |      -7   -190 |  -0.63   298
+  Clean Vocal Reverse       84   48.0 |   -10.1   -10.4    -0.2 |      -7   -190 |  -0.63   426
   OK    Clean Vocal Reverse 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Clean Vocal Reverse 84 BPM 48.0 kHz: sin NaN
   OK    Clean Vocal Reverse 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -419,7 +420,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Clean Vocal Reverse 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Clean Vocal Reverse 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Clean Vocal Reverse      128   48.0 |   -10.1   -10.4    -0.3 |      -9   -125 |  -0.62   225
+  Clean Vocal Reverse      128   48.0 |   -10.1   -10.4    -0.3 |      -9   -125 |  -0.62   300
   OK    Clean Vocal Reverse 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Clean Vocal Reverse 128 BPM 48.0 kHz: sin NaN
   OK    Clean Vocal Reverse 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -429,7 +430,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Clean Vocal Reverse 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Clean Vocal Reverse 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Clean Vocal Reverse      174   48.0 |   -10.1   -10.7    -0.6 |      -6    -92 |  -0.60   214
+  Clean Vocal Reverse      174   48.0 |   -10.1   -10.7    -0.6 |      -6    -92 |  -0.60   237
   OK    Clean Vocal Reverse 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Clean Vocal Reverse 174 BPM 48.0 kHz: sin NaN
   OK    Clean Vocal Reverse 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -439,7 +440,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.3 dB por debajo de la llegada
   OK    Clean Vocal Reverse 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Clean Vocal Reverse 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Soft Reverse              84   48.0 |   -10.1   -10.5    -0.4 |      -2   -212 |  -0.61   260
+  Soft Reverse              84   48.0 |   -10.1   -10.5    -0.4 |      -2   -212 |  -0.61   308
   OK    Soft Reverse 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Soft Reverse 84 BPM 48.0 kHz: sin NaN
   OK    Soft Reverse 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -449,7 +450,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.5 dB por debajo de la llegada
   OK    Soft Reverse 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Soft Reverse 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Soft Reverse             128   48.0 |   -10.1   -10.3    -0.2 |      -7   -142 |  -0.62   173
+  Soft Reverse             128   48.0 |   -10.1   -10.3    -0.2 |      -7   -142 |  -0.62   219
   OK    Soft Reverse 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Soft Reverse 128 BPM 48.0 kHz: sin NaN
   OK    Soft Reverse 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -459,7 +460,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Soft Reverse 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Soft Reverse 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Soft Reverse             174   48.0 |   -10.1   -10.4    -0.3 |     -13   -197 |  -0.65   123
+  Soft Reverse             174   48.0 |   -10.1   -10.4    -0.3 |     -13   -197 |  -0.65   185
   OK    Soft Reverse 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Soft Reverse 174 BPM 48.0 kHz: sin NaN
   OK    Soft Reverse 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -469,7 +470,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Soft Reverse 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Soft Reverse 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Natural Reverse           84   48.0 |   -10.1   -10.2    -0.1 |      -8   -141 |  -0.72   153
+  Natural Reverse           84   48.0 |   -10.1   -10.2    -0.1 |      -8   -141 |  -0.72   141
   OK    Natural Reverse 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Natural Reverse 84 BPM 48.0 kHz: sin NaN
   OK    Natural Reverse 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -479,7 +480,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Natural Reverse 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Natural Reverse 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Natural Reverse          128   48.0 |   -10.1   -10.7    -0.5 |      -8   -110 |  -0.70   120
+  Natural Reverse          128   48.0 |   -10.1   -10.7    -0.5 |      -8   -110 |  -0.70   111
   OK    Natural Reverse 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Natural Reverse 128 BPM 48.0 kHz: sin NaN
   OK    Natural Reverse 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -489,7 +490,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.3 dB por debajo de la llegada
   OK    Natural Reverse 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Natural Reverse 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Natural Reverse          174   48.0 |   -10.1   -10.7    -0.6 |      -9    -95 |  -0.75   106
+  Natural Reverse          174   48.0 |   -10.1   -10.7    -0.6 |      -9    -95 |  -0.75    97
   OK    Natural Reverse 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Natural Reverse 174 BPM 48.0 kHz: sin NaN
   OK    Natural Reverse 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -499,7 +500,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.3 dB por debajo de la llegada
   OK    Natural Reverse 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Natural Reverse 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Crank Riser               84   48.0 |   -10.1   -10.3    -0.1 |      -6   -265 |  -1.02   273
+  Crank Riser               84   48.0 |   -10.1   -10.3    -0.1 |      -6   -265 |  -1.02   388
   OK    Crank Riser 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Crank Riser 84 BPM 48.0 kHz: sin NaN
   OK    Crank Riser 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -509,7 +510,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Crank Riser 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Crank Riser 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Crank Riser              128   48.0 |   -10.1   -10.4    -0.3 |      -6   -150 |  -0.77   207
+  Crank Riser              128   48.0 |   -10.1   -10.4    -0.3 |      -6   -150 |  -0.77   296
   OK    Crank Riser 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Crank Riser 128 BPM 48.0 kHz: sin NaN
   OK    Crank Riser 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -519,7 +520,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Crank Riser 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Crank Riser 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Crank Riser              174   48.0 |   -10.1   -10.5    -0.4 |     -13   -122 |  -0.71   189
+  Crank Riser              174   48.0 |   -10.1   -10.5    -0.4 |     -13   -122 |  -0.71   240
   OK    Crank Riser 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Crank Riser 174 BPM 48.0 kHz: sin NaN
   OK    Crank Riser 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -529,7 +530,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.5 dB por debajo de la llegada
   OK    Crank Riser 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Crank Riser 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Dark Vocal Rise           84   48.0 |   -10.1   -10.3    -0.2 |      -4   -177 |  -0.81   290
+  Dark Vocal Rise           84   48.0 |   -10.1   -10.3    -0.2 |      -4   -177 |  -0.81   369
   OK    Dark Vocal Rise 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Dark Vocal Rise 84 BPM 48.0 kHz: sin NaN
   OK    Dark Vocal Rise 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -539,7 +540,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Dark Vocal Rise 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dark Vocal Rise 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Dark Vocal Rise          128   48.0 |   -10.1   -10.4    -0.2 |      -9   -118 |  -0.66   222
+  Dark Vocal Rise          128   48.0 |   -10.1   -10.4    -0.2 |      -9   -118 |  -0.66   272
   OK    Dark Vocal Rise 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Dark Vocal Rise 128 BPM 48.0 kHz: sin NaN
   OK    Dark Vocal Rise 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -549,7 +550,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Dark Vocal Rise 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dark Vocal Rise 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Dark Vocal Rise          174   48.0 |   -10.1   -10.4    -0.2 |     -13    -84 |  -0.62   174
+  Dark Vocal Rise          174   48.0 |   -10.1   -10.4    -0.2 |     -13    -84 |  -0.62   219
   OK    Dark Vocal Rise 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Dark Vocal Rise 174 BPM 48.0 kHz: sin NaN
   OK    Dark Vocal Rise 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -559,7 +560,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Dark Vocal Rise 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dark Vocal Rise 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Aggressive Reverse        84   48.0 |   -10.1   -10.2    -0.0 |      -9   -155 |  -0.77   374
+  Aggressive Reverse        84   48.0 |   -10.1   -10.2    -0.0 |      -9   -155 |  -0.77   577
   OK    Aggressive Reverse 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Aggressive Reverse 84 BPM 48.0 kHz: sin NaN
   OK    Aggressive Reverse 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -569,7 +570,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Aggressive Reverse 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Aggressive Reverse 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Aggressive Reverse       128   48.0 |   -10.1   -10.3    -0.1 |      -7   -100 |  -0.52   259
+  Aggressive Reverse       128   48.0 |   -10.1   -10.3    -0.1 |      -7   -100 |  -0.52   356
   OK    Aggressive Reverse 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Aggressive Reverse 128 BPM 48.0 kHz: sin NaN
   OK    Aggressive Reverse 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -579,7 +580,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Aggressive Reverse 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Aggressive Reverse 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Aggressive Reverse       174   48.0 |   -10.1   -10.5    -0.3 |     -14    -72 |  -0.36   199
+  Aggressive Reverse       174   48.0 |   -10.1   -10.5    -0.3 |     -14    -72 |  -0.36   300
   OK    Aggressive Reverse 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Aggressive Reverse 174 BPM 48.0 kHz: sin NaN
   OK    Aggressive Reverse 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -589,7 +590,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.5 dB por debajo de la llegada
   OK    Aggressive Reverse 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Aggressive Reverse 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Distorted Vocal Rise      84   48.0 |   -10.1   -10.2    -0.1 |      -5   -135 |  -1.12   259
+  Distorted Vocal Rise      84   48.0 |   -10.1   -10.2    -0.1 |      -5   -135 |  -1.12   368
   OK    Distorted Vocal Rise 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Distorted Vocal Rise 84 BPM 48.0 kHz: sin NaN
   OK    Distorted Vocal Rise 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -599,7 +600,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Distorted Vocal Rise 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Distorted Vocal Rise 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Distorted Vocal Rise     128   48.0 |   -10.1   -10.3    -0.2 |     -11    -95 |  -0.73   228
+  Distorted Vocal Rise     128   48.0 |   -10.1   -10.3    -0.2 |     -11    -95 |  -0.73   294
   OK    Distorted Vocal Rise 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Distorted Vocal Rise 128 BPM 48.0 kHz: sin NaN
   OK    Distorted Vocal Rise 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -609,7 +610,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Distorted Vocal Rise 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Distorted Vocal Rise 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Distorted Vocal Rise     174   48.0 |   -10.1   -10.5    -0.4 |     -20    -67 |  -0.49   264
+  Distorted Vocal Rise     174   48.0 |   -10.1   -10.5    -0.4 |     -20    -67 |  -0.49   267
   OK    Distorted Vocal Rise 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Distorted Vocal Rise 174 BPM 48.0 kHz: sin NaN
   OK    Distorted Vocal Rise 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -619,7 +620,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.5 dB por debajo de la llegada
   OK    Distorted Vocal Rise 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Distorted Vocal Rise 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Dreamy Reverse            84   48.0 |   -10.1   -10.2    -0.1 |     -18   -274 |  -0.79  1221
+  Dreamy Reverse            84   48.0 |   -10.1   -10.2    -0.1 |     -18   -274 |  -0.79  1251
   OK    Dreamy Reverse 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Dreamy Reverse 84 BPM 48.0 kHz: sin NaN
   OK    Dreamy Reverse 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -629,7 +630,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Dreamy Reverse 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dreamy Reverse 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Dreamy Reverse           128   48.0 |   -10.1   -10.3    -0.2 |      -2   -178 |  -0.80   783
+  Dreamy Reverse           128   48.0 |   -10.1   -10.3    -0.2 |      -2   -178 |  -0.80   882
   OK    Dreamy Reverse 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Dreamy Reverse 128 BPM 48.0 kHz: sin NaN
   OK    Dreamy Reverse 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -639,7 +640,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Dreamy Reverse 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dreamy Reverse 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Dreamy Reverse           174   48.0 |   -10.1   -10.2    -0.1 |      -5   -136 |  -0.82   776
+  Dreamy Reverse           174   48.0 |   -10.1   -10.2    -0.1 |      -5   -136 |  -0.82   662
   OK    Dreamy Reverse 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Dreamy Reverse 174 BPM 48.0 kHz: sin NaN
   OK    Dreamy Reverse 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -649,7 +650,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Dreamy Reverse 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dreamy Reverse 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Wide Reverse              84   48.0 |   -10.1   -10.6    -0.5 |      -7   -180 |  -0.61   554
+  Wide Reverse              84   48.0 |   -10.1   -10.6    -0.5 |      -7   -180 |  -0.61   729
   OK    Wide Reverse 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Wide Reverse 84 BPM 48.0 kHz: sin NaN
   OK    Wide Reverse 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -659,7 +660,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.4 dB por debajo de la llegada
   OK    Wide Reverse 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Wide Reverse 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Wide Reverse             128   48.0 |   -10.1   -11.0    -0.9 |      -8   -115 |  -0.60   352
+  Wide Reverse             128   48.0 |   -10.1   -11.0    -0.9 |      -8   -115 |  -0.60   599
   OK    Wide Reverse 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Wide Reverse 128 BPM 48.0 kHz: sin NaN
   OK    Wide Reverse 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -669,7 +670,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.0 dB por debajo de la llegada
   OK    Wide Reverse 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Wide Reverse 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Wide Reverse             174   48.0 |   -10.1   -11.1    -1.0 |      -9    -87 |  -0.59   354
+  Wide Reverse             174   48.0 |   -10.1   -11.1    -1.0 |      -9    -87 |  -0.59   388
   OK    Wide Reverse 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Wide Reverse 174 BPM 48.0 kHz: sin NaN
   OK    Wide Reverse 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -679,7 +680,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 168.9 dB por debajo de la llegada
   OK    Wide Reverse 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Wide Reverse 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Ambient Rise              84   48.0 |   -10.1   -10.2    -0.0 |     -21   -449 |  -1.56  2193
+  Ambient Rise              84   48.0 |   -10.1   -10.2    -0.0 |     -21   -449 |  -1.56  2362
   OK    Ambient Rise 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Ambient Rise 84 BPM 48.0 kHz: sin NaN
   OK    Ambient Rise 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -689,7 +690,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Ambient Rise 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Ambient Rise 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Ambient Rise             128   48.0 |   -10.1   -10.2    -0.0 |     -21   -270 |  -1.11  1473
+  Ambient Rise             128   48.0 |   -10.1   -10.2    -0.0 |     -21   -270 |  -1.11  1584
   OK    Ambient Rise 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Ambient Rise 128 BPM 48.0 kHz: sin NaN
   OK    Ambient Rise 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -699,7 +700,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Ambient Rise 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Ambient Rise 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Ambient Rise             174   48.0 |   -10.1   -10.2    -0.0 |     -14   -222 |  -1.83   968
+  Ambient Rise             174   48.0 |   -10.1   -10.2    -0.0 |     -14   -222 |  -1.83  1190
   OK    Ambient Rise 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Ambient Rise 174 BPM 48.0 kHz: sin NaN
   OK    Ambient Rise 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -709,7 +710,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Ambient Rise 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Ambient Rise 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Long Vocal Transition     84   48.0 |   -10.1   -10.2    -0.0 |     -20   -304 |  -2.55  1034
+  Long Vocal Transition     84   48.0 |   -10.1   -10.2    -0.0 |     -20   -304 |  -2.55  1238
   OK    Long Vocal Transition 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Long Vocal Transition 84 BPM 48.0 kHz: sin NaN
   OK    Long Vocal Transition 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -719,7 +720,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Long Vocal Transition 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Vocal Transition 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Long Vocal Transition    128   48.0 |   -10.1   -10.2    -0.0 |     -15   -205 |  -2.13  1120
+  Long Vocal Transition    128   48.0 |   -10.1   -10.2    -0.0 |     -15   -205 |  -2.13   823
   OK    Long Vocal Transition 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Long Vocal Transition 128 BPM 48.0 kHz: sin NaN
   OK    Long Vocal Transition 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -729,7 +730,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Long Vocal Transition 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Vocal Transition 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Long Vocal Transition    174   48.0 |   -10.1   -10.1    -0.0 |      -7   -152 |  -1.89   543
+  Long Vocal Transition    174   48.0 |   -10.1   -10.1    -0.0 |      -7   -152 |  -1.89   625
   OK    Long Vocal Transition 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Long Vocal Transition 174 BPM 48.0 kHz: sin NaN
   OK    Long Vocal Transition 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -739,7 +740,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.9 dB por debajo de la llegada
   OK    Long Vocal Transition 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Vocal Transition 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Short Impact              84   48.0 |   -10.1   -11.2    -1.1 |     -11   -107 |  -0.60   155
+  Short Impact              84   48.0 |   -10.1   -11.2    -1.1 |     -11   -107 |  -0.60   177
   OK    Short Impact 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Short Impact 84 BPM 48.0 kHz: sin NaN
   OK    Short Impact 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -749,7 +750,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 168.8 dB por debajo de la llegada
   OK    Short Impact 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Short Impact 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Short Impact             128   48.0 |   -10.1   -11.4    -1.2 |     -16    -74 |  -0.60   128
+  Short Impact             128   48.0 |   -10.1   -11.4    -1.2 |     -16    -74 |  -0.60   148
   OK    Short Impact 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Short Impact 128 BPM 48.0 kHz: sin NaN
   OK    Short Impact 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -759,7 +760,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 168.6 dB por debajo de la llegada
   OK    Short Impact 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Short Impact 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Short Impact             174   48.0 |   -10.1   -11.5    -1.3 |     -13    -57 |  -0.60   116
+  Short Impact             174   48.0 |   -10.1   -11.5    -1.3 |     -13    -57 |  -0.60   133
   OK    Short Impact 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Short Impact 174 BPM 48.0 kHz: sin NaN
   OK    Short Impact 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -769,7 +770,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 168.5 dB por debajo de la llegada
   OK    Short Impact 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Short Impact 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Long Build                84   48.0 |   -10.1   -10.3    -0.1 |     -10   -212 |  -1.84   606
+  Long Build                84   48.0 |   -10.1   -10.3    -0.1 |     -10   -212 |  -1.84   670
   OK    Long Build 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Long Build 84 BPM 48.0 kHz: sin NaN
   OK    Long Build 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -779,7 +780,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Long Build 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Build 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Long Build               128   48.0 |   -10.1   -10.2    -0.1 |      -8   -138 |  -1.61   618
+  Long Build               128   48.0 |   -10.1   -10.2    -0.1 |      -8   -138 |  -1.61   480
   OK    Long Build 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Long Build 128 BPM 48.0 kHz: sin NaN
   OK    Long Build 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -789,7 +790,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Long Build 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Build 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Long Build               174   48.0 |   -10.1   -10.2    -0.0 |      -7    -99 |  -1.05   337
+  Long Build               174   48.0 |   -10.1   -10.2    -0.0 |      -7    -99 |  -1.05   386
   OK    Long Build 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Long Build 174 BPM 48.0 kHz: sin NaN
   OK    Long Build 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -799,7 +800,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Long Build 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Build 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Rhythmic Build            84   48.0 |   -10.1   -10.4    -0.3 |     -17   -177 |  -0.89   730
+  Rhythmic Build            84   48.0 |   -10.1   -10.4    -0.3 |     -17   -177 |  -0.89   823
   OK    Rhythmic Build 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Rhythmic Build 84 BPM 48.0 kHz: sin NaN
   OK    Rhythmic Build 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -809,7 +810,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Rhythmic Build 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Rhythmic Build 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Rhythmic Build           128   48.0 |   -10.1   -10.4    -0.3 |     -13    -88 |  -0.76   506
+  Rhythmic Build           128   48.0 |   -10.1   -10.4    -0.3 |     -13    -88 |  -0.76   578
   OK    Rhythmic Build 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Rhythmic Build 128 BPM 48.0 kHz: sin NaN
   OK    Rhythmic Build 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -819,7 +820,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Rhythmic Build 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Rhythmic Build 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Rhythmic Build           174   48.0 |   -10.1   -10.8    -0.6 |     -12    -69 |  -0.62   384
+  Rhythmic Build           174   48.0 |   -10.1   -10.8    -0.6 |     -12    -69 |  -0.62   512
   OK    Rhythmic Build 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Rhythmic Build 174 BPM 48.0 kHz: sin NaN
   OK    Rhythmic Build 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -829,7 +830,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.2 dB por debajo de la llegada
   OK    Rhythmic Build 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Rhythmic Build 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Final Transition          84   48.0 |   -10.1   -10.2    -0.0 |      -1   -291 |  -1.67  1693
+  Final Transition          84   48.0 |   -10.1   -10.2    -0.0 |      -1   -291 |  -1.67  2087
   OK    Final Transition 84 BPM 48.0 kHz: duración exacta a tempo
   OK    Final Transition 84 BPM 48.0 kHz: sin NaN
   OK    Final Transition 84 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -839,7 +840,7 @@ TODO OK (0 fallos)
                             84   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Final Transition 84 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Final Transition 84 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Final Transition         128   48.0 |   -10.1   -10.1    +0.0 |     -12   -190 |  -1.80  1316
+  Final Transition         128   48.0 |   -10.1   -10.1    +0.0 |     -12   -190 |  -1.80  1642
   OK    Final Transition 128 BPM 48.0 kHz: duración exacta a tempo
   OK    Final Transition 128 BPM 48.0 kHz: sin NaN
   OK    Final Transition 128 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -849,7 +850,7 @@ TODO OK (0 fallos)
                            128   48.0 | hueco antes del golpe 169.9 dB por debajo de la llegada
   OK    Final Transition 128 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Final Transition 128 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Final Transition         174   48.0 |   -10.1   -10.2    -0.0 |      -7   -140 |  -1.28   969
+  Final Transition         174   48.0 |   -10.1   -10.2    -0.0 |      -7   -140 |  -1.28  1048
   OK    Final Transition 174 BPM 48.0 kHz: duración exacta a tempo
   OK    Final Transition 174 BPM 48.0 kHz: sin NaN
   OK    Final Transition 174 BPM 48.0 kHz: pico <= -0,3 dBFS
@@ -859,7 +860,7 @@ TODO OK (0 fallos)
                            174   48.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Final Transition 174 BPM 48.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Final Transition 174 BPM 48.0 kHz: sin clics (0.0 en 0.000 s)
-  Clean Vocal Reverse      128   96.0 |   -10.1   -10.4    -0.3 |      -9   -128 |  -0.64   556
+  Clean Vocal Reverse      128   96.0 |   -10.1   -10.4    -0.3 |      -9   -128 |  -0.64   669
   OK    Clean Vocal Reverse 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Clean Vocal Reverse 128 BPM 96.0 kHz: sin NaN
   OK    Clean Vocal Reverse 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -869,7 +870,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Clean Vocal Reverse 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Clean Vocal Reverse 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Soft Reverse             128   96.0 |   -10.1   -10.3    -0.1 |      -7   -150 |  -0.64   385
+  Soft Reverse             128   96.0 |   -10.1   -10.3    -0.1 |      -7   -150 |  -0.64   584
   OK    Soft Reverse 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Soft Reverse 128 BPM 96.0 kHz: sin NaN
   OK    Soft Reverse 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -879,7 +880,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Soft Reverse 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Soft Reverse 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Natural Reverse          128   96.0 |   -10.1   -10.6    -0.5 |      -8   -110 |  -0.69   198
+  Natural Reverse          128   96.0 |   -10.1   -10.6    -0.5 |      -8   -110 |  -0.69   281
   OK    Natural Reverse 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Natural Reverse 128 BPM 96.0 kHz: sin NaN
   OK    Natural Reverse 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -889,7 +890,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.4 dB por debajo de la llegada
   OK    Natural Reverse 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Natural Reverse 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Crank Riser              128   96.0 |   -10.1   -10.3    -0.2 |      -7   -170 |  -0.78   514
+  Crank Riser              128   96.0 |   -10.1   -10.3    -0.2 |      -7   -170 |  -0.78   614
   OK    Crank Riser 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Crank Riser 128 BPM 96.0 kHz: sin NaN
   OK    Crank Riser 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -899,7 +900,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Crank Riser 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Crank Riser 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Dark Vocal Rise          128   96.0 |   -10.1   -10.3    -0.1 |      -9   -118 |  -0.75   590
+  Dark Vocal Rise          128   96.0 |   -10.1   -10.3    -0.1 |      -9   -118 |  -0.75   588
   OK    Dark Vocal Rise 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Dark Vocal Rise 128 BPM 96.0 kHz: sin NaN
   OK    Dark Vocal Rise 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -909,7 +910,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Dark Vocal Rise 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dark Vocal Rise 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Aggressive Reverse       128   96.0 |   -10.1   -10.3    -0.1 |      -7   -100 |  -0.55   732
+  Aggressive Reverse       128   96.0 |   -10.1   -10.3    -0.1 |      -7   -100 |  -0.55   814
   OK    Aggressive Reverse 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Aggressive Reverse 128 BPM 96.0 kHz: sin NaN
   OK    Aggressive Reverse 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -919,7 +920,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Aggressive Reverse 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Aggressive Reverse 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Distorted Vocal Rise     128   96.0 |   -10.1   -10.3    -0.2 |     -14    -92 |  -0.73   473
+  Distorted Vocal Rise     128   96.0 |   -10.1   -10.3    -0.2 |     -14    -92 |  -0.73   548
   OK    Distorted Vocal Rise 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Distorted Vocal Rise 128 BPM 96.0 kHz: sin NaN
   OK    Distorted Vocal Rise 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -929,7 +930,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Distorted Vocal Rise 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Distorted Vocal Rise 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Dreamy Reverse           128   96.0 |   -10.1   -10.3    -0.1 |      -2   -178 |  -0.79  1552
+  Dreamy Reverse           128   96.0 |   -10.1   -10.3    -0.1 |      -2   -178 |  -0.79  2119
   OK    Dreamy Reverse 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Dreamy Reverse 128 BPM 96.0 kHz: sin NaN
   OK    Dreamy Reverse 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -939,7 +940,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.7 dB por debajo de la llegada
   OK    Dreamy Reverse 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Dreamy Reverse 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Wide Reverse             128   96.0 |   -10.1   -10.8    -0.7 |      -9   -120 |  -0.60  1026
+  Wide Reverse             128   96.0 |   -10.1   -10.8    -0.7 |      -9   -120 |  -0.60   976
   OK    Wide Reverse 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Wide Reverse 128 BPM 96.0 kHz: sin NaN
   OK    Wide Reverse 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -949,7 +950,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.2 dB por debajo de la llegada
   OK    Wide Reverse 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Wide Reverse 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Ambient Rise             128   96.0 |   -10.1   -10.2    -0.0 |     -23   -272 |  -1.23  3114
+  Ambient Rise             128   96.0 |   -10.1   -10.2    -0.0 |     -23   -272 |  -1.23  3629
   OK    Ambient Rise 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Ambient Rise 128 BPM 96.0 kHz: sin NaN
   OK    Ambient Rise 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -959,7 +960,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Ambient Rise 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Ambient Rise 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Long Vocal Transition    128   96.0 |   -10.1   -10.2    -0.0 |     -14   -205 |  -2.09  1222
+  Long Vocal Transition    128   96.0 |   -10.1   -10.2    -0.0 |     -14   -205 |  -2.09  1724
   OK    Long Vocal Transition 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Long Vocal Transition 128 BPM 96.0 kHz: sin NaN
   OK    Long Vocal Transition 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -969,7 +970,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Long Vocal Transition 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Vocal Transition 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Short Impact             128   96.0 |   -10.1   -11.3    -1.2 |     -17    -76 |  -0.60   214
+  Short Impact             128   96.0 |   -10.1   -11.3    -1.2 |     -17    -76 |  -0.60   404
   OK    Short Impact 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Short Impact 128 BPM 96.0 kHz: sin NaN
   OK    Short Impact 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -979,7 +980,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 168.7 dB por debajo de la llegada
   OK    Short Impact 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Short Impact 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Long Build               128   96.0 |   -10.1   -10.2    -0.0 |      -8   -138 |  -1.49   676
+  Long Build               128   96.0 |   -10.1   -10.2    -0.0 |      -8   -138 |  -1.49  1191
   OK    Long Build 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Long Build 128 BPM 96.0 kHz: sin NaN
   OK    Long Build 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -989,7 +990,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.8 dB por debajo de la llegada
   OK    Long Build 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Long Build 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Rhythmic Build           128   96.0 |   -10.1   -10.4    -0.3 |     -15    -88 |  -0.65   962
+  Rhythmic Build           128   96.0 |   -10.1   -10.4    -0.3 |     -15    -88 |  -0.65  1314
   OK    Rhythmic Build 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Rhythmic Build 128 BPM 96.0 kHz: sin NaN
   OK    Rhythmic Build 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -999,7 +1000,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.6 dB por debajo de la llegada
   OK    Rhythmic Build 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Rhythmic Build 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  Final Transition         128   96.0 |   -10.1   -10.1    +0.0 |      -9   -190 |  -1.37  2944
+  Final Transition         128   96.0 |   -10.1   -10.1    +0.0 |      -9   -190 |  -1.37  3457
   OK    Final Transition 128 BPM 96.0 kHz: duración exacta a tempo
   OK    Final Transition 128 BPM 96.0 kHz: sin NaN
   OK    Final Transition 128 BPM 96.0 kHz: pico <= -0,3 dBFS
@@ -1009,7 +1010,7 @@ TODO OK (0 fallos)
                            128   96.0 | hueco antes del golpe 169.9 dB por debajo de la llegada
   OK    Final Transition 128 BPM 96.0 kHz: hueco limpio antes del golpe (la palabra no se oye dos veces)
   OK    Final Transition 128 BPM 96.0 kHz: sin clics (0.0 en 0.000 s)
-  diferencia de nivel entre presets: 1.4 dB (de -1.4 a +0.0) · peor tiempo 2193 ms
+  diferencia de nivel entre presets: 1.4 dB (de -1.4 a +0.0) · peor tiempo 2362 ms
   OK    todos los presets llegan con el mismo nivel (margen <= 3 dB)
   OK    ningÃºn preset tarda mÃ¡s de 4 s en generarse
 
@@ -1058,7 +1059,7 @@ TODO OK (0 fallos)
   OK    6 instancias con editores abiertos y cerrados 4 veces cada una
 
 == Quitar el plugin mientras genera
-  el plugin se cierra en 231 ms como mucho
+  el plugin se cierra en 315 ms como mucho
   OK    se cierra al momento aunque estÃ© generando (sin matar hilos)
 
 == Proyecto cargado antes de saber la frecuencia (orden de Ableton/Logic)

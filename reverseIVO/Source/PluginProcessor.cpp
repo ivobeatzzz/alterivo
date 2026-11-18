@@ -321,6 +321,9 @@ void ReverseIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::
 }
 
 // ---------------------------------------------------------------------------- captura
+std::vector<float> ReverseIvoProcessor::livePeaks() const { std::lock_guard<std::mutex> g (capMutex); return livePeaksBuf; }
+bool ReverseIvoProcessor::captureRolling() const { std::lock_guard<std::mutex> g (capMutex); return capSawPlay; }
+
 void ReverseIvoProcessor::toggleCapture()
 {
     if (capturing.load()) { stopCapture(); return; }
@@ -330,6 +333,7 @@ void ReverseIvoProcessor::toggleCapture()
         capL.clear(); capR.clear();
         capPpq = std::numeric_limits<double>::quiet_NaN();
         capSawPlay = false;
+        livePeaksBuf.clear(); liveAcc = 0.0f; liveCount = 0;
     }
     capSeconds = 0.0;
     stopSeenMs = 0;
@@ -363,6 +367,14 @@ void ReverseIvoProcessor::run()
                 }
                 capL.insert (capL.end(), tmp.getReadPointer (0), tmp.getReadPointer (0) + h.n);
                 capR.insert (capR.end(), tmp.getReadPointer (1), tmp.getReadPointer (1) + h.n);
+                // forma de onda en directo: un pico cada 5 ms para dibujar lo que entra mientras se graba
+                const int binLen = std::max (1, (int) (0.005 * sr));
+                const float* a = tmp.getReadPointer (0); const float* b = tmp.getReadPointer (1);
+                for (int i = 0; i < h.n; ++i)
+                {
+                    liveAcc = std::max (liveAcc, 0.5f * (std::abs (a[i]) + std::abs (b[i])));
+                    if (++liveCount >= binLen) { livePeaksBuf.push_back (liveAcc); liveAcc = 0.0f; liveCount = 0; }
+                }
             }
             capSeconds = (double) capL.size() / sr;
         }
