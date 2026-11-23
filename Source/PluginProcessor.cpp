@@ -47,6 +47,9 @@ const TempoPattern kPatterns[] = {
     { 0.25, 4, { 0, 3, 7, 12 } },          // Escalera en semicorcheas
 };
 constexpr int kNumPatterns = (int) (sizeof (kPatterns) / sizeof (kPatterns[0]));
+
+// Formant más cerca de 0 que esto = sin efecto (la voz pasa intacta, sin el motor)
+constexpr float kFormantDeadZone = 0.1f;
 } // namespace
 
 juce::AudioProcessorValueTreeState::ParameterLayout AlterIvoProcessor::createLayout()
@@ -286,7 +289,12 @@ void AlterIvoProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mi
     {
         const float pitchParam = pPitch->load() + (float) patternOffset;
         const float pitchSemis = heldNote.load() >= 0 ? (float) (heldNote.load() - 60 + patternOffset) : pitchParam;
-        const float formantSemis = juce::jlimit (-12.0f, 12.0f, pFormant->load() + (linked ? pitchSemis : 0.0f));
+        float formantSemis = juce::jlimit (-12.0f, 12.0f, pFormant->load() + (linked ? pitchSemis : 0.0f));
+        // Zona muerta: un macro de Ableton en reposo deja el Formant a pocas centésimas
+        // de 0 (p. ej. -0,09 st). Eso es inaudible como efecto pero arrancaba el motor y
+        // re-sintetizaba la voz entera. Por debajo de 0,1 st se trata como 0: la voz pasa intacta.
+        if (std::abs (formantSemis) < kFormantDeadZone)
+            formantSemis = 0.0f;
         engine.setPitchSemitones (pitchParam);
         engine.setFormantSemitones (formantSemis * intensity);
         return formantSemis;

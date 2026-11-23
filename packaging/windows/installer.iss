@@ -3,7 +3,7 @@
 ; Resultado:       dist\alterIVO-Windows-Instalador.exe
 
 #define AppName    "alterIVO"
-#define AppVersion "1.0.0"
+#define AppVersion "1.0.1"
 #define Publisher  "IVO Beatz"
 #define BuildDir   "..\..\build\AlterIvo_artefacts\Release\VST3"
 

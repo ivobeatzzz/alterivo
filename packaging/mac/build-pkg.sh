@@ -3,7 +3,7 @@
 # Uso: bash packaging/mac/build-pkg.sh [versión]
 set -euo pipefail
 
-VERSION="${1:-1.0.0}"
+VERSION="${1:-1.0.1}"
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 ART="$ROOT/build/AlterIvo_artefacts/Release"
 WORK="$ROOT/build/pkg"

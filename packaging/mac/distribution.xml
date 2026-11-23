@@ -23,6 +23,6 @@
         <pkg-ref id="com.ivobeatz.alterivo.au"/>
     </choice>
 
-    <pkg-ref id="com.ivobeatz.alterivo.vst3" version="1.0.0" onConclusion="none">alterIVO-VST3.pkg</pkg-ref>
-    <pkg-ref id="com.ivobeatz.alterivo.au" version="1.0.0" onConclusion="none">alterIVO-AU.pkg</pkg-ref>
+    <pkg-ref id="com.ivobeatz.alterivo.vst3" version="1.0.1" onConclusion="none">alterIVO-VST3.pkg</pkg-ref>
+    <pkg-ref id="com.ivobeatz.alterivo.au" version="1.0.1" onConclusion="none">alterIVO-AU.pkg</pkg-ref>
 </installer-gui-script>
